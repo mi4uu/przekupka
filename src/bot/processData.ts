@@ -11,7 +11,6 @@ export const processData = (
   minChange: BigNumber,
   balanceTransactionType: number,
   lastTransactions: ('b' | 's')[],
-  resetCounters: any,
 ) => {
   if (price.isGreaterThan(highest)) {
     highest = price

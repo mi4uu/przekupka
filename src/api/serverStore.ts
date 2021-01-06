@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js'
-interface  iTradeVars {
+export interface  ITradeVars {
     buy : boolean
     sell : boolean
     lastTrasnactionPrice?:BigNumber
@@ -39,7 +39,7 @@ interface closedTransactions {
     close: string;
   }
 interface IStore {
-    tradeVars:{[pair:string]:iTradeVars}
+    tradeVars:{[pair:string]:ITradeVars}
     assetPairs:{[pair:string]: {
         altname: string;
         wsname: string;

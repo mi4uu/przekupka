@@ -7,7 +7,7 @@ export const shouldSellNow = (
   highest: BigNumber,
   lastTrasnactionPrice: BigNumber,
   risk: BigNumber,
-  sellFromMarket: any,
+  sellFromMarket: ()=>void,
 ) => {
   const diffToHighestPrice = calculatePercentage(price, highest)
   const notProfitable = calculatePercentage(price, lastTrasnactionPrice).isLessThan(0.3)
@@ -21,7 +21,7 @@ export const shouldSellNow = (
     return false
   }
   if (!notProfitable && diffToHighestPrice.isLessThanOrEqualTo(risk.multipliedBy(-1))) {
-    sellFromMarket(price)
+    sellFromMarket()
 
     return false
   }
@@ -33,7 +33,7 @@ export const shouldBuyNow = (
   lowest: BigNumber,
   lastTrasnactionPrice: BigNumber,
   risk: BigNumber,
-  buyFromMarket: any,
+  buyFromMarket: ()=>void,
 ) => {
   const diffToLowestPrice = calculatePercentage(price, lowest)
   const notProfitable = calculatePercentage(price, lastTrasnactionPrice).isGreaterThan(-0.3)
@@ -47,7 +47,7 @@ export const shouldBuyNow = (
     return false
   }
   if (!notProfitable && diffToLowestPrice.isGreaterThanOrEqualTo(risk)) {
-    buyFromMarket(price)
+    buyFromMarket()
     return false
   }
   return true
