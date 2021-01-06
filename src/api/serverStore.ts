@@ -1,4 +1,12 @@
-import BigNumber from "bignumber.js";
+import BigNumber from 'bignumber.js'
+interface  iTradeVars {
+    buy : boolean
+    sell : boolean
+    lastTrasnactionPrice?:BigNumber
+    highest : BigNumber
+    lowest :  BigNumber
+    lastTransactions:  ('b' | 's')[]
+   }
 interface closedTransactions {
     refid?: any;
     userref: number;
@@ -31,6 +39,7 @@ interface closedTransactions {
     close: string;
   }
 interface IStore {
+    tradeVars:{[pair:string]:iTradeVars}
     assetPairs:{[pair:string]: {
         altname: string;
         wsname: string;
@@ -80,34 +89,35 @@ interface IStore {
             }
     }[]
     closedTransactions:closedTransactions[]
-    // {"XETHZUSD":{"a":["1084.25000","30","30.000"],"b":["1083.49000","6","6.000"],"c":["1083.93000","2.00000000"],"v":["8506.97431786","255717.51776701"],"p":["1085.79834","1060.09509"],"t":[2783,73108],"l":["1064.26000","975.00000"],"h":["1113.32000","1134.00000"],"o":"1103.48000"}}
 }
 export const store:IStore = {
-    assetPairs:{},
-    balance:{},
-    closedTransactions:[],
-    ticks:[],
-    pairs:{
-        XXBTZUSD:{
-            changeToTrend: new BigNumber('0.6'),
-            changeToChangeTrend: new BigNumber('0.2'),
-            persuadeToBalance: 0.2,
-            volume: new BigNumber('0.001'),
-            active: false
-        },
-        XETHZUSD:{
-            changeToTrend: new BigNumber('0.6'),
-            changeToChangeTrend: new BigNumber('0.2'),
-            persuadeToBalance: 0.2,
-            volume: new BigNumber('0.001'),
-            active: false
-        },
-        NANOUSD:{
-            changeToTrend: new BigNumber('0.6'),
-            changeToChangeTrend: new BigNumber('0.2'),
-            persuadeToBalance: 0.2,
-            volume: new BigNumber('0.01'),
-            active: false
-        }
+
+  tradeVars:{},
+  assetPairs:{},
+  balance:{},
+  closedTransactions:[],
+  ticks:[],
+  pairs:{
+    XXBTZUSD:{
+      changeToTrend: new BigNumber('0.6'),
+      changeToChangeTrend: new BigNumber('0.2'),
+      persuadeToBalance: 0.1,
+      volume: new BigNumber('0.001'),
+      active: true
+    },
+    XETHZUSD:{
+      changeToTrend: new BigNumber('0.6'),
+      changeToChangeTrend: new BigNumber('0.2'),
+      persuadeToBalance: 0.1,
+      volume: new BigNumber('0.001'),
+      active: true
+    },
+    NANOUSD:{
+      changeToTrend: new BigNumber('0.4'),
+      changeToChangeTrend: new BigNumber('0.2'),
+      persuadeToBalance: 0.2,
+      volume: new BigNumber('0.01'),
+      active: true
     }
+  }
 }
