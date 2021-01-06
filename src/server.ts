@@ -49,7 +49,7 @@ app.prepare().then(() => {
 
   server.listen(port,'0.0.0.0',()=> console.log(`server is listening on ${port} port`))
   fetchData()
-  setTimeout(()=> startTrading(),1000)
+  startTrading()
 })
 
 

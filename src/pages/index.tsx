@@ -12,6 +12,7 @@ import {
   fetchPairs,
   fetchTick,
   fetchTicks,
+  fetchTradeVars,
   fetchTransactions,
   initialState,
   reducer,
@@ -28,7 +29,9 @@ export default function layout() {
   useEffect(() => {
     fetchAssetPairs(dispatch)
   }, [])
-
+  useEffect(() => {
+    fetchTradeVars(dispatch)
+  }, [])
   useEffect(() => {
     fetchBalance(dispatch)
   }, [])
@@ -49,7 +52,10 @@ export default function layout() {
     const pid = setInterval(() => fetchTransactions(dispatch), 10000)
     return () => clearInterval(pid)
   }, [])
-
+  useEffect(() => {
+    const pid = setInterval(() => fetchTradeVars(dispatch), 1000)
+    return () => clearInterval(pid)
+  }, [])
   return (
     <>
       <Topbar store={store} />

@@ -1,3 +1,5 @@
+import { ITradeVars } from '../api/serverStore'
+
 interface IAssetPairs {
     [pair:string]: {
     altname: string;
@@ -77,6 +79,9 @@ interface ITick {
 
 }
 interface IState {
+    tradeVars:{
+        [pair:string]:ITradeVars
+    }
     balance:{
         [key:string]:string
     }

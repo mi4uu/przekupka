@@ -75,10 +75,6 @@ export const startTrading=()=>{
     .map(([key])=>key)
   for(const pair of activePairs)
     createTradeVars(pair)
-  setInterval(()=>{
-    if(store.ticks.length>2)
-      for(const pair of activePairs)
-        trade(pair,buyFn,sellFn)
-  },1000)
+
 }
 

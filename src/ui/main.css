@@ -1,3 +1,22 @@
 html {
     font-size: 10px;
 }
+body {
+    margin-top:100px
+}
+.topBar {
+    position: fixed;
+    width: 100vw;
+    z-index: 999;
+    background: white;
+    top: 0px;
+}
+.green {
+    background-color: #6fcf00 !important;
+}
+.red {
+    background-color: #cf0000 !important;
+}
+.gray {
+    background-color: #7c7c7c !important;
+}

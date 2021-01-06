@@ -3,7 +3,9 @@ import { Chart } from 'primereact/chart'
 import moment from 'moment'
 import Transactions from './transactions'
 import Params from './params'
+import { Log } from './log'
 export default function trader({pair,store}:{pair:string,store:IState}){
+  const log = store.tradeVars[pair]
   const lastPrices = store.ticks.map((tick:ITick)=>{
     return {
       y:tick.pairs[pair].c[0],
@@ -56,6 +58,26 @@ export default function trader({pair,store}:{pair:string,store:IState}){
     labels:labels,
     datasets: [
       {
+        label:'highest',
+        data:labels.map(_=>log.highest),
+        fill:false,
+        borderColor: '#0f0',
+        pointBorderWidth:0,
+        radius:0,
+        lineTension:0.1,
+        borderWidth:1
+      },
+      {
+        label:'lowest',
+        data:labels.map(_=>log.lowest),
+        fill:false,
+        borderColor: '#f00',
+        pointBorderWidth:0,
+        radius:0,
+        lineTension:0.1,
+        borderWidth:1
+      },
+      {
         label: 'price',
         data:lastPrices,
         fill: false,
@@ -102,7 +124,7 @@ export default function trader({pair,store}:{pair:string,store:IState}){
     ]
   }
   return <>
-    <Chart   type="line" data={basicData} style={{height:200}} options={{
+    <Chart   type="line" data={basicData} style={{height:400}} options={{
       responsive:true,  maintainAspectRatio: false,
       animation:{
         duration:0
@@ -112,6 +134,10 @@ export default function trader({pair,store}:{pair:string,store:IState}){
       <div className="p-field p-col-12 p-md-4"><Transactions transactions={transactions}/></div>
       <div className="p-field p-col-12 p-md-4">
         <Params store={store} pair={pair}/>
+
+      </div>
+      <div className="p-field p-col-12 p-md-4">
+        <Log store={store} pair={pair}/>
 
       </div>
     </div>

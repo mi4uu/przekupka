@@ -109,14 +109,14 @@ export const store:IStore = {
       changeToTrend: new BigNumber('0.6'),
       changeToChangeTrend: new BigNumber('0.2'),
       persuadeToBalance: 0.1,
-      volume: new BigNumber('0.001'),
+      volume: new BigNumber('0.05'),
       active: true
     },
     NANOUSD:{
       changeToTrend: new BigNumber('0.4'),
       changeToChangeTrend: new BigNumber('0.2'),
       persuadeToBalance: 0.2,
-      volume: new BigNumber('0.01'),
+      volume: new BigNumber('10'),
       active: true
     }
   }

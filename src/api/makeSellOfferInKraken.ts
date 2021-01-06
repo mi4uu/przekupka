@@ -1,6 +1,5 @@
-import BigNumber from "bignumber.js";
-import { makePrivateCall } from './makePrivateCall';
-import { price, pairDecimals, calculatePercentage, lastTrasnactionPrice, userRef } from '../index';
+import BigNumber from 'bignumber.js'
+import { makePrivateCall } from './makePrivateCall'
 
 export function makeSellOfferInKraken(pair:string, price:string, volume:string) {
 
@@ -10,11 +9,11 @@ export function makeSellOfferInKraken(pair:string, price:string, volume:string) 
     ordertype: 'limit',
     price,
     volume,
-    userref: userRef + "",
-    expiretm: '+20'
+    // userref: userRef + '',
+    expiretm: '+40'
   }).then(result => {
-    console.log(result.data);
+    console.log(result.data)
   }).catch(err => {
-    console.log(err);
-  });
+    console.log(err)
+  })
 }
