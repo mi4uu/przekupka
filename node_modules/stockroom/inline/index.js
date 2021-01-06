@@ -1,0 +1,2 @@
+module.exports=function(t){var n=function(t){return"function"!=typeof Event||!(t instanceof Event)};return t.action=function(e){return function(){for(var o=[],a=arguments.length;a--;)o[a]=arguments[a];var r,p="function"==typeof e?e.apply(void 0,o):e;"string"==typeof p&&(p={type:p,params:o.filter(n)}),p&&!p.type?t.setState(p,!1,e.name,!0):(r=t.actions)[p.type].apply(r,p.params||[p.payload])}},t};
+//# sourceMappingURL=index.js.map
