@@ -6,18 +6,12 @@ export const processData = (
   sell: boolean,
   price: BigNumber,
   lastTrasnactionPrice: BigNumber,
-  highest: BigNumber,
-  lowest: BigNumber,
+
   minChange: BigNumber,
   balanceTransactionType: number,
   lastTransactions: ('b' | 's')[],
 ) => {
-  if (price.isGreaterThan(highest)) {
-    highest = price
-  }
-  if (price.isLessThan(lowest)) {
-    lowest = price
-  }
+ 
 
   const changeFromLastTransaction = calculatePercentage(price, lastTrasnactionPrice)
   // console.log(changeFromLastTransaction.toFixed(2))
@@ -28,6 +22,7 @@ export const processData = (
   // should we consider buying ?
   if (!buy && !sell && changeFromLastTransaction.isLessThan(minChangeforBuy.multipliedBy(-1))) {
     //   resetCounters(price)
+    
     buy = true
   }
   // should we consider selling ?
@@ -36,5 +31,5 @@ export const processData = (
     sell = true
   }
 
-  return { buy, sell, highest, lowest }
+  return { buy, sell}
 }

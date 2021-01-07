@@ -6,7 +6,9 @@ import Params from './params'
 import { Log } from './log'
 export default function trader({pair,store}:{pair:string,store:IState}){
   const log = store.tradeVars[pair]
+  let lastPrice
   const lastPrices = store.ticks.map((tick:ITick)=>{
+    lastPrice=tick.pairs[pair].c[0]
     return {
       y:tick.pairs[pair].c[0],
       x:moment.unix(tick.timestamp).format('HH:mm:ss')
@@ -22,7 +24,8 @@ export default function trader({pair,store}:{pair:string,store:IState}){
       cost:t.cost,
       fee:t.fee,
       time:t.opentm,
-      date:moment.unix(t.opentm).format('YYYY-MM-DD HH:mm:ss')
+      date:moment.unix(t.opentm).format('YYYY-MM-DD HH:mm:ss'),
+      price: parseFloat(t.price)>0 ? t.price : t.descr.price 
             
     })
     ).sort((a,b)=>b.time-a.time)
@@ -53,6 +56,9 @@ export default function trader({pair,store}:{pair:string,store:IState}){
 
   const labels = [ ...store.ticks.map(tick=>tick.timestamp),
     ...transactions.map(t=>t.time) ].sort().map(l=>moment.unix(l).format('HH:mm:ss'))
+  const willSellAt=log?parseFloat(log.highest)-(parseFloat(log.highest)*(parseFloat(store.pairs[pair].changeToChangeTrend)/100) ) :0
+  const willBuyAt=log?parseFloat(log.lowest)+(parseFloat(log.lowest)*(parseFloat(store.pairs[pair].changeToChangeTrend)/100) ) :0
+
   const basicData = {
         
     labels:labels,
@@ -61,6 +67,27 @@ export default function trader({pair,store}:{pair:string,store:IState}){
         label:'highest',
         data:labels.map(_=>log.highest),
         fill:false,
+        borderColor: '#f00',
+        pointBorderWidth:0,
+        radius:0,
+        lineTension:0.1,
+        borderWidth:1
+      },
+      {
+        label:'will sell at',
+        data:labels.map(_=>willSellAt),
+        fill:false,
+        borderColor: '#f00',
+        pointBorderWidth:0,
+        radius:0,
+        lineTension:0.1,
+        borderWidth:3,
+        borderDash: [2, 5]
+      },
+      {
+        label:'lowest',
+        data:labels.map(_=>log.lowest),
+        fill:false,
         borderColor: '#0f0',
         pointBorderWidth:0,
         radius:0,
@@ -68,14 +95,26 @@ export default function trader({pair,store}:{pair:string,store:IState}){
         borderWidth:1
       },
       {
-        label:'lowest',
-        data:labels.map(_=>log.lowest),
+        label:'will buy at',
+        data:labels.map(_=>willBuyAt),
         fill:false,
-        borderColor: '#f00',
+        borderColor: '#0f0',
         pointBorderWidth:0,
         radius:0,
         lineTension:0.1,
-        borderWidth:1
+        borderWidth:3,
+        borderDash: [2, 5]
+      },
+      {
+        label:'current price',
+        data:labels.map(_=>lastPrice),
+        fill:false,
+        borderColor: '#42A5F5',
+        pointBorderWidth:0,
+        radius:0,
+        lineTension:0.1,
+        borderWidth:3,
+        borderDash: [2, 5]
       },
       {
         label: 'price',

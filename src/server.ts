@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express'
-
+import bodyParser from 'body-parser'
 import next from 'next'
 import fetchData from './api/fetchData'
 
@@ -20,7 +20,7 @@ app.prepare().then(() => {
   
   const server = express()
   server.use(express.static('public'))
-
+  server.use(bodyParser.json()) 
   server.get('/tick', (req: Request, res: Response) => {
     res.send(store.ticks[store.ticks.length-1])
   })
@@ -38,6 +38,17 @@ app.prepare().then(() => {
   })
   server.get('/pairs', (req: Request, res: Response) => {
     res.send(store.pairs)
+  })
+  server.post('/pair', (req: Request, res: Response) => {
+    console.log(res.json(req.body))
+    // store.pairs[pair] = {
+    //   ...store.pairs[pair],
+    //   changeToTrend: new BigNumber(values.changeToTrend),
+    //   changeToChangeTrend: new BigNumber(values.changeToChangeTrend),
+    //   volume: new BigNumber(values.volume), // min 50
+    // }
+
+    res.send(res.json(req.body))
   })
   server.get('/tradeVars', (req: Request, res: Response) => {
     res.send(store.tradeVars)

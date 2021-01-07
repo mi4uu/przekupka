@@ -15,6 +15,7 @@ export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars) =>
   )
   if(data.error.length){
     console.log(data)
+    vars.buy = false
   }else {
     vars.lastTransactionId = data.result.txid[0]
     vars.wait = 5
@@ -31,6 +32,7 @@ export const sellFn = async (pair: string, price: BigNumber, vars: ITradeVars) =
   )
   if(data.error.length){
     console.log(data)
+    vars.sell = false
   }else {
     vars.lastTransactionId = data.result.txid[0]
     vars.wait = 5
@@ -63,24 +65,32 @@ export const trade = (pair: string) => {
     vars.sell,
     price,
     vars.lastTrasnactionPrice,
-    vars.highest,
-    vars.lowest,
+
     pairParams.changeToTrend,
     pairParams.persuadeToBalance,
     vars.lastTransactions,
   )
-  vars.highest = result.highest
-  vars.lowest = result.lowest
-  if (result.buy) {
-    vars.buy = shouldBuyNow(price, vars.lowest, vars.lastTrasnactionPrice, pairParams.changeToChangeTrend, () =>
-      buyFn(pair, price, vars),
-    )
+  if (price.isGreaterThan(vars.highest)) {
+    vars.highest = price
   }
-  if (result.sell) {
-    vars.sell = shouldSellNow(price, vars.highest, vars.lastTrasnactionPrice, pairParams.changeToChangeTrend, () =>
-      sellFn(pair, price, vars),
-    )
+  if (price.isLessThan(vars.lowest)) {
+    vars.lowest = price
   }
+  const balanceCoin0 = new BigNumber(store.balance[store.pairs[pair].coin0])
+  const balanceCoin1 = new BigNumber(store.balance[store.pairs[pair].coin1])
+  if(balanceCoin1.isGreaterThan(price.multipliedBy(store.pairs[pair].volume)))
+    if (result.buy) {
+      vars.buy = shouldBuyNow(price, vars.lowest, vars.lastTrasnactionPrice, pairParams.changeToChangeTrend, () =>
+        buyFn(pair, price, vars),
+      )
+    }
+  if(balanceCoin0.isGreaterThan(store.pairs[pair].volume))
+    if (result.sell) {
+      vars.sell = shouldSellNow(price, vars.highest, vars.lastTrasnactionPrice, pairParams.changeToChangeTrend, () =>
+        sellFn(pair, price, vars),
+      )
+    }
+  
 }
 export const startTrading = () => {
   const activePairs = Object.entries(store.pairs)
