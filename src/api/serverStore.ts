@@ -6,6 +6,8 @@ export interface  ITradeVars {
     highest : BigNumber
     lowest :  BigNumber
     lastTransactions:  ('b' | 's')[]
+    wait:number
+    lastTransactionId:string
    }
 interface closedTransactions {
     refid?: any;
@@ -88,41 +90,71 @@ interface IStore {
                 }
             }
     }[]
-    closedTransactions:closedTransactions[]
+    closedTransactions:{
+      [key:string]:closedTransactions
+    }
+  tradeBalance:{
+    eb:string // = equivalent balance (combined balance of all currencies)
+    tb:string // = trade balance (combined balance of all equity currencies)
+    m:string // = margin amount of open positions
+    n:string // = unrealized net profit/loss of open positions
+    c:string // = cost basis of open positions
+    v:string // = current floating valuation of open positions
+    e:string // = equity = trade balance + unrealized net profit/loss
+    mf:string // = free margin = equity - initial margin (maximum margin available to open new positions)
+    ml:string // = margin level = (equity / initial margin) * 100
+  }
 }
 export const store:IStore = {
-
+  tradeBalance:{
+    eb:'',
+    tb:'',
+    m:'',
+    n:'',
+    c:'',
+    v:'',
+    e:'',
+    mf:'',
+    ml:'',
+  },
   tradeVars:{},
   assetPairs:{},
   balance:{},
-  closedTransactions:[],
+  closedTransactions:{},
   ticks:[],
   pairs:{
     XXBTZUSD:{
-      changeToTrend: new BigNumber('0.6'),
-      changeToChangeTrend: new BigNumber('0.3'),
-      persuadeToBalance: 0.1,
+      changeToTrend: new BigNumber('1.2'),
+      changeToChangeTrend: new BigNumber('0.4'),
+      persuadeToBalance: 0.8,
       volume: new BigNumber('0.001'),
       active: true
     },
     XETHZUSD:{
-      changeToTrend: new BigNumber('0.6'),
+      changeToTrend: new BigNumber('1.2'),
       changeToChangeTrend: new BigNumber('0.5'),
-      persuadeToBalance: 0.1,
+      persuadeToBalance: 0.8,
       volume: new BigNumber('0.05'),
       active: true
     },
     NANOUSD:{
-      changeToTrend: new BigNumber('0.4'),
-      changeToChangeTrend: new BigNumber('0.2'),
-      persuadeToBalance: 0.2,
+      changeToTrend: new BigNumber('1.3'),
+      changeToChangeTrend: new BigNumber('0.5'),
+      persuadeToBalance: 2,
       volume: new BigNumber('10'),
       active: true
     },
     XXRPZUSD:{
-      changeToTrend: new BigNumber('0.8'),
-      changeToChangeTrend: new BigNumber('0.2'),
-      persuadeToBalance: 0.4,
+      changeToTrend: new BigNumber('1.3'),
+      changeToChangeTrend: new BigNumber('0.4'),
+      persuadeToBalance: 2,
+      volume: new BigNumber('30'),
+      active: true
+    },
+    XXMRZUSD:{
+      changeToTrend: new BigNumber('1'),
+      changeToChangeTrend: new BigNumber('0.3'),
+      persuadeToBalance: 0.8,
       volume: new BigNumber('30'),
       active: true
     }

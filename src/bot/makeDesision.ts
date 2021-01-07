@@ -11,11 +11,11 @@ export const shouldSellNow = (
 ) => {
   const diffToHighestPrice = calculatePercentage(price, highest)
   const notProfitable = calculatePercentage(price, lastTrasnactionPrice).isLessThan(0.3)
-  console.log(chalk.bgRed('SELL:')
-  +'  change to highest price ' 
-  +  chalk.blue(diffToHighestPrice.toFixed(2)) 
-  + '% ' + 'will sell at <= '
-  +chalk.blue(risk.multipliedBy(-1).toFixed(2)))
+  // console.log(chalk.bgRed('SELL:')
+  // +'  change to highest price ' 
+  // +  chalk.blue(diffToHighestPrice.toFixed(2)) 
+  // + '% ' + 'will sell at <= '
+  // +chalk.blue(risk.multipliedBy(-1).toFixed(2)))
 
   if (notProfitable) {
     return false
@@ -37,11 +37,11 @@ export const shouldBuyNow = (
 ) => {
   const diffToLowestPrice = calculatePercentage(price, lowest)
   const notProfitable = calculatePercentage(price, lastTrasnactionPrice).isGreaterThan(-0.3)
-  console.log(chalk.bgGreen('BUY:')
-  +' change to lowest price '
-   + chalk.blue(diffToLowestPrice.toFixed(2))
-   +'%' + 'will buy at >= '
-   +chalk.blue(risk.toFixed(2)))
+  // console.log(chalk.bgGreen('BUY:')
+  // +' change to lowest price '
+  //  + chalk.blue(diffToLowestPrice.toFixed(2))
+  //  +'%' + 'will buy at >= '
+  //  +chalk.blue(risk.toFixed(2)))
 
   if (notProfitable) {
     return false

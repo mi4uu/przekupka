@@ -42,6 +42,9 @@ app.prepare().then(() => {
   server.get('/tradeVars', (req: Request, res: Response) => {
     res.send(store.tradeVars)
   })
+  server.get('/tradeBalance', (req: Request, res: Response) => {
+    res.send(store.tradeBalance)
+  })
   server.all('*', (req: Request, res: Response) => {
     return handle(req, res)
   })
