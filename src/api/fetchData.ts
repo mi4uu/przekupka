@@ -28,20 +28,29 @@ export default function fetchData() {
         else {
           if (wait === 1) {
             const transaction = store.closedTransactions[store.tradeVars[pair].lastTransactionId]
+
             const lastStatus = transaction?.status
             if (lastStatus === 'closed') {
-              store.tradeVars[pair].highest = new BigNumber(transaction.price)
-              store.tradeVars[pair].lowest = new BigNumber(transaction.price)
+              const oneTransactionBeforePrice = Object.values(store.closedTransactions)
+                .filter(
+                  (v) =>
+                    v.descr.pair === transaction.descr.pair &&
+                    v.status === 'closed' &&
+                    v.descr.type[0] === transaction.descr.type[0],
+                )
+                .sort((a, b) => b.opentm - a.opentm)[1]?.price
+              const price =
+                transaction.descr.type[0] === 'buy'
+                  ? BigNumber.max(transaction.price, oneTransactionBeforePrice)
+                  : BigNumber.min(transaction.price, oneTransactionBeforePrice)
+              store.tradeVars[pair].highest = price
+              store.tradeVars[pair].lowest = price
               store.tradeVars[pair].buy = false
               store.tradeVars[pair].sell = false
               store.tradeVars[pair].wait = 0
-              store.tradeVars[pair].lastTrasnactionPrice = new BigNumber(
-                transaction.price
-              )
+              store.tradeVars[pair].lastTrasnactionPrice = price
               if (store.tradeVars[pair].lastTransactions.length > 2) store.tradeVars[pair].lastTransactions.shift()
-              store.tradeVars[pair].lastTransactions.push(
-                store.closedTransactions[store.tradeVars[pair].lastTransactionId].descr.type[0] as 's' | 'b',
-              )
+              store.tradeVars[pair].lastTransactions.push(transaction.descr.type[0] as 's' | 'b')
             }
             if (lastStatus === 'expired') {
               store.tradeVars[pair].wait = 0
@@ -68,13 +77,13 @@ setInterval(() => {
   getClosedOrders()
 }, 10000)
 const getTradeBalance = async () => {
-  const { data } = await makePrivateCall('/0/private/TradeBalance',{})
+  const { data } = await makePrivateCall('/0/private/TradeBalance', {})
   if (data.error.length > 0) console.log(data.error)
   if (!data.result) console.log(data)
   store.tradeBalance = data.result
 }
 getTradeBalance()
-  
+
 setInterval(() => {
   getTradeBalance()
 }, 100000)

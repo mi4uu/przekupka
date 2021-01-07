@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "dev": "node --inspect=0.0.0.0:9229 -r ts-node/register  src/server.ts",
+    "dev": "node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register  src/server.ts",
     "dev-server": "nodemon",
     "ui": "ts-node src/app.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
