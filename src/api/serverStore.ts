@@ -100,14 +100,14 @@ export const store:IStore = {
   pairs:{
     XXBTZUSD:{
       changeToTrend: new BigNumber('0.6'),
-      changeToChangeTrend: new BigNumber('0.2'),
+      changeToChangeTrend: new BigNumber('0.3'),
       persuadeToBalance: 0.1,
       volume: new BigNumber('0.001'),
       active: true
     },
     XETHZUSD:{
       changeToTrend: new BigNumber('0.6'),
-      changeToChangeTrend: new BigNumber('0.2'),
+      changeToChangeTrend: new BigNumber('0.5'),
       persuadeToBalance: 0.1,
       volume: new BigNumber('0.05'),
       active: true
@@ -117,6 +117,13 @@ export const store:IStore = {
       changeToChangeTrend: new BigNumber('0.2'),
       persuadeToBalance: 0.2,
       volume: new BigNumber('10'),
+      active: true
+    },
+    XXRPZUSD:{
+      changeToTrend: new BigNumber('0.8'),
+      changeToChangeTrend: new BigNumber('0.2'),
+      persuadeToBalance: 0.4,
+      volume: new BigNumber('30'),
       active: true
     }
   }

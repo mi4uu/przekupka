@@ -1,3 +1,4 @@
 /*.csv
 .next
 node_modules
+src/api/config.ts
