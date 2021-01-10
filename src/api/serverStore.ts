@@ -30,6 +30,8 @@ export interface IPair {
   coin1:string,
   profit:BigNumber,
   buyPerHour:number
+  coin0FriendlyName?:string
+  coin1FriendlyName?:string
 }
   interface closedTransactions {
     refid: string;
@@ -133,126 +135,266 @@ interface IStore {
     ml:string // = margin level = (equity / initial margin) * 100
   }
 }
-export const createStore = ():IStore=>( {
-  tradeBalance:{
-    eb:'',
-    tb:'',
-    m:'',
-    n:'',
-    c:'',
-    v:'',
-    e:'',
-    mf:'',
-    ml:'',
+export const createStore = (): IStore => ({
+  tradeBalance: {
+    eb: '',
+    tb: '',
+    m: '',
+    n: '',
+    c: '',
+    v: '',
+    e: '',
+    mf: '',
+    ml: '',
   },
-  tradeVars:{},
-  assetPairs:{},
-  balance:{},
-  closedTransactions:{},
-  ticks:[],
-  toSell:{},
-  pairs:{
-    XXBTZUSD:{
-      changeToTrend: new BigNumber('1'),
-      changeToChangeTrend: new BigNumber('0.4'),
+  tradeVars: {},
+  assetPairs: {},
+  balance: {},
+  closedTransactions: {},
+  ticks: [],
+  toSell: {},
+  pairs: {
+    XXBTZUSD: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
       persuadeToBalance: 2,
-      volume: new BigNumber('0.002'),    // min 0.001
+      volume: new BigNumber('0.002'), // min 0.001
       active: true,
       coin0: 'XXBT',
-      coin1:'ZUSD',
+      coin1: 'ZUSD',
       profit: new BigNumber(0),
-      buyPerHour:2 // limit if allready not sold buys are present
+      buyPerHour: 2, // limit if allready not sold buys are present
+      coin0FriendlyName: 'BTC',
+      coin1FriendlyName: 'USD'
     },
-    XETHZUSD:{
-      changeToTrend: new BigNumber('1'),
-      changeToChangeTrend: new BigNumber('0.4'),
+    XETHZUSD: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
       persuadeToBalance: 1.8,
       volume: new BigNumber('0.05'), // min 0.02
       active: true,
       coin0: 'XETH',
-      coin1:'ZUSD',
+      coin1: 'ZUSD',
       profit: new BigNumber(0),
-      buyPerHour:2 
+      buyPerHour: 2,
+      coin0FriendlyName: 'ETH',
+      coin1FriendlyName: 'USD'
     },
-    NANOUSD:{
-      changeToTrend: new BigNumber('1.2'),
-      changeToChangeTrend: new BigNumber('0.4'),
+    NANOUSD: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
       persuadeToBalance: 1.2,
       volume: new BigNumber('30'), // min 10
       active: true,
       coin0: 'NANO',
-      coin1:'ZUSD',
+      coin1: 'ZUSD',
       profit: new BigNumber(0),
-      buyPerHour:2 
+      buyPerHour: 2,
+      coin0FriendlyName: 'NANO',
+      coin1FriendlyName: 'USD'
     },
-    XXRPZUSD:{
-      changeToTrend: new BigNumber('1.1'),
-      changeToChangeTrend: new BigNumber('0.4'),
+    XXRPZUSD: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
       persuadeToBalance: 2,
       volume: new BigNumber('60'), // min 30
       active: true,
       coin0: 'XXRP',
-      coin1:'ZUSD',
+      coin1: 'ZUSD',
       profit: new BigNumber(0),
-      buyPerHour:2 
+      buyPerHour: 2,
+      coin0FriendlyName: 'XRP',
+      coin1FriendlyName: 'USD'
     },
-    XXMRZUSD:{
-      changeToTrend: new BigNumber('1.1'),
-      changeToChangeTrend: new BigNumber('0.3'),
+    XXMRZUSD: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
       persuadeToBalance: 1,
       volume: new BigNumber('0.6'), // min 0.1
       active: true,
       coin0: 'XXMR',
-      coin1:'ZUSD',
+      coin1: 'ZUSD',
       profit: new BigNumber(0),
-      buyPerHour:2 
+      buyPerHour: 2,
+      coin0FriendlyName: 'XMR',
+      coin1FriendlyName: 'USD'
     },
-    UNIUSD:{
+    UNIUSD: {
       changeToTrend: new BigNumber('1.5'),
-      changeToChangeTrend: new BigNumber('0.3'),
+      changeToChangeTrend: new BigNumber('0.5'),
       persuadeToBalance: 2,
       volume: new BigNumber('0.25'), //min 0.25
       active: true,
       coin0: 'UNI',
-      coin1:'ZUSD' ,
+      coin1: 'ZUSD',
       profit: new BigNumber(0),
-      buyPerHour:1
-    },
-    XXLMZUSD:{
-      changeToTrend: new BigNumber('1'),
-      changeToChangeTrend: new BigNumber('0.3'),
+      buyPerHour: 1,
+      coin0FriendlyName: 'UNI',
+      coin1FriendlyName: 'USD'
+    }, 
+    XXLMZUSD: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
       persuadeToBalance: 2,
       volume: new BigNumber('60'), //min 30
       active: true,
       coin0: 'XLM',
-      coin1:'ZUSD' ,
+      coin1: 'ZUSD',
       profit: new BigNumber(0),
-      buyPerHour:2 
+      buyPerHour: 2,
+      coin0FriendlyName: 'XLM', //Stellar
+      coin1FriendlyName: 'USD'
     },
-    XLTCZUSD:{
-      changeToTrend: new BigNumber('1'),
-      changeToChangeTrend: new BigNumber('0.3'),
+    XLTCZUSD: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
       persuadeToBalance: 1,
       volume: new BigNumber('0.15'), //min 0.25
       active: true,
       coin0: 'XLTC',
-      coin1:'ZUSD' ,
+      coin1: 'ZUSD',
       profit: new BigNumber(0),
-      buyPerHour:2 
+      buyPerHour: 2,
+      coin0FriendlyName: 'LTC',
+      coin1FriendlyName: 'USD'
     },
-    ALGOUSD:{
-      changeToTrend: new BigNumber('1'),
-      changeToChangeTrend: new BigNumber('0.3'),
+    ALGOUSD: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
       persuadeToBalance: 1,
       volume: new BigNumber('100'), // min 50
       active: true,
       coin0: 'ALGO',
-      coin1:'ZUSD',
+      coin1: 'ZUSD',
       profit: new BigNumber(0),
-      buyPerHour:2 
+      buyPerHour: 2,
+      coin0FriendlyName: 'ALGO',
+      coin1FriendlyName: 'USD'
     },
-  
-  }
+    XETHXXBT: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
+      persuadeToBalance: 1,
+      volume: new BigNumber('0.04'), // min 0.02
+      active: true,
+      coin0: 'XETH',
+      coin1: 'XXBT',
+      profit: new BigNumber(0),
+      buyPerHour: 2,
+      coin0FriendlyName: 'ETH',
+      coin1FriendlyName: 'BTC'
+    },
+
+    XZECZUSD: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
+      persuadeToBalance: 1,
+      volume: new BigNumber('0.03'), // min 0.03
+      active: true,
+      coin0: 'XZEC',
+      coin1: 'ZUSD',
+      profit: new BigNumber(0),
+      buyPerHour: 2,
+      coin0FriendlyName: 'ZEC',
+      coin1FriendlyName: 'USD'
+    },
+    XXRPXXBT: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
+      persuadeToBalance: 1,
+      volume: new BigNumber('30'), // min 30
+      active: true,
+      coin0: 'XXRP',
+      coin1: 'XXBT',
+      profit: new BigNumber(0),
+      buyPerHour: 2,
+      coin0FriendlyName: 'XRP',
+      coin1FriendlyName: 'BTC'
+    },
+    XLTCXXBT: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
+      persuadeToBalance: 1,
+      volume: new BigNumber('0.1'), // min 0.1
+      active: true,
+      coin0: 'XLTC',
+      coin1: 'XXBT',
+      profit: new BigNumber(0),
+      buyPerHour: 2,
+      coin0FriendlyName: 'LTC',
+      coin1FriendlyName: 'BTC'
+    },
+    ALGOXBT: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
+      persuadeToBalance: 1,
+      volume: new BigNumber('50'), // min 50
+      active: true,
+      coin0: 'ALGO',
+      coin1: 'XXBT',
+      profit: new BigNumber(0),
+      buyPerHour: 2,
+      coin0FriendlyName: 'ALGO',
+      coin1FriendlyName: 'BTC'
+    },
+    NANOXBT: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
+      persuadeToBalance: 1,
+      volume: new BigNumber('10'), // min 10
+      active: true,
+      coin0: 'NANO',
+      coin1: 'XXBT',
+      profit: new BigNumber(0),
+      buyPerHour: 2,
+      coin0FriendlyName: 'NANO',
+      coin1FriendlyName: 'BTC'
+    },
+    XZECXXBT: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
+      persuadeToBalance: 1,
+      volume: new BigNumber('0.04'), // min 0.02
+      active: true,
+      coin0: 'XZEC',
+      coin1: 'XXBT',
+      profit: new BigNumber(0),
+      buyPerHour: 2,
+      coin0FriendlyName: 'ZEC',
+      coin1FriendlyName: 'BTC'
+    },
+    BCHXBT: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
+      persuadeToBalance: 1,
+      volume: new BigNumber('0.025'), // min0.025
+      active: true,
+      coin0: 'BCH',
+      coin1: 'XXBT',
+      profit: new BigNumber(0),
+      buyPerHour: 2,
+      coin0FriendlyName: 'BCH',
+      coin1FriendlyName: 'BTC'
+    },
+    BCHUSD: {
+      changeToTrend: new BigNumber('1.5'),
+      changeToChangeTrend: new BigNumber('0.5'),
+      persuadeToBalance: 1,
+      volume: new BigNumber('0.025'), // min0.025
+      active: true,
+      coin0: 'BCH',
+      coin1: 'ZUSD',
+      profit: new BigNumber(0),
+      buyPerHour: 2,
+      coin0FriendlyName: 'BCH',
+      coin1FriendlyName: 'USD'
+    },
+
+
+
+
+
+  },
 })
 // eslint-disable-next-line prefer-const
 export let store = createStore()

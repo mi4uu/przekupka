@@ -16,6 +16,20 @@ export function Log({store,pair}:{store:IState,pair:string}){
       <h5>Log</h5>
       <br />
 
+
+      <div className='p-field p-grid'>
+        <div className='p-col-fixed' style={{ width: '200px' }}>
+          Profit
+        </div>
+
+        <div className='p-col'> </div>
+        <div className='p-col-fixed' style={{ width: '130px' }}>
+          <span className='p-tag gold bigger '>
+            {store.pairs[pair].profit}  
+          </span>
+     
+        </div>
+      </div>
       <div className='p-field p-grid'>
         <div className='p-col-fixed' style={{ width: '200px' }}>
           Highest price
@@ -47,7 +61,7 @@ export function Log({store,pair}:{store:IState,pair:string}){
         </div>
       </div>
       <div className='p-field p-grid'>
-        <div className='p-col-fixed lastTransactionPrice' style={{ width: '200px' }}>
+        <div className='p-col-fixed ' style={{ width: '200px' }}>
           Last transaction price
         </div>
         <div className='p-col '>{log.lastTrasnactionPrice}</div>
@@ -58,13 +72,54 @@ export function Log({store,pair}:{store:IState,pair:string}){
         </div>
         <div className='p-col'>{log.lowest}</div>
         <div className='p-col-fixed' style={{ width: '130px' }}>
-          <span className='p-tag green bigger lastTransactionPrice'>
+          <span className='p-tag  bigger green'>
             {calculatePercentage(new BigNumber(log.lowest), new BigNumber(log.lastTrasnactionPrice!)).toFixed(2)} %
           </span>
         
         </div>
       </div>
     
+      <div className='p-field p-grid'>
+        <div className='p-col-fixed' style={{ width: '200px' }}>
+          Market liquidity
+        </div>
+        <div className='p-col'>{log.lowest}</div>
+        <div className='p-col-fixed' style={{ width: '130px' }}>
+          <span className='p-tag  bigger'>
+            {calculatePercentage(
+              new BigNumber(store.ticks[store.ticks.length-1].pairs[pair].a[0])
+              , 
+              new BigNumber(store.ticks[store.ticks.length-1].pairs[pair].b[0])
+            ).toFixed(2)} %
+          </span>
+        
+        </div>
+      </div>
+      <div className='p-field p-grid'>
+        <div className='p-col-fixed' style={{ width: '200px' }}>
+          Ask for:
+        </div>
+        <div className='p-col'> {  store.ticks[store.ticks.length-1].pairs[pair].a[0]}</div>
+        <div className='p-col-fixed' style={{ width: '130px' }}>
+         
+        </div>
+      </div>
+      <div className='p-field p-grid'>
+        <div className='p-col-fixed' style={{ width: '200px' }}>
+          Bid For:
+        </div>
+        <div className='p-col'>  {store.ticks[store.ticks.length-1].pairs[pair].b[0]} </div>
+        <div className='p-col-fixed' style={{ width: '130px' }}>
+          
+   
+        
+        </div>
+      </div>
+    
+
+
+
+
       <div className='p-field p-grid'>
         <div className='p-col-fixed' style={{ width: '200px' }}>
           Is trying to buy ({log.processData.buy?'Y':'N'})
@@ -110,16 +165,7 @@ export function Log({store,pair}:{store:IState,pair:string}){
       
      
 
-      <div className='p-field p-grid'>
-        <div className='p-col-fixed' style={{ width: '200px' }}>
-         Is buy highly not progitalbe 
-        </div>
-        <div className='p-col'>
-          {log.buyHighlyNotProfitable && <span className='p-tag  bigger green'>Yes</span>}
-          {!log.buyHighlyNotProfitable && <span className='p-tag gray'>No</span>}
-        </div>
-      </div>
-
+    
 
       
       <div className='p-field p-grid'>
@@ -132,15 +178,7 @@ export function Log({store,pair}:{store:IState,pair:string}){
         </div>
       </div>
       
-      <div className='p-field p-grid'>
-        <div className='p-col-fixed' style={{ width: '200px' }}>
-        sellHighlyNotProfitable
-        </div>
-        <div className='p-col'>
-          {log.sellHighlyNotProfitable && <span className='p-tag  bigger green'>Yes</span>}
-          {!log.sellHighlyNotProfitable && <span className='p-tag gray'>No</span>}
-        </div>
-      </div>
+   
       <div className='p-field p-grid'>
         <div className='p-col-fixed' style={{ width: '200px' }}>
           Wait to confirm trade

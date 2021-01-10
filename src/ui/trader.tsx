@@ -6,6 +6,7 @@ import Params from './params'
 import { Log } from './log'
 import { IState, ITick } from '.'
 import ToSell from './toSell'
+import { Panel } from 'primereact/panel'
 export default function trader({ pair, store }: { pair: string; store: IState }) {
   const log = store.tradeVars[pair]
   if (store.ticks.length === 0 || !log) return null
@@ -19,7 +20,6 @@ export default function trader({ pair, store }: { pair: string; store: IState })
     }
   })
   const transactions = Object.values(store.closedTransactions)
-
     .filter((t) => t.descr.pair === pair || t.descr.pair === store.assetPairs[pair]?.altname)
     .map((t) => ({
       ...t.descr,
@@ -70,6 +70,14 @@ export default function trader({ pair, store }: { pair: string; store: IState })
   const basicData = {
     labels: labels,
     datasets: [
+      {
+        label: 'price',
+        data: lastPrices,
+        fill: false,
+        pointBorderWidth: 0,
+        radius: 0,
+        borderColor: '#42A5F5',
+      },
       {
         label: 'highest',
         data: labels.map((_) => log.highest),
@@ -123,12 +131,7 @@ export default function trader({ pair, store }: { pair: string; store: IState })
         borderWidth: 3,
         borderDash: [2, 5],
       },
-      {
-        label: 'price',
-        data: lastPrices,
-        fill: false,
-        borderColor: '#42A5F5',
-      },
+     
       {
         label: 'buy',
         data: buyData,
@@ -170,18 +173,34 @@ export default function trader({ pair, store }: { pair: string; store: IState })
   }
   return (
     <>
-      <Chart
-        type='line'
-        data={basicData}
-        style={{ height: 400 }}
-        options={{
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: {
-            duration: 0,
-          },
-        }}
-      />
+      <Panel header={'chart'} toggleable collapsed={false}>
+        <Chart
+          type='line'
+          data={basicData}
+          style={{ height: 400 }}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+              duration: 0,
+            },
+            scales: {
+              yAxes:{
+                ticks:{
+                  sampleSize:10
+                }
+              },
+              xAxes:{
+                ticks:{
+                  sampleSize:10
+                }
+              }
+            }
+           
+          }}
+        />
+      
+      </Panel>
       <div className='p-fluid p-grid'>
         <div className='p-field p-col-12 p-md-4'>
           <ToSell pair={pair} store={store} />

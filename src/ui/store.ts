@@ -5,7 +5,7 @@ export const initialState: IState = {
   balance: {},
   pairs: {},
   ticks: [],
-  closedTransactions: [],
+  closedTransactions: {},
   assetPairs: {},
   tradeVars: {},
   toSell: {},

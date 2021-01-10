@@ -61,6 +61,9 @@ interface IPairs {
     active: boolean
     coin0: string
     coin1: string
+    profit: string
+    coin0FriendlyName: string
+    coin1FriendlyName: string
   }
 }
 interface ITick {

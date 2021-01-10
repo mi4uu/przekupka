@@ -61,6 +61,10 @@ export default function layout() {
     const pid = setInterval(() => fetchTradeVars(dispatch), 6000)
     return () => clearInterval(pid)
   }, [])
+  useEffect(() => {
+    const pid = setInterval(() => fetchPairs(dispatch), 10000)
+    return () => clearInterval(pid)
+  }, [])
   return (
     <>
       <Topbar store={store} />

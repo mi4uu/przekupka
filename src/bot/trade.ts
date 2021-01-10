@@ -51,7 +51,11 @@ export const createTradeVars = (pair: string) => {
     wait: 0,
     lastTransactionId: '',
   }
+  const altName = Object.entries(store.assetPairs)
+    .filter(([k, v]) => v.altname === pair)
+    .map(([k, v]) => k)[0]
   if( !store.toSell[pair]) store.toSell[pair] = []
+  if (altName && !store.toSell[altName]) store.toSell[altName] = []
 }
 
 export const trade = (pair: string) => {
@@ -76,11 +80,11 @@ export const trade = (pair: string) => {
     vars.lastTransactions,
   )
   vars.processData = result
-  if (price.isGreaterThan(vars.highest)) {
-    vars.highest = price
+  if (askPrice.isGreaterThan(vars.highest)) {
+    vars.highest = askPrice
   }
-  if (price.isLessThan(vars.lowest)) {
-    vars.lowest = price
+  if (bidPrice.isLessThan(vars.lowest)) {
+    vars.lowest = bidPrice
   }
   const balanceCoin0 = new BigNumber(store.balance[store.pairs[pair].coin0])
   const balanceCoin1 = new BigNumber(store.balance[store.pairs[pair].coin1])
@@ -106,33 +110,34 @@ export const trade = (pair: string) => {
       }
     } else {
       vars.limitBuyPerHourReached=true
+      vars.buy = false
     
     }
   } else {
     vars.cantAffordToBuy=true
+    vars.buy = false
 
   }
   
   // did we buy anything to sell ?
-  const minProfit = price.multipliedBy(pairParams.changeToTrend.dividedBy(100))
-  if (store.toSell[pair].filter((p) => p.value.isLessThan(price.plus(minProfit))).length > 0){
-    vars.noAssetsToSell=false
-    if (balanceCoin0.isGreaterThan(store.pairs[pair].volume)){
-      
+  const minProfit = bidPrice.multipliedBy(pairParams.changeToTrend.dividedBy(100))
+  if (store.toSell[pair].filter((p) => p.value.isLessThan(bidPrice.plus(minProfit))).length > 0) {
+    vars.noAssetsToSell = false
+    if (balanceCoin0.isGreaterThan(store.pairs[pair].volume)) {
       if (result.sell) {
         vars.sell = shouldSellNow(
           bidPrice,
           vars,
           vars.lastTrasnactionPrice,
-          pairParams.changeToTrend, 
+          pairParams.changeToTrend,
           pairParams.changeToChangeTrend,
           () => sellFn(pair, bidPrice, vars),
         )
       }
-    }  
+    }
   } else {
-    vars.noAssetsToSell=true
-
+    vars.noAssetsToSell = true
+    vars.sell  =  false
   }
 }
 export const startTrading = () => {

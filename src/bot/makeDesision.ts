@@ -27,6 +27,14 @@ export const shouldSellNow = (
     return false
   }
   if (!notProfitable && diffToHighestPrice.isLessThanOrEqualTo(risk.multipliedBy(-1))) {
+    console.log(
+      JSON.stringify({
+        diffToLastPrice: calculatePercentage(price, lastTrasnactionPrice),
+        minProfit,
+        price,
+        lastTrasnactionPrice,
+      }),
+    )
     sellFromMarket()
 
     return false
@@ -53,17 +61,12 @@ export const shouldBuyNow = (
   //  +chalk.blue(risk.toFixed(2)))
 
   if (highlyNotProfitable) {
-    vars.buyHighlyNotProfitable =highlyNotProfitable
+    vars.buyHighlyNotProfitable = highlyNotProfitable
     vars.lowest = price
     return false
   }
-  console.log(JSON.stringify({
-    notProfitable,
-    diffToLowestPrice,
-    isGreaterThanOrEqualTo:risk
-  }))
+
   if (!notProfitable && diffToLowestPrice.isGreaterThanOrEqualTo(risk)) {
-    
     buyFromMarket()
     return false
   }

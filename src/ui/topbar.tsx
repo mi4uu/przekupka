@@ -11,8 +11,18 @@ const jump = (h:string)=>{
   window.scrollTo(0, top )                        //Go there directly or some transition
 }
 export default function TopBar({ store }: { store: IState }) {
-
-
+  let profit = new BigNumber(0)
+  if(store.pairs && store.ticks)
+    Object.entries(store.pairs).map(([pair,v])=>{
+      if(v.coin1!==primaryCoin)
+      {
+        const traidingPair =  Object.entries(store.pairs).filter(([p_,v_])=>v_.coin0===v.coin1).map(([p_])=>p_)[0]
+        const lastPrice = store.ticks[store.ticks.length-1]?.pairs[traidingPair].c[0]
+        if(lastPrice)
+          profit = profit.plus((new BigNumber(v.profit)).multipliedBy(new BigNumber(lastPrice)))
+      } else 
+        profit = profit.plus(new BigNumber(v.profit))
+    })
   return <div className="topBar p-d-flex p-p-3 card p-jc-center p-shadow-1">
     {Object.entries(store.balance).map(([coin, value], i, { length }) =>{
       const pair = Object.entries(store.pairs).filter(([k,v])=>v.coin0===coin)
@@ -27,7 +37,13 @@ export default function TopBar({ store }: { store: IState }) {
               label={new BigNumber(value).multipliedBy(new BigNumber(price)).toFixed(2)}
               className="p-button-success" />
             <Button type="button" label={'$'} /></>}
+          {coin===primaryCoin && <> 
+            <Button type="button" 
+              label={profit.toFixed(2)}
+              className="p-button-success" />
+            <Button type="button" label={'profit'} /></>}
         </div>
+        
       )}
     )
     

@@ -31,3 +31,24 @@ body {
 .lastTransactionPrice{
     border-bottom:3px solid rgb(102, 226, 1);
 }
+.gold {
+    background-color: gold!important;
+    color:black !important;
+}
+.header {
+    font-size:16px;
+    display:flex;
+align-items:center;
+}
+.header .bigger {
+    font-size:14px !important;
+
+}
+.header .p-tag {
+    font-size:14px !important;
+}
+.header .part {
+    width:150px;
+    display:inline-block;
+    margin-left:20px
+}

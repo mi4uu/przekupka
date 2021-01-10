@@ -6,7 +6,7 @@ import { checkBalance } from './checkBalance'
 import { makePrivateCall } from './makePrivateCall'
 import { store } from './serverStore'
 export default function fetchData() {
-  axios.get('https://api.kraken.com/0/public/AssetPairs').then((result) => (store.assetPairs = result.data.result))
+ 
 
   const setBalance = () => checkBalance().then((result) => (store.balance = result.result))
   setBalance()
@@ -15,7 +15,7 @@ export default function fetchData() {
     axios.get('https://api.kraken.com/0/public/Ticker?pair=' + Object.keys(store.pairs).join(',')).then((results) => {
       const ticks = store.ticks
       // ( 30 = minute ) *60 = hour )
-      if (ticks.length > 30 * 60 * 24) ticks.shift()
+      if (ticks.length > 30 * 60 * 24) ticks.shift()     
       ticks.push({ timestamp: moment().unix(), pairs: results.data.result })
       store.ticks = ticks
       // trade
@@ -44,19 +44,32 @@ export default function fetchData() {
               console.log(transaction.descr.type[0])
               if (transaction.descr.type === 'sell') {
                 const sold = store.toSell[pair]
-                  .sort((a, b) => b.value.minus(a.value).toNumber())
-                  .filter((p) => p.value.isLessThan(price))[0]
+                  .sort((a, b) => b.value.minus(a.value).toNumber())[0]
+                const cost = new BigNumber(transaction.cost).minus(new BigNumber(transaction.fee).multipliedBy(2))
+                console.log(`cost = ${transaction.cost} - (${transaction.fee} * 2)`)
+                const profit = cost.minus(new BigNumber(sold.value).multipliedBy(transaction.vol))
+                console.log(`profit = cost - sold.value(${sold.value.toFixed(8)} * transaction.volume(${transaction.vol}) )`)
                 store.toSell[pair] = store.toSell[pair].filter((p) => p.id !== sold.id)
-                const profit = new BigNumber(transaction.cost).minus(new BigNumber(transaction.fee).multipliedBy(2))
 
                 store.pairs[pair].profit = store.pairs[pair].profit.plus(profit)
+
                 console.log(JSON.stringify({ profit, profitSum: store.pairs[pair].profit.plus(profit) }))
               } else {
+                const altName = Object.entries(store.assetPairs)
+                  .filter(([k, v]) => v.altname === pair)
+                  .map(([k, v]) => k)[0]
+
                 store.toSell[pair].push({
                   value: new BigNumber(price),
                   id: store.tradeVars[pair].lastTransactionId,
                   timestamp: moment().unix(),
                 })
+                if (altName)
+                  store.toSell[altName].push({
+                    value: new BigNumber(price),
+                    id: store.tradeVars[pair].lastTransactionId,
+                    timestamp: moment().unix(),
+                  })
               }
             } else {
               console.log({ lastStatus, transaction: JSON.stringify(transaction) })
@@ -80,23 +93,90 @@ const getClosedOrders = async () => {
   if (data.error.length > 0) console.log(data.error)
   if (!data.result) console.log(data)
   store.closedTransactions = data.result.closed
-  if (firstRun) {
+  if (firstRun) {  
     firstRun = false
-    Object.entries(store.closedTransactions)
-      .filter(([k, t]) => t.status === 'closed' && t.descr.type === 'buy')
-      .map(([k, t]) => {
-        const pair = t.descr.pair
-        const price = t.price
-        if (!store.toSell[pair]) store.toSell[pair] = []
-        store.toSell[pair].push({
-          value: new BigNumber(price),
-          timestamp: t.opentm,
-          id: k,
+    axios.get('https://api.kraken.com/0/public/AssetPairs').then((result) =>{
+      store.assetPairs = result.data.result
+      Object.entries(store.closedTransactions)
+        .filter(([k, t]) => t.status === 'closed' && t.descr.type === 'buy')
+        .map(([k, t]) => {
+          const pair = t.descr.pair
+          const price = t.price
+          const altName = Object.entries(store.assetPairs)
+ 
+            .filter(([k, v]) => v.altname === pair)
+ 
+            .map(([k, v]) => k)[0]
+  
+          console.log(`altname for ${pair} is ${altName}`)
+          if (!store.toSell[pair]) store.toSell[pair] = []
+          if (altName && !store.toSell[altName]) store.toSell[pair] = []
+          store.toSell[pair].push({
+            value: new BigNumber(price),
+            timestamp: t.opentm,
+            id: k,
+          })
+          if (altName){
+            if(!store.toSell[altName]) store.toSell[altName]=[]
+            store.toSell[altName].push({
+              value: new BigNumber(price),
+              timestamp: t.opentm,
+              id: k,
+            })}
         })
-      })
+        //remove sold
+      Object.entries(store.closedTransactions)
+        .filter(([k, t]) => t.status === 'closed' && t.descr.type === 'sell')
+        .map(([k, t]) => {
+          const pair = t.descr.pair
+          const price = t.price
+          // stupid kraken
+          const altName = Object.entries(store.assetPairs)
+ 
+            .filter(([k, v]) => v.altname === pair)
+ 
+            .map(([k, v]) => k)[0]
+          if (store.toSell[pair]) {
+            const sold = store.toSell[pair]
+              .sort((a, b) => b.value.minus(a.value).toNumber())
+              .filter((p) => p.value.isLessThan(new BigNumber(price)))[0]
+            if (sold) {
+              const pairName = store.pairs[pair]?pair:altName
+              store.toSell[pair] = store.toSell[pair].filter((p) => p.id !== sold.id)
+
+              const cost = new BigNumber(t.cost).minus(new BigNumber(t.fee).multipliedBy(2))
+              const profit = cost.minus(new BigNumber(sold.value).multipliedBy(t.vol))
+              if(profit.isGreaterThan(0)) console.log(`setting profit for ${pair}(${altName}, ${pairName}) to ${profit.toFixed(2)}`)
+              store.pairs[pairName].profit = store.pairs[pairName].profit .plus(profit)
+            }
+          }
+          if (altName && store.toSell[altName]) {
+            const pairName = store.pairs[pair]?pair:altName
+
+            const sold = store.toSell[altName]
+              .sort((a, b) => b.value.minus(a.value).toNumber())
+              .filter((p) => p.value.isLessThan(new BigNumber(price)))[0]
+            if (sold) {
+              store.toSell[altName] = store.toSell[altName].filter((p) => p.id !== sold.id)
+              
+              const cost = new BigNumber(t.cost).minus(new BigNumber(t.fee).multipliedBy(2))
+              const profit = cost.minus(new BigNumber(sold.value).multipliedBy(t.vol))
+              if(profit.isGreaterThan(0)) console.log(`setting profit for ${altName} to ${profit.toFixed(2)}`)
+
+              store.pairs[pairName].profit = store.pairs[pairName].profit .plus(profit)
+            }
+          }
+        }) 
+
+      
+    })
+  
   }
 }
-getClosedOrders()
+setTimeout(() => {
+  getClosedOrders()
+}, 3000)
+
 
 setInterval(() => {
   getClosedOrders()
@@ -113,3 +193,25 @@ setInterval(() => {
   getTradeBalance()
 }, 100000)
  
+setInterval(() => {
+  // lets check if pair cant sell anything for hours
+  const hours = 8
+  const filterBeforeThisTime = moment().subtract(hours,'hours').unix()
+  Object.entries(store.pairs).map(([pair,pairConfig])=>{
+    const altName = store.assetPairs[pair]?.altname
+    const lastTransactions = Object.entries(store.closedTransactions)
+      .filter(([transactionId, transaction])=>transaction.descr.pair===pair || transaction.descr.pair===altName)
+      .map(([transactionId, transaction])=>transaction)
+      .filter(t=>t.status==='closed')
+      .filter(t=>t.opentm>filterBeforeThisTime)
+    if(lastTransactions.length === 0){
+      const currentPrice = new BigNumber(store.ticks[store.ticks.length-1].pairs[pair].c[0])
+      const newMax = currentPrice.plus(currentPrice.multipliedBy(1.02))
+      const newMin = currentPrice.minus(currentPrice.multipliedBy(1.02))
+      store.tradeVars[pair].lastTrasnactionPrice = currentPrice
+      store.tradeVars[pair].highest = newMax
+      store.tradeVars[pair].lowest = newMin
+
+    }
+  })
+}, 1000*60*60)
