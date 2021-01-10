@@ -1,12 +1,14 @@
 import axios from 'axios'
+import { IState } from '.'
 
-export const initialState:IState = {
-  balance:{},
-  pairs:{},
-  ticks:[],
-  closedTransactions:[],
-  assetPairs:{},
-  tradeVars:{}
+export const initialState: IState = {
+  balance: {},
+  pairs: {},
+  ticks: [],
+  closedTransactions: [],
+  assetPairs: {},
+  tradeVars: {},
+  toSell: {},
 }
 
 export const reducer=(state:IState,action:IAction):IState=>{
@@ -35,6 +37,9 @@ export const reducer=(state:IState,action:IAction):IState=>{
   if(action.type==='SET_TRADEVARS'){
     return {...state, tradeVars:action.payload}
   }
+  if (action.type === 'SET_TOSELL') {
+    return { ...state, toSell: action.payload }
+  }
   return state
 }
 
@@ -47,3 +52,6 @@ export const fetchTicks = (dispatch:React.Dispatch<IAction>)=>axios.get('/ticks'
 export const fetchTransactions = (dispatch:React.Dispatch<IAction>)=>axios.get('/transactions').then(results=> dispatch({type:'SET_TRANSACTIONS', payload:results.data}) )
 export const fetchAssetPairs = (dispatch:React.Dispatch<IAction>)=>axios.get('/assetPairs').then(results=> dispatch({type:'SET_ASSETPAIRS', payload:results.data}) )
 export const fetchTradeVars = (dispatch:React.Dispatch<IAction>)=>axios.get('/tradeVars').then(results=> dispatch({type:'SET_TRADEVARS', payload:results.data}) )
+
+export const fetchToSell = (dispatch: React.Dispatch<IAction>) =>
+  axios.get('/toSell').then((results) => dispatch({ type: 'SET_TOSELL', payload: results.data }))

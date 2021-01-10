@@ -3,7 +3,16 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { ToggleButton } from 'primereact/togglebutton'
 import { InputNumber } from 'primereact/inputnumber'
-
+import axios from 'axios'
+import { IState } from '.'
+const changeParam = async (store:IState, pair:string, param:string, value:unknown)=>{
+  const values = {
+    ...store.pairs[pair],
+    [param]:value
+  }
+  const {data}= await axios.post('/pair', {pair,values})
+  console.log(data)
+}
 export default function Params({store,pair}:{store:IState,pair:string}){
   const pairData = store.pairs[pair]
   return    <div className="card">
@@ -15,7 +24,7 @@ export default function Params({store,pair}:{store:IState,pair:string}){
         <ToggleButton  
           id={`${pair}_persuade`}
           checked={pairData.active }
-          onChange={(e) => console.log({value1: e.value})}
+          onChange={(e) => changeParam(store, pair, 'active', e.value)}
         />
       </div>
 
@@ -26,8 +35,9 @@ export default function Params({store,pair}:{store:IState,pair:string}){
       <div className="p-col">
         <InputNumber 
           id={`${pair}_volume`}
+          step={0.001}
           value={parseFloat(pairData.volume) }
-          onValueChange={(e) => console.log({value1: e.value})}
+          onValueChange={(e) => changeParam(store, pair, 'volume', e.value)}
           showButtons  />
       </div></div>
     <div className="p-field p-grid">
@@ -36,8 +46,9 @@ export default function Params({store,pair}:{store:IState,pair:string}){
       <div className="p-col">
         <InputNumber 
           id={`${pair}_changeToTrend`}
+          step={0.1}
           value={parseFloat(pairData.changeToTrend) }
-          onValueChange={(e) => console.log({value1: e.value})}
+          onValueChange={(e) => changeParam(store, pair, 'changeToTrend', e.value)}
           showButtons  />
       </div></div>
 
@@ -48,7 +59,8 @@ export default function Params({store,pair}:{store:IState,pair:string}){
         <InputNumber   
           id={`${pair}_changeToChangeTrend`}
           value={parseFloat(pairData.changeToChangeTrend) }
-          onValueChange={(e) => console.log({value1: e.value})}
+          step={0.1}
+          onValueChange={(e) => changeParam(store, pair, 'changeToChangeTrend', e.value)}
           showButtons  />
       </div></div>
 
@@ -60,7 +72,8 @@ export default function Params({store,pair}:{store:IState,pair:string}){
         <InputNumber 
           id={`${pair}_persuade`}
           value={pairData.persuadeToBalance }
-          onValueChange={(e) => console.log({value1: e.value})}
+          step={0.1}
+          onValueChange={(e) => changeParam(store, pair, 'persuadeToBalance', e.value)}
           showButtons  />
       </div></div>
      

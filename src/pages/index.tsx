@@ -12,6 +12,7 @@ import {
   fetchPairs,
   fetchTick,
   fetchTicks,
+  fetchToSell,
   fetchTradeVars,
   fetchTransactions,
   initialState,
@@ -46,6 +47,10 @@ export default function layout() {
     const pid = setInterval(() => fetchTick(dispatch), 6000)
     return () => clearInterval(pid)
   }, [])
+  useEffect(() => {
+    const pid = setInterval(() => fetchToSell(dispatch), 10000)
+    return () => clearInterval(pid)
+  }, [])
 
   useEffect(() => {
     fetchTransactions(dispatch)
@@ -53,7 +58,7 @@ export default function layout() {
     return () => clearInterval(pid)
   }, [])
   useEffect(() => {
-    const pid = setInterval(() => fetchTradeVars(dispatch), 1000)
+    const pid = setInterval(() => fetchTradeVars(dispatch), 6000)
     return () => clearInterval(pid)
   }, [])
   return (

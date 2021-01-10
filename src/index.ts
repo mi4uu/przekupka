@@ -147,7 +147,9 @@ const watch = async () => {
   transactions.map((transaction) => console.log(chalk.bgBlack(JSON.stringify(transaction))))
 
   console.log(
-    chalk`RUN PARAMS: [minChange: {blue ${minChange}}] [minChangeTrend: {blue ${minChangeToConsiderChangeOfTrend}}]  [howMuchToTrade: {blue ${howMuchToTrade}}]  [pair: {blue ${pair}}]`,
+    chalk`RUN PARAMS: [minChange: {blue ${minChange}}] 
+    [minChangeTrend: {blue ${minChangeToConsiderChangeOfTrend}}]
+      [howMuchToTrade: {blue ${howMuchToTrade}}]  [pair: {blue ${pair}}]`,
   )
 
   console.log(

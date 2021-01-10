@@ -53,13 +53,15 @@ interface closedTransactions {
     close: string;
   }
 interface IPairs {
-    [pair:string]:{
-        changeToTrend:string
-        changeToChangeTrend:string
-        persuadeToBalance:number
-        volume:string
-        active:boolean
-    }
+  [pair: string]: {
+    changeToTrend: string
+    changeToChangeTrend: string
+    persuadeToBalance: number
+    volume: string
+    active: boolean
+    coin0: string
+    coin1: string
+  }
 }
 interface ITick {
     pairs:{
@@ -79,16 +81,27 @@ interface ITick {
 
 }
 interface IState {
-    tradeVars:{
-        [pair:string]:ITradeVars
-    }
-    balance:{
-        [key:string]:string
-    }
-    pairs:IPairs
-    ticks:ITick[],
-    closedTransactions:closedTransactions[],
-    assetPairs:IAssetPairs
+  toSell: {
+    [pair: string]: {
+      value: string
+      id: string
+      timestamp: number
+    }[]
+  }
+  tradeVars: {
+    [pair: string]: ITradeVars
+  }
+  balance: {
+    [key: string]: string
+  }
+  pairs: IPairs
+  ticks: ITick[]
+  closedTransactions:   {
+    [id:   string]:   closedTransactions
+  
+  
+  }
+  assetPairs: IAssetPairs
 }
 type IAction = 
 | {

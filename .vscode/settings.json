@@ -14,6 +14,10 @@
 
     },
     "eslint.format.enable": true,
-    "prettier.printWidth": 120
+    "prettier.printWidth": 120,
+    "editor.formatOnSave": true,
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
     
 }
