@@ -1,4 +1,6 @@
 ![Baba ze straganem](screenshot.png?raw=true "przekupka 1.0")
+![Baba ze straganem](screenshot1.png?raw=true "przekupka 1.0")
+
 
 **** INSTALL AND RUN:
 

@@ -3,8 +3,7 @@ import bodyParser from 'body-parser'
 import next from 'next'
 import fetchData from './api/fetchData'
 import auth from './auth'
-// @ts-ignore
-import greenlock from 'greenlock-express'
+
 
 const dev = process.env.NODE_ENV !== 'production'
 const app = next({ dev })
@@ -68,23 +67,8 @@ app.prepare().then(() => {
   server.all('*', (req: Request, res: Response) => {
     return handle(req, res)
   })
-  greenlock
-    
-    .init({
-      packageRoot: __dirname,
-      configDir: './greenlock.d',
 
-      // contact for security and critical bug notices
-      maintainerEmail: 'michal.lipinski@gmail.com',
-
-      // whether or not to run at cloudscale
-      cluster: false,
-    })
-  // Serves on 80 and 443
-  // Get's SSL certificates magically!
-    .serve(server)
-
-  //server.listen(port, '0.0.0.0', () => console.log(`server is listening on ${port} port`))
+  server.listen(port, '0.0.0.0', () => console.log(`server is listening on ${port} port`))
   fetchData()
   startTrading()
 })
