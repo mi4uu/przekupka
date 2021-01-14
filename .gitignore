@@ -2,3 +2,6 @@
 .next
 node_modules
 src/api/config.ts
+.cache
+.history
+dist

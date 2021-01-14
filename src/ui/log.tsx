@@ -7,7 +7,7 @@ import { calculatePercentage } from '../bot/calculatePercentage'
 
 export function Log({store,pair}:{store:IState,pair:string}){
   if(!store.ticks.length)
-    return false
+    return null
   const lastTick = store.ticks[store.ticks.length - 1].pairs[pair]
   const log = store.tradeVars[pair]
   const price =lastTick.c[0]
@@ -37,7 +37,7 @@ export function Log({store,pair}:{store:IState,pair:string}){
 
         <div className='p-col'>{log.highest}</div>
         <div className='p-col-fixed' style={{ width: '130px' }}>
-          <span className='p-tag red bigger '>
+          <span className='p-tag green bigger '>
             + {calculatePercentage(new BigNumber(log.highest), new BigNumber(log.lastTrasnactionPrice!)).toFixed(2)} %
           </span>
      
@@ -49,13 +49,13 @@ export function Log({store,pair}:{store:IState,pair:string}){
         </div>
         <div className='p-col'>{price}</div>
         <div className='p-col-fixed' style={{ width: '200px' }}>
-          <span className='p-tag green bigger '>
+          <span className='p-tag red bigger '>
             {calculatePercentage(new BigNumber(log.lowest), new BigNumber(price)).toFixed(2)} %
           </span>
           <span className='p-tag  bigger '>
             {calculatePercentage(new BigNumber(lastTick.c[0]), new BigNumber(log.lastTrasnactionPrice!)).toFixed(2)} % 
           </span>
-          <span className='p-tag red bigger  '>
+          <span className='p-tag green bigger  '>
             + {calculatePercentage(new BigNumber(log.highest), new BigNumber(price)).toFixed(2)} %
           </span>
         </div>
@@ -72,7 +72,7 @@ export function Log({store,pair}:{store:IState,pair:string}){
         </div>
         <div className='p-col'>{log.lowest}</div>
         <div className='p-col-fixed' style={{ width: '130px' }}>
-          <span className='p-tag  bigger green'>
+          <span className='p-tag  bigger red'>
             {calculatePercentage(new BigNumber(log.lowest), new BigNumber(log.lastTrasnactionPrice!)).toFixed(2)} %
           </span>
         

@@ -1,9 +1,9 @@
 import React, { useEffect, useReducer } from 'react'
 
-import 'primereact/resources/themes/saga-blue/theme.css'
 import 'primereact/resources/primereact.min.css'
 import 'primeicons/primeicons.css'
 import 'primeflex/primeflex.css'
+import 'primereact/resources/themes/mdc-dark-indigo/theme.css'
 
 import Topbar from '../ui/topbar'
 import {
@@ -20,6 +20,7 @@ import {
 } from '../ui/store'
 import Traders from '../ui/traders'
 import PrimeReact from 'primereact/utils'
+import '../ui/main.css'
 
 PrimeReact.ripple = true
 export default function layout() {
@@ -40,11 +41,11 @@ export default function layout() {
     fetchTicks(dispatch)
   }, [])
   useEffect(() => {
-    const pid = setInterval(() => fetchBalance(dispatch), 10000)
+    const pid = setInterval(() => fetchBalance(dispatch), 11000)
     return () => clearInterval(pid)
   }, [])
   useEffect(() => {
-    const pid = setInterval(() => fetchTick(dispatch), 6000)
+    const pid = setInterval(() => fetchTick(dispatch), 5000)
     return () => clearInterval(pid)
   }, [])
   useEffect(() => {
@@ -54,7 +55,7 @@ export default function layout() {
 
   useEffect(() => {
     fetchTransactions(dispatch)
-    const pid = setInterval(() => fetchTransactions(dispatch), 10000)
+    const pid = setInterval(() => fetchTransactions(dispatch), 9000)
     return () => clearInterval(pid)
   }, [])
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function layout() {
     return () => clearInterval(pid)
   }, [])
   useEffect(() => {
-    const pid = setInterval(() => fetchPairs(dispatch), 10000)
+    const pid = setInterval(() => fetchPairs(dispatch), 80000)
     return () => clearInterval(pid)
   }, [])
   return (

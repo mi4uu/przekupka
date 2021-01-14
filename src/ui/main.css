@@ -1,15 +1,22 @@
 html {
     font-size: 10px;
+  color:white;
+
 }
 body {
-    margin-top:100px
+    background-color:#1a1a1a;
+    font-family: 'PT Sans', sans-serif;
+
 }
+
 .topBar {
-    position: fixed;
-    width: 100vw;
+    background: #252526;
     z-index: 999;
-    background: white;
     top: 0px;
+    display:block;
+}
+.topBar .coin {
+    display:inline-block
 }
 .green {
     background-color: #6fcf00 !important;
@@ -39,6 +46,8 @@ body {
     font-size:16px;
     display:flex;
 align-items:center;
+padding:4px;
+    margin:1px;
 }
 .header .bigger {
     font-size:14px !important;
@@ -51,4 +60,24 @@ align-items:center;
     width:150px;
     display:inline-block;
     margin-left:20px
+}
+.trader {
+    margin:1px;
+    border:1px solid #999;
+    border-radius:5px;
+    background: #252526;
+}
+.header:hover {
+    background: #121213;
+
+}
+.chartButton {
+    padding:5px;
+    margin:10px;
+   border-radius:5px;
+   border-color:#1a1a1a;
+    text-align:center; 
+}
+table {
+    font-size: 10px;
 }

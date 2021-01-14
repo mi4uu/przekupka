@@ -1,3 +1,6 @@
 module.exports = {
-    useFileSystemPublicRoutes: true,
-  }
+  useFileSystemPublicRoutes: true,
+  typescript: {
+    transpileOnly: true,
+  },
+}

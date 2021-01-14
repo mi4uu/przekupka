@@ -106,30 +106,34 @@ interface IState {
   }
   assetPairs: IAssetPairs
 }
-type IAction = 
-| {
-    type:'SET_BALANCE'
-    payload: {
-        [key:string]:string
+type IAction =
+  | {
+      type: 'SET_BALANCE'
+      payload: {
+        [key: string]: string
+      }
     }
-}
-| {
-    type:'ADD_TICK'
-    payload:ITick
-}
-| {
-    type:'SET_TICKS'
-    payload:ITick[]
-}
-| {
-    type:'SET_PAIRS'
-    payload:IPairs
-}
-| {
-    type:'SET_TRANSACTIONS'
-    payload:closedTransactions[]
-}
-| {
-    type:'SET_ASSETPAIRS'
-    payload:IAssetPairs
-}
+  | {
+      type: 'ADD_TICK'
+      payload: ITick
+    }
+  | {
+      type: 'SET_TICKS'
+      payload: ITick[]
+    }
+  | {
+      type: 'SET_PAIRS'
+      payload: IPairs
+    }
+  | {
+      type: 'SET_TRANSACTIONS'
+      payload: closedTransactions[]
+    }
+  | {
+      type: 'SET_ASSETPAIRS'
+      payload: IAssetPairs
+    }
+  | {
+      type: 'SET_TOSELL'
+      payload: any
+    }

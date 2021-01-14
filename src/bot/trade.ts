@@ -6,6 +6,7 @@ import { ITradeVars } from '../api/serverStore'
 import { makeSellOfferInKraken } from '../api/makeSellOfferInKraken'
 import { makeBuyOfferInKraken } from '../api/makeBuyOfferInKraken'
 import moment from 'moment'
+import { calculatePercentage } from './calculatePercentage'
 
 export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars) => {
   console.log(pair, 'BUY!!!', price.toFixed(8))
@@ -80,11 +81,11 @@ export const trade = (pair: string) => {
     vars.lastTransactions,
   )
   vars.processData = result
-  if (askPrice.isGreaterThan(vars.highest)) {
-    vars.highest = askPrice
+  if (bidPrice.isGreaterThan(vars.highest) && calculatePercentage(bidPrice, vars.highest).abs().isLessThan(10)) {
+    vars.highest = bidPrice
   }
-  if (bidPrice.isLessThan(vars.lowest)) {
-    vars.lowest = bidPrice
+  if (askPrice.isLessThan(vars.lowest) && calculatePercentage(askPrice, vars.lowest).abs().isLessThan(10)) {
+    vars.lowest = askPrice
   }
   const balanceCoin0 = new BigNumber(store.balance[store.pairs[pair].coin0])
   const balanceCoin1 = new BigNumber(store.balance[store.pairs[pair].coin1])

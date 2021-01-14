@@ -21,11 +21,13 @@ export const shouldSellNow = (
   // + '% ' + 'will sell at <= '
   // +chalk.blue(risk.multipliedBy(-1).toFixed(2)))
 
-  if (highlyNotProfitable) {
-    vars.sellHighlyNotProfitable =highlyNotProfitable
+  if (highlyNotProfitable && calculatePercentage(price, vars.highest).abs().isLessThan(10)) {
+    vars.sellHighlyNotProfitable = highlyNotProfitable
     vars.highest = price
     return false
   }
+  if (notProfitable) return false
+
   if (!notProfitable && diffToHighestPrice.isLessThanOrEqualTo(risk.multipliedBy(-1))) {
     console.log(
       JSON.stringify({
@@ -60,12 +62,13 @@ export const shouldBuyNow = (
   //  +'%' + 'will buy at >= '
   //  +chalk.blue(risk.toFixed(2)))
 
-  if (highlyNotProfitable) {
+  if (highlyNotProfitable && calculatePercentage(price, vars.lowest).abs().isLessThan(10)) {
     vars.buyHighlyNotProfitable = highlyNotProfitable
     vars.lowest = price
     return false
   }
 
+  if (notProfitable) return false
   if (!notProfitable && diffToLowestPrice.isGreaterThanOrEqualTo(risk)) {
     buyFromMarket()
     return false
