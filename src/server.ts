@@ -1,85 +1,83 @@
-import express, { Request, Response } from 'express'
+import express, {Request, Response} from 'express'
 import bodyParser from 'body-parser'
-import fetchData from './api/fetchData'
+import fetchData from './api/fetch-data'
 import auth from './auth'
-import { JsonMix } from '@creately/jsonmix'
-import fs from 'fs'
-process.on('uncaughtException', function (err) {
-  console.log('##########################################################################################')
-  console.log(err)
-  console.log('##########################################################################################')
 
+process.on('uncaughtException', (error) => {
+  console.log('##########################################################################################')
+  console.log(error)
+  console.log('##########################################################################################')
 })
 
 const dev = process.env.NODE_ENV !== 'production'
-//const app = next({ dev })
-//const handle = app.getRequestHandler()
-import { IPair, store } from './api/serverStore'
-import { startTrading, trade } from './bot/trade'
+
+import {IPair, store} from './api/server-store'
+import {startTrading, trade} from './bot/trade'
 import BigNumber from 'bignumber.js'
 
 const args = process.argv.slice(2)
-const port = args[0] ? parseInt(args[0]) : 3000
+const port = args[0] ? Number.parseInt(args[0], 10) : 3000
 
-//app.prepare().then(() => {
+// App.prepare().then(() => {
 const server = express()
 server.use(auth)
 
 server.use(express.static('public'))
 server.use(bodyParser.json())
-server.get('/tick', (req: Request, res: Response) => {
-  res.send(store.ticks[store.ticks.length - 1])
+server.get('/tick', (_request: Request, response: Response) => {
+  response.send(store.ticks[store.ticks.length - 1])
 })
-server.get('/ticks', (req: Request, res: Response) => {
-
-  res.send(store.ticks)
- 
+server.get('/store', (_request: Request, response: Response) => {
+  response.send(store)
 })
-server.get('/sold', (req: Request, res: Response) => {
-  res.send(store.sold)
+server.get('/ticks', (_request: Request, response: Response) => {
+  response.send(store.ticks)
 })
-server.get('/transactions', (req: Request, res: Response) => {
-  res.send(store.closedTransactions)
+server.get('/sold', (_request: Request, response: Response) => {
+  response.send(store.sold)
 })
-server.get('/balance', (req: Request, res: Response) => {
-  res.send(store.balance)
+server.get('/transactions', (_request: Request, response: Response) => {
+  response.send(store.closedTransactions)
 })
-server.get('/assetPairs', (req: Request, res: Response) => {
-  res.send(store.assetPairs)
+server.get('/balance', (_request: Request, response: Response) => {
+  response.send(store.balance)
 })
-server.get('/pairs', (req: Request, res: Response) => {
-  res.send(store.pairs)
+server.get('/assetPairs', (_request: Request, response: Response) => {
+  response.send(store.assetPairs)
 })
-server.post('/pair', (req: Request, res: Response) => {
-  const { pair, values } = req.body as {
-      pair: string
-      values: IPair
-    }
+server.get('/pairs', (_request: Request, response: Response) => {
+  response.send(store.pairs)
+})
+server.post('/pair', (request: Request, response: Response) => {
+  const {pair, key, value} = request.body as {
+    pair: string
+    key: string
+    value: string
+  }
 
   store.pairs[pair] = {
     ...store.pairs[pair],
-    ...values,
-    changeToTrend: new BigNumber(values.changeToTrend),
-    changeToChangeTrend: new BigNumber(values.changeToChangeTrend),
-    volume: new BigNumber(values.volume), // min 50
+    [key]: value,
   }
 
-  res.send(store.pairs)
+  response.send(store.pairs)
 })
-server.get('/tradeVars', (req: Request, res: Response) => {
-  res.send(store.tradeVars)
+server.get('/tradeVars', (_request: Request, response: Response) => {
+  response.send(store.tradeVars)
 })
-server.get('/tradeBalance', (req: Request, res: Response) => {
-  res.send(store.tradeBalance)
+server.get('/tradeBalance', (_request: Request, response: Response) => {
+  response.send(store.tradeBalance)
 })
-server.get('/toSell', (req: Request, res: Response) => {
-  res.send(store.toSell)
+server.get('/toSell', (_request: Request, response: Response) => {
+  response.send(store.toSell)
 })
-// server.all('*', (req: Request, res: Response) => {
+// Server.all('*', (req: Request, res: Response) => {
 //   return handle(req, res)
 // })
 
-server.listen(port, '0.0.0.0', () => console.log(`server is listening on ${port} port`))
+server.listen(port, '0.0.0.0', () => {
+  console.log(`server is listening on ${port} port`)
+})
 fetchData()
 startTrading()
-//})
+// })

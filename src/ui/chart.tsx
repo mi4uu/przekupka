@@ -1,22 +1,17 @@
-import React, { useState } from 'react'
-import { Chart } from 'primereact/chart'
+import React, {useState} from 'react'
+import {Chart} from 'primereact/chart'
 import moment from 'moment'
-import Transactions from './transactions'
-import Params from './params'
-import { Log } from './log'
-import { IState, ITick } from '.'
-import ToSell from './toSell'
-import { Panel } from 'primereact/panel'
-import { Button } from 'primereact/button'
-export default function chart({ pair, store }: { pair: string; store: IState }) {
+
+import {IStore, ITick} from '../api/server-store'
+export default function chart({pair, store}: {pair: string; store: IStore}) {
   const log = store.tradeVars[pair]
   if (store.ticks.length === 0 || !log) return null
 
   let lastPrice: string
   const lastPrices = store.ticks.map((tick: ITick) => {
-    lastPrice = tick.pairs[pair].c[0]
+    lastPrice = tick.pairs[pair].c
     return {
-      y: tick.pairs[pair].c[0],
+      y: tick.pairs[pair].c,
       x: moment.unix(tick.timestamp).format('HH:mm:ss'),
     }
   })
@@ -30,7 +25,7 @@ export default function chart({ pair, store }: { pair: string; store: IState }) 
       fee: t.fee,
       time: t.opentm,
       date: moment.unix(t.opentm).format('YYYY-MM-DD HH:mm:ss'),
-      price: parseFloat(t.price) > 0 ? t.price : t.descr.price,
+      price: Number.parseFloat(t.price) > 0 ? t.price : t.descr.price,
     }))
     .sort((a, b) => b.time - a.time)
   const sellData = transactions
@@ -62,16 +57,18 @@ export default function chart({ pair, store }: { pair: string; store: IState }) 
     .sort()
     .map((l) => moment.unix(l).format('HH:mm:ss'))
   const willSellAt = log
-    ? parseFloat((log.highest as unknown) as string) -
-      parseFloat((log.highest as unknown) as string) * (parseFloat(store.pairs[pair].changeToChangeTrend) / 100)
+    ? Number.parseFloat((log.highest as unknown) as string) -
+      Number.parseFloat((log.highest as unknown) as string) *
+        (Number.parseFloat(store.pairs[pair].changeToChangeTrend) / 100)
     : 0
   const willBuyAt = log
-    ? parseFloat((log.lowest as unknown) as string) +
-      parseFloat((log.lowest as unknown) as string) * (parseFloat(store.pairs[pair].changeToChangeTrend) / 100)
+    ? Number.parseFloat((log.lowest as unknown) as string) +
+      Number.parseFloat((log.lowest as unknown) as string) *
+        (Number.parseFloat(store.pairs[pair].changeToChangeTrend) / 100)
     : 0
 
   const basicData = {
-    labels: labels,
+    labels,
     datasets: [
       {
         label: 'price',
@@ -177,50 +174,31 @@ export default function chart({ pair, store }: { pair: string; store: IState }) 
   const [opened, setOpened] = useState(false)
 
   return (
-    <>
-      <div className='chartButton red' onClick={() => setOpened(!opened)}>
-        {opened ? 'Hide chart' : 'Show chart'}{' '}
-      </div>
-      {opened && (
-        <div>
-          <Chart
-            type='line'
-            data={basicData}
-            style={{ height: 400 }}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              animation: {
-                duration: 0,
+    <div>
+      <Chart
+        type='line'
+        data={basicData}
+        style={{height: 400}}
+        options={{
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: {
+            duration: 0,
+          },
+          scales: {
+            yAxes: {
+              ticks: {
+                sampleSize: 10,
               },
-              scales: {
-                yAxes: {
-                  ticks: {
-                    sampleSize: 10,
-                  },
-                },
-                xAxes: {
-                  ticks: {
-                    sampleSize: 10,
-                  },
-                },
+            },
+            xAxes: {
+              ticks: {
+                sampleSize: 10,
               },
-            }}
-          />
-        </div>
-      )}
-      <div className='p-fluid p-grid'>
-        <div className='p-field p-col-12 p-md-4'>
-          <ToSell pair={pair} store={store} />
-          <Transactions transactions={transactions} />
-        </div>
-        <div className='p-field p-col-12 p-md-4'>
-          <Params store={store} pair={pair} />
-        </div>
-        <div className='p-field p-col-12 p-md-4'>
-          <Log store={store} pair={pair} />
-        </div>
-      </div>
-    </>
+            },
+          },
+        }}
+      />
+    </div>
   )
 }

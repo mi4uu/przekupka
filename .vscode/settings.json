@@ -15,7 +15,7 @@
         "titleBar.inactiveBackground": "#280d1c99",
         "titleBar.inactiveForeground": "#e7e7e799"
     },
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "samverschueren.linter-xo",
     "editor.codeActionsOnSave": {
         // For ESLint
         "source.fixAll.eslint": true,
@@ -28,8 +28,20 @@
     "prettier.printWidth": 120,
     "editor.formatOnSave": true,
     "[typescript]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.defaultFormatter": "samverschueren.linter-xo"
     },
-    "peacock.remoteColor": "#280d1c"
+    "peacock.remoteColor": "#280d1c",
+    "xo.enable": true,
+"xo.format.enable": true,
+"files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/node_modules": true,
+    "node_modules": true
+},
+"explorerExclude.backup": null
     
 }

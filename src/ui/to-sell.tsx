@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { DataTable } from 'primereact/datatable'
-import { Column } from 'primereact/column'
-import { IState } from '.'
+import React from 'react'
+import {DataTable} from 'primereact/datatable'
+import {Column} from 'primereact/column'
 import moment from 'moment'
+import {IStore} from '../api/server-store'
 
-export default function ToSell({ pair, store }: { pair: string; store: IState }) {
+export default function ToSell({pair, store}: {pair: string; store: IStore}) {
   const transactions = store.closedTransactions
   if (!store.toSell[pair] || !store.ticks) return null
   const toSell = store.toSell[pair]
@@ -13,9 +13,11 @@ export default function ToSell({ pair, store }: { pair: string; store: IState })
       volume: transactions[ts.id]?.vol,
       price: ts.value,
       status:
-        parseFloat(ts.value) < parseFloat(store.ticks[store.ticks.length - 1].pairs[pair].c[0]) ? 'OK' : 'too high',
+        Number.parseFloat(ts.value) < Number.parseFloat(store.ticks[store.ticks.length - 1].pairs[pair].c)
+          ? 'OK'
+          : 'too high',
     }))
-    .sort((a, b) => parseFloat(a.price) - parseFloat(b.price))
+    .sort((a, b) => Number.parseFloat(a.price) - Number.parseFloat(b.price))
   return (
     <div className='card'>
       <h5>To Sell</h5>

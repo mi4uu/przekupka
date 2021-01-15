@@ -2,7 +2,7 @@ import { key, baseUrl } from './config'
 import axios from 'axios'
 import qs from 'qs'
 
-import { getMessageSignature } from './getMessageSignature'
+import { getMessageSignature } from './get-message-signature'
 // @ts-ignore
 import { ConcurrencyManager } from 'axios-concurrency'
 

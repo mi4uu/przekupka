@@ -1,8 +1,8 @@
 import BigNumber from 'bignumber.js'
-import { processData } from './processData'
+import {processData} from './process-data'
 
 test('process data', () => {
-  // processData(buy: boolean, sell: boolean, price, lastTrasnactionPrice, minChange, balanceTransactionType
+  // ProcessData(buy: boolean, sell: boolean, price, lastTrasnactionPrice, minChange, balanceTransactionType
   let result = processData(false, false, new BigNumber('1'), new BigNumber('0.9'), new BigNumber('0.5'), 0, [])
   expect(result.sell).toBeTruthy()
   expect(result.buy).toBeFalsy()

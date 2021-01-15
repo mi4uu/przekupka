@@ -1,29 +1,32 @@
-import BigNumber from 'bignumber.js'
 import moment from 'moment'
-jest.mock('../api/serverStore', () => ({ store: {} }))
+jest.mock('../api/server-store', () => ({store: {}}))
 
-jest.mock('../api/makeSellOfferInKraken', () => ({ makeSellOfferInKraken: jest.fn() }))
-jest.mock('../api/makeBuyOfferInKraken', () => ({ makeBuyOfferInKraken: jest.fn(() => console.log('XXX{A')) }))
+jest.mock('../api/make-sell-offer-in-kraken', () => ({makeSellOfferInKraken: jest.fn()}))
+jest.mock('../api/make-buy-offer-in-kraken', () => ({
+  makeBuyOfferInKraken: jest.fn(() => {
+    console.log('XXX{A')
+  }),
+}))
 
-import { store } from '../api/serverStore'
-import { processData } from './processData'
-import { trade } from './trade'
-import { makeSellOfferInKraken } from '../api/makeSellOfferInKraken'
-import { makeBuyOfferInKraken } from '../api/makeBuyOfferInKraken'
-const delay = (time = 0) =>
+import {store} from '../api/server-store'
+import {processData} from './process-data'
+import {trade} from './trade'
+import {makeSellOfferInKraken} from '../api/make-sell-offer-in-kraken'
+import {makeBuyOfferInKraken} from '../api/make-buy-offer-in-kraken'
+const delay = async (time = 0) =>
   new Promise((resolve, reject) =>
     setTimeout(() => {
       resolve(true)
     }, time),
   )
 beforeEach(() => {
-  // @ts-ignore
+  // @ts-expect-error
   makeSellOfferInKraken.mockClear()
 
-  // @ts-ignore
+  // @ts-expect-error
   makeBuyOfferInKraken.mockClear()
 
-  // @ts-ignore
+  // @ts-expect-error
   store = {
     tradeBalance: {
       eb: '',
@@ -38,7 +41,7 @@ beforeEach(() => {
     },
     tradeVars: {
       XXBTZUSD: {
-        lastTrasnactionPrice: new BigNumber('1'),
+        lastTrasnactionPrice: '1',
         lastTransactions: [],
       },
     },
@@ -53,24 +56,24 @@ beforeEach(() => {
       {
         pairs: {
           XXBTZUSD: {
-            c: ['1'],
-            a: ['1'],
-            b: ['1'], //lower than a
+            c: '1',
+            a: '1',
+            b: '1', // Lower than a
           },
         },
       },
     ],
     pairs: {
       XXBTZUSD: {
-        changeToTrend: new BigNumber('1'),
-        changeToChangeTrend: new BigNumber('1'),
+        changeToTrend: '1',
+        changeToChangeTrend: '1',
         persuadeToBalance: 1,
-        volume: new BigNumber('0.001'), // min 0.001
+        volume: '0.001', // Min 0.001
         active: true,
         coin0: 'XXBT',
         coin1: 'ZUSD',
-        profit: new BigNumber(0),
-        buyPerHour: 1, // limit if allready not sold buys are present
+        profit: '0',
+        buyPerHour: 1, // Limit if allready not sold buys are present
       },
     },
     toSell: {
@@ -85,22 +88,24 @@ test('no asset to sell', () => {
   expect(store.tradeVars.XXBTZUSD.noAssetsToSell).toBeTruthy()
 
   store.toSell.XXBTZUSD.push({
-    value: new BigNumber('2'),
+    value: '2',
     id: 'xxx',
     timestamp: 1,
+    diff: '0',
   })
   trade(pair)
   expect(store.tradeVars.XXBTZUSD.noAssetsToSell).toBeTruthy()
 
   store.toSell.XXBTZUSD.push({
-    value: new BigNumber('0.5'),
+    value: '0.5',
     id: 'xxy',
     timestamp: 1,
+    diff: '0',
   })
   trade(pair)
   expect(store.tradeVars.XXBTZUSD.noAssetsToSell).toBeFalsy()
 
-  // console.log(JSON.stringify(store, null, 2))
+  // Console.log(JSON.stringify(store, null, 2))
 })
 test('cannot afford to buy', () => {
   expect(store.tradeVars.XXBTZUSD.cantAffordToBuy).toBeFalsy()
@@ -125,55 +130,62 @@ test('limit buy per hour', () => {
   expect(store.tradeVars[pair].limitBuyPerHourReached).toBeFalsy()
 
   store.toSell.XXBTZUSD.push({
-    value: new BigNumber('0.5'),
+    value: '0.5',
     id: 'xxy',
     timestamp: moment().unix(),
+    diff: '0',
   })
   trade(pair)
   expect(store.tradeVars[pair].limitBuyPerHourReached).toBeTruthy()
 })
 
 test('lets buy some shieeet', async () => {
-  // jest.useFakeTimers()
-
+  // Jest.useFakeTimers()
+console.log('----------------------------------- TRADE 1 --------------------------------------------------')
   store.balance[store.pairs[pair].coin1] = '10'
   store.tradeVars[pair] = {
     ...store.tradeVars[pair],
     buy: false,
     sell: false,
     lastTransactions: [],
-    highest: new BigNumber(0),
-    lowest: new BigNumber(999),
+    highest: '0',
+    lowest: '999',
   }
   trade(pair)
   expect(store.tradeVars[pair].buy).toBeFalsy()
   expect(store.tradeVars[pair].sell).toBeFalsy()
 
-  store.tradeVars[pair].lastTrasnactionPrice = new BigNumber('1.1')
+
+  store.tradeVars[pair].lastTransactionPrice = '1.1'
+  console.log('----------------------------------- TRADE 2 --------------------------------------------------')
+
   trade(pair)
   await delay(1)
-
   expect(store.tradeVars[pair].buy).toBeTruthy()
+  expect(makeBuyOfferInKraken).toBeCalledTimes(0) // We create new low, now lets get back to - risk factor
 
-  expect(makeBuyOfferInKraken).toBeCalledTimes(0) // we create new low, now lets get back to - risk factor
 
+  // lets reduce price from 1.1 a bit to triger buying
   store.ticks.push({
+    timestamp: 1,
     pairs: {
-      // @ts-ignore
       [pair]: {
-        a: ['1.05'],
-        b: ['1.05'],
-        c: ['1.05'],
+        a: '1.06',
+        b: '1.05',
+        c: '1.04',
       },
     },
   })
-  // @ts-ignore
-  makeBuyOfferInKraken = jest.fn(() => Promise.resolve({ data: { error: [], result: { txid: ['XXX-XXX-XXX'] } } }))
+  // @ts-expect-error
+  makeBuyOfferInKraken = jest.fn(async () => Promise.resolve({data: {error: [], result: {txid: ['XXX-XXX-XXX']}}}))
+  console.log('----------------------------------- TRADE 3 --------------------------------------------------')
 
   trade(pair)
   await delay(1)
+  console.log(JSON.stringify(store.tradeVars, null, 2))
+
   expect(makeBuyOfferInKraken).toBeCalledTimes(1)
   expect(store.tradeVars[pair].lastTransactionId).toBe('XXX-XXX-XXX')
 
-  //console.log(JSON.stringify(store.tradeVars, null, 2))
+   // console.log(JSON.stringify(store.tradeVars, null, 2))
 })
