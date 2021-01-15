@@ -23,7 +23,7 @@ export default function Parameters_({store, pair}: {store: IStore; pair: string}
           <ToggleButton
             id={`${pair}_persuade`}
             checked={pairData.active}
-            onChange={async (e) => changeParameter(store, pair, 'active', e.value)}
+            onChange={async (event) => changeParameter(store, pair, 'active', event.value)}
           />
         </div>
       </div>

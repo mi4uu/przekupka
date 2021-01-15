@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from 'react'
+import React, {useEffect, useReducer} from 'react'
 
 import 'primereact/resources/primereact.min.css'
 import 'primeicons/primeicons.css'
@@ -26,45 +26,69 @@ PrimeReact.ripple = true
 export default function layout() {
   const [store, dispatch] = useReducer(reducer, initialState)
   useEffect(() => {
-    fetchPairs(dispatch)
+    fetchPairs(dispatch).catch((error) => {
+      console.log(error)
+    })
   }, [])
   useEffect(() => {
-    fetchAssetPairs(dispatch)
+    fetchAssetPairs(dispatch).catch((error) => {
+      console.log(error)
+    })
   }, [])
   useEffect(() => {
-    fetchTradeVars(dispatch)
+    fetchTradeVars(dispatch).catch((error) => {
+      console.log(error)
+    })
   }, [])
   useEffect(() => {
-    fetchBalance(dispatch)
+    fetchBalance(dispatch).catch((error) => {
+      console.log(error)
+    })
   }, [])
   useEffect(() => {
-    fetchTicks(dispatch)
+    fetchTicks(dispatch).catch((error) => {
+      console.log(error)
+    })
   }, [])
   useEffect(() => {
-    const pid = setInterval(() => fetchBalance(dispatch), 11000)
-    return () => clearInterval(pid)
+    const pid = setInterval(async () => fetchBalance(dispatch), 11000)
+    return () => {
+      clearInterval(pid)
+    }
   }, [])
   useEffect(() => {
-    const pid = setInterval(() => fetchTick(dispatch), 5000)
-    return () => clearInterval(pid)
+    const pid = setInterval(async () => fetchTick(dispatch), 5000)
+    return () => {
+      clearInterval(pid)
+    }
   }, [])
   useEffect(() => {
-    const pid = setInterval(() => fetchToSell(dispatch), 10000)
-    return () => clearInterval(pid)
+    const pid = setInterval(async () => fetchToSell(dispatch), 10000)
+    return () => {
+      clearInterval(pid)
+    }
   }, [])
 
   useEffect(() => {
-    fetchTransactions(dispatch)
-    const pid = setInterval(() => fetchTransactions(dispatch), 9000)
-    return () => clearInterval(pid)
+    fetchTransactions(dispatch).catch((error) => {
+      console.log(error)
+    })
+    const pid = setInterval(async () => fetchTransactions(dispatch), 9000)
+    return () => {
+      clearInterval(pid)
+    }
   }, [])
   useEffect(() => {
-    const pid = setInterval(() => fetchTradeVars(dispatch), 6000)
-    return () => clearInterval(pid)
+    const pid = setInterval(async () => fetchTradeVars(dispatch), 6000)
+    return () => {
+      clearInterval(pid)
+    }
   }, [])
   useEffect(() => {
-    const pid = setInterval(() => fetchPairs(dispatch), 80000)
-    return () => clearInterval(pid)
+    const pid = setInterval(async () => fetchPairs(dispatch), 80000)
+    return () => {
+      clearInterval(pid)
+    }
   }, [])
   return (
     <>

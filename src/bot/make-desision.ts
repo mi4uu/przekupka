@@ -30,7 +30,6 @@ export const shouldSellNow = (
   if (notProfitable) return false
 
   if (!notProfitable && diffToHighestPrice.isLessThanOrEqualTo(risk.multipliedBy(-1))) {
-
     sellFromMarket()
 
     return false
@@ -48,10 +47,10 @@ export const shouldBuyNow = (
   risk: BigNumber,
   buyFromMarket: () => void,
 ) => {
-  const diffToLowestPrice = calculatePercentage(String(price), String(vars.lowest) )
+  const diffToLowestPrice = calculatePercentage(String(price), String(vars.lowest))
   const notProfitable = calculatePercentage(price, lastTransactionPrice).isGreaterThan(minProfit.multipliedBy(-1))
   const highlyNotProfitable = calculatePercentage(price, lastTransactionPrice).isGreaterThan(-0.3)
- const dtlp = price.minus(vars.lowest).dividedBy(vars.lowest).multipliedBy(100)
+  const dtlp = price.minus(vars.lowest).dividedBy(vars.lowest).multipliedBy(100)
   // Console.log(chalk.bgGreen('BUY:')
   // +' change to lowest price '
   //  + chalk.blue(diffToLowestPrice.toFixed(2))

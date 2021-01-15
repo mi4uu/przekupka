@@ -141,7 +141,6 @@ test('limit buy per hour', () => {
 
 test('lets buy some shieeet', async () => {
   // Jest.useFakeTimers()
-console.log('----------------------------------- TRADE 1 --------------------------------------------------')
   store.balance[store.pairs[pair].coin1] = '10'
   store.tradeVars[pair] = {
     ...store.tradeVars[pair],
@@ -155,15 +154,12 @@ console.log('----------------------------------- TRADE 1 -----------------------
   expect(store.tradeVars[pair].buy).toBeFalsy()
   expect(store.tradeVars[pair].sell).toBeFalsy()
 
-
   store.tradeVars[pair].lastTransactionPrice = '1.1'
-  console.log('----------------------------------- TRADE 2 --------------------------------------------------')
 
   trade(pair)
   await delay(1)
   expect(store.tradeVars[pair].buy).toBeTruthy()
   expect(makeBuyOfferInKraken).toBeCalledTimes(0) // We create new low, now lets get back to - risk factor
-
 
   // lets reduce price from 1.1 a bit to triger buying
   store.ticks.push({
@@ -178,7 +174,6 @@ console.log('----------------------------------- TRADE 1 -----------------------
   })
   // @ts-expect-error
   makeBuyOfferInKraken = jest.fn(async () => Promise.resolve({data: {error: [], result: {txid: ['XXX-XXX-XXX']}}}))
-  console.log('----------------------------------- TRADE 3 --------------------------------------------------')
 
   trade(pair)
   await delay(1)
@@ -187,5 +182,5 @@ console.log('----------------------------------- TRADE 1 -----------------------
   expect(makeBuyOfferInKraken).toBeCalledTimes(1)
   expect(store.tradeVars[pair].lastTransactionId).toBe('XXX-XXX-XXX')
 
-   // console.log(JSON.stringify(store.tradeVars, null, 2))
+  // Console.log(JSON.stringify(store.tradeVars, null, 2))
 })

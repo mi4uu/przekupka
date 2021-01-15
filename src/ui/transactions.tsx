@@ -1,6 +1,6 @@
 import React from 'react'
-import { DataTable } from 'primereact/datatable'
-import { Column } from 'primereact/column'
+import {DataTable} from 'primereact/datatable'
+import {Column} from 'primereact/column'
 
 interface ITransaction {
   status: string
@@ -18,7 +18,7 @@ interface ITransaction {
   close: string
   date: string
 }
-export default function Transactions({ transactions }: { transactions: ITransaction[] }) {
+export default function Transactions({transactions}: {transactions: ITransaction[]}) {
   return (
     <div className='card'>
       <h5>Transactions</h5>
