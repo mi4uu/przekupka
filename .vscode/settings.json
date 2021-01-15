@@ -42,6 +42,14 @@
     "**/node_modules": true,
     "node_modules": true
 },
-"explorerExclude.backup": null
+"emeraldwalk.runonsave": {
+    "commands": [
+      
+        {
+            "match": "\\.ts(x)?$",
+            "cmd": "xo --fix --prettier ${file}"
+        }
+    ]
+}
     
 }

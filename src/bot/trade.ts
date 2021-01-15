@@ -3,44 +3,33 @@ import {store, ITradeVars} from '../api/server-store'
 import {shouldBuyNow, shouldSellNow} from './make-desision'
 import {processData} from './process-data'
 
-import {makeSellOfferInKraken} from '../api/make-sell-offer-in-kraken'
-import {makeBuyOfferInKraken} from '../api/make-buy-offer-in-kraken'
 import moment from 'moment'
 import {calculatePercentage} from './calculate-percentage'
 import {bn} from '../utils/bn'
+import api from '../api/api'
 
 export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars) => {
   console.log(pair, 'BUY!!!', price.toFixed(8))
-  const {data} = await makeBuyOfferInKraken(
-    pair,
-    price.toFixed(store.assetPairs[pair].pair_decimals),
-    store.pairs[pair].volume,
-  )
-  if (data.error.length > 0) {
-    console.log(data)
-    vars.buy = false
+  const result = await api.makeSellOffer(pair, price.toFixed(8), store.pairs[pair].volume)
+  if (result) {
+    vars.lastTransactionId = result
+    vars.wait = 20
   } else {
-    console.log(JSON.stringify(data.result, null, 2))
-    vars.lastTransactionId = data.result.txid[0]
-    vars.wait = 5
+    console.log('transaction failed')
+    vars.buy = false
   }
 }
 
 export const sellFn = async (pair: string, price: BigNumber, vars: ITradeVars) => {
   console.log(pair, 'SELL!!!', price.toFixed(8))
 
-  const {data} = await makeSellOfferInKraken(
-    pair,
-    price.toFixed(store.assetPairs[pair].pair_decimals),
-    store.pairs[pair].volume,
-  )
-  if (data.error.length > 0) {
-    console.log(data)
-    vars.sell = false
+  const result = await api.makeSellOffer(pair, price.toFixed(8), store.pairs[pair].volume)
+  if (result) {
+    vars.lastTransactionId = result
+    vars.wait = 20
   } else {
-    console.log(JSON.stringify(data.result, null, 2))
-    vars.lastTransactionId = data.result.txid[0]
-    vars.wait = 5
+    console.log('transaction failed')
+    vars.sell = false
   }
 }
 
@@ -128,7 +117,7 @@ export const trade = (pair: string) => {
   const candidatesToSell = store.toSell[pair].filter((p) => bn(p.value).isLessThan(minPrice))
   if (candidatesToSell.length > 0) {
     vars.noAssetsToSell = false
-    if (balanceCoin0.isGreaterThan(store.pairs[pair].volume) ) {
+    if (balanceCoin0.isGreaterThan(store.pairs[pair].volume)) {
       vars.sell = shouldSellNow(
         bn(bidPrice),
         vars,

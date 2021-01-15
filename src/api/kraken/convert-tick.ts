@@ -1,4 +1,4 @@
-import {ITick} from './server-store'
+import {ITick} from '../server-store'
 
 type IKrakenTick = Record<
   string,

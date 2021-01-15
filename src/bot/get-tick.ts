@@ -1,21 +1,23 @@
 import axios from 'axios'
 import moment from 'moment'
-import {convertTick} from '../api/kraken'
+import api from '../api/api'
+import {convertTick} from '../api/kraken/convert-tick'
 import {store} from '../api/server-store'
 import {makeTransactions} from './make-transactions'
 import {trade} from './trade'
 
 export const getTick = async () => {
-  const results = await axios.get('https://api.kraken.com/0/public/Ticker?pair=' + Object.keys(store.pairs).join(','))
+  const results = await api.getTick()
   const ticks = store.ticks
 
-  ticks.push({timestamp: moment().unix(), pairs: convertTick(results.data.result)})
+  ticks.push({timestamp: moment().unix(), pairs: api.convertTick(results)})
   store.ticks = ticks
-  // Trade
 
+  // Trade
   const activePairs = Object.entries(store.pairs)
     .filter(([_, config]) => config.active)
     .map(([key]) => key)
+
   for (const pair of activePairs) {
     const wait = store.tradeVars[pair].wait
     if (wait <= 0) trade(pair)

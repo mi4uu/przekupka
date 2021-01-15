@@ -11,8 +11,8 @@ jest.mock('../api/make-buy-offer-in-kraken', () => ({
 import {store} from '../api/server-store'
 import {processData} from './process-data'
 import {trade} from './trade'
-import {makeSellOfferInKraken} from '../api/make-sell-offer-in-kraken'
-import {makeBuyOfferInKraken} from '../api/make-buy-offer-in-kraken'
+import {makeSellOfferInKraken} from '../api/kraken/make-sell-offer-in-kraken'
+import {makeBuyOfferInKraken} from '../api/kraken/make-buy-offer-in-kraken'
 const delay = async (time = 0) =>
   new Promise((resolve, reject) =>
     setTimeout(() => {
@@ -28,17 +28,7 @@ beforeEach(() => {
 
   // @ts-expect-error
   store = {
-    tradeBalance: {
-      eb: '',
-      tb: '',
-      m: '',
-      n: '',
-      c: '',
-      v: '',
-      e: '',
-      mf: '',
-      ml: '',
-    },
+  
     tradeVars: {
       XXBTZUSD: {
         lastTrasnactionPrice: '1',

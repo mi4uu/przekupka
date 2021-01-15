@@ -9,7 +9,7 @@
     "dev-server": "nodemon",
     "ui": "ts-node src/app.ts",
     "build": "parcel build public/index.html",
-    "deploy":"parcel build public/index.html &&  ./syncWithServer.sh",
+    "deploy": "parcel build public/index.html &&  ./syncWithServer.sh",
     "test": "jest"
   },
   "author": "",
@@ -49,6 +49,7 @@
     "primeicons": "^4.1.0",
     "primereact": "^5.0.2",
     "prop-types": "^15.7.2",
+    "qs": "^6.9.6",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-transition-group": "^4.4.1",

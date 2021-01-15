@@ -65,9 +65,7 @@ server.post('/pair', (request: Request, response: Response) => {
 server.get('/tradeVars', (_request: Request, response: Response) => {
   response.send(store.tradeVars)
 })
-server.get('/tradeBalance', (_request: Request, response: Response) => {
-  response.send(store.tradeBalance)
-})
+
 server.get('/toSell', (_request: Request, response: Response) => {
   response.send(store.toSell)
 })
