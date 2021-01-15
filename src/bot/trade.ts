@@ -128,13 +128,13 @@ export const trade = (pair: string) => {
   const candidatesToSell = store.toSell[pair].filter((p) => bn(p.value).isLessThan(minPrice))
   if (candidatesToSell.length > 0) {
     vars.noAssetsToSell = false
-    if (balanceCoin0.isGreaterThan(store.pairs[pair].volume) && result.sell) {
+    if (balanceCoin0.isGreaterThan(store.pairs[pair].volume) ) {
       vars.sell = shouldSellNow(
         bn(bidPrice),
         vars,
-        bn(vars.lastTransactionPrice),
         bn(pairParameters.changeToTrend),
         bn(pairParameters.changeToChangeTrend),
+        candidatesToSell,
         async () => sellFn(pair, bn(bidPrice), vars),
       )
     }

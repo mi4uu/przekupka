@@ -19,12 +19,15 @@ interface ITransaction {
   date: string
 }
 export default function Transactions({transactions}: {transactions: ITransaction[]}) {
+  const typeColor = (rowData: ITransaction) => (
+    <div className={rowData.type === 'sell' ? 'red' : 'green'}>{rowData.type}</div>
+  )
   return (
     <div className='card'>
       <h5>Transactions</h5>
       <DataTable value={transactions} scrollable scrollHeight='200px'>
         <Column field='date' header='Date'></Column>
-        <Column field='type' header='Type'></Column>
+        <Column field='type' body={typeColor}></Column>
         <Column field='volume' header='Volume'></Column>
         <Column field='price' header='Price'></Column>
         <Column field='fee' header='Fee'></Column>

@@ -37,7 +37,7 @@ export default function Parameters_({store, pair}: {store: IStore; pair: string}
             id={`${pair}_volume`}
             step={0.001}
             value={Number.parseFloat(pairData.volume)}
-            onValueChange={async (e) => changeParameter(store, pair, 'volume', e.value)}
+            onValueChange={async (event) => changeParameter(store, pair, 'volume', event.value)}
             showButtons
           />
         </div>
@@ -51,7 +51,7 @@ export default function Parameters_({store, pair}: {store: IStore; pair: string}
             id={`${pair}_changeToTrend`}
             step={0.1}
             value={Number.parseFloat(pairData.changeToTrend)}
-            onValueChange={async (e) => changeParameter(store, pair, 'changeToTrend', e.value)}
+            onValueChange={async (event) => changeParameter(store, pair, 'changeToTrend', event.value)}
             showButtons
           />
         </div>
@@ -66,7 +66,7 @@ export default function Parameters_({store, pair}: {store: IStore; pair: string}
             id={`${pair}_changeToChangeTrend`}
             value={Number.parseFloat(pairData.changeToChangeTrend)}
             step={0.1}
-            onValueChange={async (e) => changeParameter(store, pair, 'changeToChangeTrend', e.value)}
+            onValueChange={async (event) => changeParameter(store, pair, 'changeToChangeTrend', event.value)}
             showButtons
           />
         </div>
@@ -81,7 +81,7 @@ export default function Parameters_({store, pair}: {store: IStore; pair: string}
             id={`${pair}_persuade`}
             value={pairData.persuadeToBalance}
             step={0.1}
-            onValueChange={async (e) => changeParameter(store, pair, 'persuadeToBalance', e.value)}
+            onValueChange={async (event) => changeParameter(store, pair, 'persuadeToBalance', event.value)}
             showButtons
           />
         </div>
