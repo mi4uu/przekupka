@@ -12,8 +12,8 @@ export default function Trader({pair, store}: {pair: string; store: IStore}) {
   const [opened, setOpened] = useState(false)
 
   const closedTransactionsCount = Object.values(store.closedTransactions)
-    .filter((t) => t.descr.pair === pair || t.descr.pair === store.assetPairs[pair]?.altname)
-    .filter((t) => t.status === 'closed' && t.descr.type === 'sell').length
+    .filter((t) => t.pair === pair || t.pair === store.assetPairs[pair]?.altname)
+    .filter((t) => t.status === 'closed' && t.type === 'sell').length
   const firstTick = store.ticks[0]?.pairs[pair]
   const lastTick = store.ticks[store.ticks.length - 1]?.pairs[pair]
   const price24Change = calculatePercentage(lastTick?.c, firstTick?.c)

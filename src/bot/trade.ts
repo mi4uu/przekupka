@@ -42,6 +42,7 @@ export const createTradeVars = (pair: string) => {
     sell: false,
     wait: 0,
     lastTransactionId: '',
+    lastActionTime: moment().unix(),
   }
   const altName = Object.entries(store.assetPairs)
     .filter(([k, v]) => v.altname === pair)
@@ -73,6 +74,8 @@ export const trade = (pair: string) => {
     vars.lastTransactions,
   )
   vars.processData = result
+  if (result.buy) vars.lastActionTime = moment().unix()
+  if (result.sell) vars.lastActionTime = moment().unix()
   if (bn(bidPrice).isGreaterThan(vars.highest) && calculatePercentage(bidPrice, vars.highest).abs().isLessThan(10)) {
     vars.highest = bidPrice
   }
@@ -118,6 +121,7 @@ export const trade = (pair: string) => {
   if (candidatesToSell.length > 0) {
     vars.noAssetsToSell = false
     if (balanceCoin0.isGreaterThan(store.pairs[pair].volume)) {
+      vars.lastActionTime = moment().unix()
       vars.sell = shouldSellNow(
         bn(bidPrice),
         vars,

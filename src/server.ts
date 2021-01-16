@@ -2,7 +2,7 @@ import express, {Request, Response} from 'express'
 import bodyParser from 'body-parser'
 import fetchData from './api/fetch-data'
 import auth from './auth'
-
+import request from 'request'
 process.on('uncaughtException', (error) => {
   console.log('##########################################################################################')
   console.log(error)
@@ -22,7 +22,6 @@ const port = args[0] ? Number.parseInt(args[0], 10) : 3000
 const server = express()
 server.use(auth)
 
-server.use(express.static('public'))
 server.use(bodyParser.json())
 server.get('/tick', (_request: Request, response: Response) => {
   response.send(store.ticks[store.ticks.length - 1])
@@ -69,9 +68,10 @@ server.get('/tradeVars', (_request: Request, response: Response) => {
 server.get('/toSell', (_request: Request, response: Response) => {
   response.send(store.toSell)
 })
-// Server.all('*', (req: Request, res: Response) => {
-//   return handle(req, res)
-// })
+server.all('*', (_request: Request, response: Response) => {
+  console.log(_request.originalUrl)
+  _request.pipe(request('http://localhost:1234' + _request.originalUrl)).pipe(response)
+})
 
 server.listen(port, '0.0.0.0', () => {
   console.log(`server is listening on ${port} port`)

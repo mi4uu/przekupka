@@ -13,7 +13,7 @@ export default function fetchData() {
         store.balance = result
       })
       .catch((error) => {
-        console.log(error)
+        console.log('Check balance error:', error.code)
       })
   }
 
@@ -34,8 +34,10 @@ setInterval(async () => {
 
 setInterval(() => {
   // Lets check if pair cant sell anything for hours
-  const hours = 48
-  const filterBeforeThisTime = moment().subtract(hours, 'hours').unix()
+  const noTransactionForHours = 48
+  const notNearToDoAnyActionsHours = 6
+  const filterBeforeThisTime = moment().subtract(noTransactionForHours, 'hours').unix()
+  const notEvenNearToDoAnythingBeforeThisTime = moment().subtract(notNearToDoAnyActionsHours, 'hours').unix()
   Object.entries(store.pairs).forEach(([pair, _pairConfig]) => {
     const diff = calculatePercentage(
       store.tradeVars[pair].highest,
@@ -47,7 +49,10 @@ setInterval(() => {
       .map(([_transactionId, transaction]) => transaction)
       .filter((t) => t.status === 'closed')
       .filter((t) => t.opentm > filterBeforeThisTime)
-    if (lastTransactions.length === 0 || diff.isGreaterThan(100)) {
+    if (
+      store.tradeVars[pair].lastActionTime < notEvenNearToDoAnythingBeforeThisTime &&
+      (lastTransactions.length === 0 || diff.isGreaterThan(100))
+    ) {
       const currentPrice = bn(store.ticks[store.ticks.length - 1].pairs[pair].c)
 
       console.log('PAIR HEALTHY CHECK for ' + pair)

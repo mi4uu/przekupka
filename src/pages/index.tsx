@@ -25,6 +25,8 @@ import '../ui/main.css'
 PrimeReact.ripple = true
 export default function layout() {
   const [store, dispatch] = useReducer(reducer, initialState)
+  // @ts-expect-error
+  window.store = store
   useEffect(() => {
     fetchPairs(dispatch).catch((error) => {
       console.log(error)
