@@ -17,6 +17,9 @@ export const checkBalance = async () => {
   const responsePromise = makePrivateGetCall('/trading/balance', {})
   const {data}: {data: IHitBtcBalance} = await responsePromise
   return Object.fromEntries(
-    data.filter((value) => coinsInUse.has(value.currency)).map((value) => [value.currency, value.available]),
+    data
+      .filter((value) => coinsInUse.has(value.currency))
+      .map((value) => [value.currency, value.available])
+      .sort((a, b) => Number.parseFloat(a[1]) - Number.parseFloat(b[1])),
   )
 }

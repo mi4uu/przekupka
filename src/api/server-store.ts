@@ -132,21 +132,21 @@ export const createStore = (): IStore => ({
   ticks: [],
   toSell: {},
   pairs: {
-    BTCUSDC: {
-      changeToTrend: '2',
+    BTCUSD: {
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.004', // Min 0.001
       active: true,
       coin0: 'BTC',
-      coin1: 'USDC',
+      coin1: 'USD',
       profit: '0',
       buyPerHour: 1, // Limit if allready not sold buys are present
       coin0FriendlyName: 'BTC',
-      coin1FriendlyName: 'USDC',
+      coin1FriendlyName: 'USD',
     },
     ETHBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.0001', // Min 0.0001
@@ -158,8 +158,22 @@ export const createStore = (): IStore => ({
       coin0FriendlyName: 'ETH',
       coin1FriendlyName: 'BTC',
     },
+    ETHUSD: {
+      changeToTrend: '1.5',
+      changeToChangeTrend: '1',
+      persuadeToBalance: 2,
+      volume: '0.0001', // Min 0.001
+      active: true,
+      coin0: 'ETH',
+      coin1: 'USD',
+      profit: '0',
+      buyPerHour: 1, // Limit if allready not sold buys are present
+      coin0FriendlyName: 'ETH',
+      coin1FriendlyName: 'USD',
+    },
+
     DOGEBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '10', // Min 10
@@ -172,7 +186,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'BTC',
     },
     BTMBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '1', // Min 1
@@ -185,7 +199,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'BTC',
     },
     WAVESBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.01', // Min 1
@@ -198,7 +212,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'BTC',
     },
     VETBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '10', // Min 10
@@ -211,7 +225,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'BTC',
     },
     ATOMBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.01', // Min 0.01
@@ -224,7 +238,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'BTC',
     },
     IOTABTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.1', // Min 0.1
@@ -237,7 +251,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'BTC',
     },
     ZRXBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.1', // Min 0.1
@@ -250,7 +264,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'BTC',
     },
     ICXBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.1', // Min 0.1
@@ -263,7 +277,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'BTC',
     },
     TRXBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '1', // Min 1
@@ -276,7 +290,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'BTC',
     },
     QTUMBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.01', // Min 0.01
@@ -290,7 +304,7 @@ export const createStore = (): IStore => ({
     },
 
     XTZBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.1', // Min 0.1
@@ -303,7 +317,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'BTC',
     },
     BNTBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.1', // Min 0.1
@@ -316,7 +330,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'BTC',
     },
     NEBLBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.01', // Min 0.01
@@ -328,21 +342,9 @@ export const createStore = (): IStore => ({
       coin0FriendlyName: 'NEBL',
       coin1FriendlyName: 'BTC',
     },
-    ETHUSDC: {
-      changeToTrend: '2',
-      changeToChangeTrend: '1',
-      persuadeToBalance: 2,
-      volume: '0.0001', // Min 0.01
-      active: true,
-      coin0: 'ETH',
-      coin1: 'USDC',
-      profit: '0',
-      buyPerHour: 1, // Limit if allready not sold buys are present
-      coin0FriendlyName: 'ETC',
-      coin1FriendlyName: 'USDC',
-    },
+
     BATBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.1', // Min 0.1
@@ -355,7 +357,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'BTC',
     },
     RENBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '1', // Min 1
@@ -369,7 +371,7 @@ export const createStore = (): IStore => ({
     },
 
     ENJBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '1', // Min 1
@@ -382,7 +384,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'BTC',
     },
     RVNBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '1', // Min 1
@@ -394,22 +396,9 @@ export const createStore = (): IStore => ({
       coin0FriendlyName: 'RVN',
       coin1FriendlyName: 'BTC',
     },
-    YCCBTC: {
-      changeToTrend: '2',
-      changeToChangeTrend: '1',
-      persuadeToBalance: 2,
-      volume: '10', // Min 10
-      active: true,
-      coin0: 'YCC',
-      coin1: 'BTC',
-      profit: '0',
-      buyPerHour: 1, // Limit if allready not sold buys are present
-      coin0FriendlyName: 'YCC',
-      coin1FriendlyName: 'BTC',
-    },
 
     TONBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.1', // Min 0.1
@@ -422,7 +411,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'BTC',
     },
     HEXBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '10', // Min 10
@@ -434,8 +423,21 @@ export const createStore = (): IStore => ({
       coin0FriendlyName: 'HEX',
       coin1FriendlyName: 'BTC',
     },
+    BTGBTC: {
+      changeToTrend: '1.5',
+      changeToChangeTrend: '1',
+      persuadeToBalance: 2,
+      volume: '0.001', // Min 0.001
+      active: true,
+      coin0: 'BTG',
+      coin1: 'BTC',
+      profit: '0',
+      buyPerHour: 1, // Limit if allready not sold buys are present
+      coin0FriendlyName: 'BTG',
+      coin1FriendlyName: 'BTC',
+    },
     YCCBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '10', // Min 10
@@ -448,7 +450,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'BTC',
     },
     AIMBTC: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '10', // Min 10
@@ -463,7 +465,7 @@ export const createStore = (): IStore => ({
     // Few eth pairs ETH
 
     DOGEETH: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '10', // Min 10
@@ -476,7 +478,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'BTC',
     },
     BTMETH: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '1', // Min 1
@@ -488,34 +490,22 @@ export const createStore = (): IStore => ({
       coin0FriendlyName: 'BTM',
       coin1FriendlyName: 'ETH',
     },
-    WAVESETH: {
-      changeToTrend: '2',
-      changeToChangeTrend: '1',
-      persuadeToBalance: 2,
-      volume: '0.01', // Min 1
-      active: true,
-      coin0: 'WAVES',
-      coin1: 'ETH',
-      profit: '0',
-      buyPerHour: 1, // Limit if allready not sold buys are present
-      coin0FriendlyName: 'WAVES',
-      coin1FriendlyName: 'ETH',
-    },
+
     VETETH: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '10', // Min 10
       active: true,
-      coin0: 'ETH',
+      coin0: 'VET',
       coin1: 'BTC',
       profit: '0',
       buyPerHour: 1, // Limit if allready not sold buys are present
-      coin0FriendlyName: 'ETH',
+      coin0FriendlyName: 'VET',
       coin1FriendlyName: 'BTC',
     },
     ATOMETH: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.01', // Min 0.01
@@ -528,7 +518,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'ETH',
     },
     IOTAETH: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.1', // Min 0.1
@@ -541,7 +531,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'ETH',
     },
     ZRXETH: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.1', // Min 0.1
@@ -554,7 +544,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'ETH',
     },
     ICXETH: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.1', // Min 0.1
@@ -567,7 +557,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'ETH',
     },
     TRXETH: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '1', // Min 1
@@ -580,7 +570,7 @@ export const createStore = (): IStore => ({
       coin1FriendlyName: 'ETH',
     },
     QTUMETH: {
-      changeToTrend: '2',
+      changeToTrend: '1.5',
       changeToChangeTrend: '1',
       persuadeToBalance: 2,
       volume: '0.01', // Min 0.01
@@ -591,6 +581,73 @@ export const createStore = (): IStore => ({
       buyPerHour: 1, // Limit if allready not sold buys are present
       coin0FriendlyName: 'QTUM',
       coin1FriendlyName: 'ETH',
+    },
+
+    // USD
+    BSVUSD: {
+      changeToTrend: '1.5',
+      changeToChangeTrend: '1',
+      persuadeToBalance: 2,
+      volume: '0.091', // Min 0.001
+      active: true,
+      coin0: 'BSV',
+      coin1: 'USD',
+      profit: '0',
+      buyPerHour: 1, // Limit if allready not sold buys are present
+      coin0FriendlyName: 'BSV',
+      coin1FriendlyName: 'USD',
+    },
+    ICXUSD: {
+      changeToTrend: '1.5',
+      changeToChangeTrend: '1',
+      persuadeToBalance: 2,
+      volume: '0.01', // Min 0.01
+      active: true,
+      coin0: 'ICX',
+      coin1: 'USD',
+      profit: '0',
+      buyPerHour: 1, // Limit if allready not sold buys are present
+      coin0FriendlyName: 'ICX',
+      coin1FriendlyName: 'USD',
+    },
+    QTUMUSD: {
+      changeToTrend: '1.5',
+      changeToChangeTrend: '1',
+      persuadeToBalance: 2,
+      volume: '0.01', // Min 0.01
+      active: true,
+      coin0: 'QTUM',
+      coin1: 'ETH',
+      profit: '0',
+      buyPerHour: 1, // Limit if allready not sold buys are present
+      coin0FriendlyName: 'QTUM',
+      coin1FriendlyName: 'ETH',
+    },
+    DOGEUSD: {
+      changeToTrend: '1.5',
+      changeToChangeTrend: '1',
+      persuadeToBalance: 2,
+      volume: '10', // Min 0.01
+      active: true,
+      coin0: 'DOGE',
+      coin1: 'USD',
+      profit: '0',
+      buyPerHour: 1, // Limit if allready not sold buys are present
+      coin0FriendlyName: 'DOGE',
+      coin1FriendlyName: 'USD',
+    },
+    IOTAUSD: {
+      changeToTrend: '1.5',
+      changeToChangeTrend: '1',
+      persuadeToBalance: 2,
+      volume: '0.1', // Min 0.1
+      active: true,
+      coin0: 'IOTA',
+      coin1: 'USD',
+      profit: '0',
+      buyPerHour: 1, // Limit if allready not sold buys are present
+      coin0FriendlyName: 'IOTA',
+      coin1FriendlyName: 'USD',
     },
   },
   storeLoaded: false,

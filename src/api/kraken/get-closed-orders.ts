@@ -20,7 +20,7 @@ export const getClosedOrders = async () => {
     closedTransactions.map(([id, transaction]: [string, any]) => [
       id,
       {
-        pair: transaction.descr.pair,
+        pair: transaction.pair,
         refid: id,
         userref: transaction.userref,
         status: transaction.status,
@@ -28,7 +28,7 @@ export const getClosedOrders = async () => {
         vol: transaction.vol,
         fee: transaction.fee,
         price: transaction.price,
-        type: transaction.descr.type,
+        type: transaction.type,
       },
     ]),
   )

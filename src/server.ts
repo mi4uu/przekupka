@@ -68,10 +68,12 @@ server.get('/tradeVars', (_request: Request, response: Response) => {
 server.get('/toSell', (_request: Request, response: Response) => {
   response.send(store.toSell)
 })
-server.all('*', (_request: Request, response: Response) => {
-  console.log(_request.originalUrl)
-  _request.pipe(request('http://localhost:1234' + _request.originalUrl)).pipe(response)
-})
+if (dev) {
+  server.all('*', (_request: Request, response: Response) => {
+    console.log(_request.originalUrl)
+    _request.pipe(request('http://localhost:1234' + _request.originalUrl)).pipe(response)
+  })
+}
 
 server.listen(port, '0.0.0.0', () => {
   console.log(`server is listening on ${port} port`)

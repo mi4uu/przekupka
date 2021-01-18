@@ -13,8 +13,8 @@ type IHitBtcTradingHistory = Array<{
   timestamp: string
 }>
 export const getClosedOrders = async () => {
-  const start = moment().subtract(100, 'hours').toISOString()
-  const {data}: {data: IHitBtcTradingHistory} = await makePrivateGetCall(`/history/order?from=${start}`, {})
+  const start = moment().subtract(200, 'hours').toISOString()
+  const {data}: {data: IHitBtcTradingHistory} = await makePrivateGetCall(`/history/trades?from=${start}`, {})
   const receivedTransactions = Object.fromEntries(
     data.map((transaction) => [
       String(transaction.id),
@@ -34,6 +34,6 @@ export const getClosedOrders = async () => {
 
   store.closedTransactions = {
     ...receivedTransactions,
-    ...store.closedTransactions,
+    // ...store.closedTransactions,
   }
 }

@@ -56,6 +56,11 @@ export const makeTransactions = (pair: string) => {
       // Just to have something to read in logs
       console.log(
         JSON.stringify({
+          amount,
+          stv: soldTransaction.vol,
+          tv: transaction.vol,
+          tfee: transaction.fee,
+          stfee: soldTransaction.fee,
           transactionBuyPrice,
           transactionSoldPrice,
           profit,

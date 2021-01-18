@@ -43,7 +43,7 @@ setInterval(() => {
       store.tradeVars[pair].highest,
       bn(store.ticks[store.ticks.length - 1].pairs[pair].c),
     ).abs()
-    const altName = store.assetPairs[pair]?.altname
+    const altName = store.assetPairs ? store.assetPairs[pair]?.altname : null
     const lastTransactions = Object.entries(store.closedTransactions)
       .filter(([_transactionId, transaction]) => transaction.pair === pair || transaction.pair === altName)
       .map(([_transactionId, transaction]) => transaction)

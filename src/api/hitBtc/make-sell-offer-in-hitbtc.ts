@@ -2,7 +2,7 @@ import moment from 'moment'
 import {makePrivateCall} from './make-private-call'
 
 export async function makeSellOfferInHitBtc(pair: string, price: string, volume: string) {
-  const {status, data} = await makePrivateCall('/0/private/AddOrder', {
+  const {status, data} = await makePrivateCall('/order', {
     symbol: pair,
     side: 'sell',
     price,
@@ -12,7 +12,7 @@ export async function makeSellOfferInHitBtc(pair: string, price: string, volume:
     type: 'limit',
   })
   if (status !== 200) {
-    console.log(data)
+    console.log(JSON.stringify(data.error, null, 2))
     return false
   }
 

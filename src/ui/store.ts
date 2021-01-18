@@ -26,7 +26,7 @@ export const reducer = (state: IStore, action: IAction): IStore => {
   if (action.type === 'ADD_TICK') {
     let newTicks = state.ticks
     if (newTicks.length > 100) {
-      newTicks = newTicks.filter((_tick, i) => i === 0 || i % 3)
+      newTicks = newTicks.filter((_tick, i) => i + (1 % 3))
     }
 
     newTicks.push(action.payload)

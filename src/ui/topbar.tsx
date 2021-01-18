@@ -2,7 +2,7 @@ import React from 'react'
 import {Button} from 'primereact/button'
 import BigNumber from 'bignumber.js'
 import {IStore} from '../api/server-store'
-const primaryCoin = 'USDC'
+const primaryCoin = 'USD'
 
 const jump = (h: string) => {
   const top = (document.getElementById(h)?.offsetTop || 0) - 100 // Getting Y of target element
