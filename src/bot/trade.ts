@@ -1,19 +1,20 @@
 import BigNumber from 'bignumber.js'
 import {store, ITradeVars} from '../api/server-store'
-import {shouldBuyNow, shouldSellNow} from './make-desision'
-import {processData} from './process-data'
 
 import moment from 'moment'
 import {calculatePercentage} from './calculate-percentage'
 import {bn} from '../utils/bn'
 import api from '../api/api'
-import {IgnorePlugin} from 'webpack'
+import {Pair} from '#db/entity/pair'
+import {ToSell} from '#db/entity/to-sell'
+import {ClosedTransaction} from '#db/entity/closed-transactions'
+import {getRepository} from 'typeorm'
 
 export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars) => {
   console.log(pair, 'BUY!!!', price.toFixed(8))
-  const result = await api.makeBuyOffer(pair, price.toFixed(8), store.pairs[pair].volume)
+  const p = await Pair.findOneOrFail(pair)
+  const result = await api.makeBuyOffer(pair, price.toFixed(8), p.volume)
   if (result) {
-    vars.lastTransactionId = result
     vars.wait = 20
   } else {
     console.log('transaction failed')
@@ -21,12 +22,10 @@ export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars) =>
   }
 }
 
-export const sellFn = async (pair: string, price: BigNumber, vars: ITradeVars) => {
+export const sellFn = async (pair: string, price: BigNumber, volume: string, vars: ITradeVars) => {
   console.log(pair, 'SELL!!!', price.toFixed(8))
-
-  const result = await api.makeSellOffer(pair, price.toFixed(8), store.pairs[pair].volume)
+  const result = await api.makeSellOffer(pair, price.toFixed(8), volume)
   if (result) {
-    vars.lastTransactionId = result
     vars.wait = 20
   } else {
     console.log('transaction failed')
@@ -34,30 +33,12 @@ export const sellFn = async (pair: string, price: BigNumber, vars: ITradeVars) =
   }
 }
 
-export const createTradeVars = (pair: string) => {
-  store.tradeVars[pair] = {
-    lastTransactions: [],
-    highest: '0',
-    lowest: '0',
-    buy: false,
-    sell: false,
-    wait: 0,
-    lastTransactionId: '',
-    lastActionTime: moment().unix(),
-  }
-  const altName = Object.entries(store.assetPairs)
-    .filter(([k, v]) => v.altname === pair)
-    .map(([k, v]) => k)[0]
-  if (!store.toSell[pair]) store.toSell[pair] = []
-  if (altName && !store.toSell[altName]) store.toSell[altName] = []
-}
-
-export const trade = (pair: string) => {
-  const vars = store.tradeVars[pair]
-  const pairParameters = store.pairs[pair]
-  const price = store.ticks[store.ticks.length - 1].pairs[pair].a
-  const askPrice = store.ticks[store.ticks.length - 1].pairs[pair].c
-  const bidPrice = store.ticks[store.ticks.length - 1].pairs[pair].b
+export const trade = async (pair: Pair) => {
+  const vars = store.tradeVars[pair.name]
+  const lastTick = store.ticks[store.ticks.length - 1].pairs[pair.name]
+  const price = lastTick.c
+  const askPrice = lastTick.a
+  const bidPrice = lastTick.b
 
   // For initial values
   if (!vars.lastTransactionPrice) {
@@ -70,28 +51,44 @@ export const trade = (pair: string) => {
     vars.highest = bidPrice
   }
 
-  const balanceCoin0 = bn(store.balance[store.pairs[pair].coin0])
-  const balanceCoin1 = bn(store.balance[store.pairs[pair].coin1])
+  const balanceCoin0 = bn(store.balance[pair.coin0])
+  const balanceCoin1 = bn(store.balance[pair.coin1])
   const hourBefore = moment().subtract(1, 'hour').unix()
 
-  if (balanceCoin1.isGreaterThan(bn(askPrice).multipliedBy(store.pairs[pair].volume))) {
+  if (balanceCoin1.isGreaterThanOrEqualTo(bn(askPrice).multipliedBy(pair.volume))) {
     // Can we afford that?
     vars.cantAffordToBuy = false
 
-    if (store.toSell[pair].filter((p) => p.timestamp > hourBefore).length < store.pairs[pair].buyPerHour) {
+    const howMuchPerHourCanIBuy = bn(pair.buyPerHour).multipliedBy(pair.volume)
+    const {howMuchDidIBuyInLastHour} = await getRepository(ClosedTransaction)
+      .createQueryBuilder('t')
+      .where('t.pairName = :pair AND t.type = :type AND t.opentm > :hourBefore', {
+        pair: pair.name,
+        hourBefore,
+        type: 'buy',
+      })
+      .select('COALESCE(SUM(t.vol), 0)', 'howMuchDidIBuyInLastHour')
+      .getRawOne()
+
+    if (bn(howMuchDidIBuyInLastHour).isLessThan(howMuchPerHourCanIBuy)) {
       // Limit buy per h
       vars.limitBuyPerHourReached = false
 
       const marketLiquidity = calculatePercentage(askPrice, bidPrice)
       const changeFromLastTransaction = calculatePercentage(vars.lastTransactionPrice, askPrice)
-      const minDiffToBuy = bn(pairParameters.changeToTrend).plus(marketLiquidity)
+      const minDiffToBuy = bn(pair.changeToTrend).plus(marketLiquidity)
       if (changeFromLastTransaction.isGreaterThan(minDiffToBuy)) {
         vars.buy = true
         vars.lastActionTime = moment().unix()
         if (bn(vars.lowest).isGreaterThan(bn(askPrice))) vars.lowest = askPrice
         const diffToLowest = calculatePercentage(askPrice, vars.lowest)
         if (diffToLowest.isGreaterThanOrEqualTo(minDiffToBuy)) {
-          buyFn(pair, bn(askPrice), vars).catch((error) => {
+          // Log
+          console.log(
+            JSON.stringify({minDiffToBuy, askPrice, bidPrice, changeFromLastTransaction, marketLiquidity}, null, 2),
+          )
+
+          buyFn(pair.name, bn(askPrice), vars).catch((error) => {
             console.log('cant buy', error)
           })
         }
@@ -100,6 +97,7 @@ export const trade = (pair: string) => {
         vars.lowest = askPrice
       }
     } else {
+      console.log(JSON.stringify({howMuchDidIBuyInLastHour, howMuchPerHourCanIBuy}))
       vars.limitBuyPerHourReached = true
       vars.buy = false
       vars.lowest = askPrice
@@ -111,40 +109,35 @@ export const trade = (pair: string) => {
   }
 
   // Did we buy anything to sell ?
-  const minProfit = bn(bidPrice).multipliedBy(bn(pairParameters.changeToTrend).dividedBy(100))
-  const minPrice = bn(bidPrice).plus(minProfit)
-  const candidatesToSell = store.toSell[pair].filter((p) => bn(p.value).isLessThan(minPrice))
-  // If (pair === 'NEBLBTC') {
-  //   console.log(
-  //     JSON.stringify({
-  //       sell: vars.sell,
-  //       diff: calculatePercentage(
-  //         bidPrice,
-  //         candidatesToSell.sort((a, b) => Number.parseFloat(a.value) - Number.parseFloat(b.value))[0].value,
-  //       ),
-  //       changetotrend: pairParameters.changeToTrend,
-  //       balance: balanceCoin0.isGreaterThanOrEqualTo(store.pairs[pair].volume),
-  //       volume: store.pairs[pair].volume,
-  //     }),
-  //   )
-  // }
+  const minProfit = bn(bidPrice).multipliedBy(bn(pair.changeToTrend).dividedBy(100))
+  const maxPrice = bn(bidPrice).plus(minProfit)
+  const {howMuchToSell, lowestBuy} = await getRepository(ToSell)
+    .createQueryBuilder('t')
+    .where('t.pairName = :pair AND t.filled = :filled AND t.price < :maxPrice', {
+      pair: pair.name,
+      maxPrice: maxPrice.toFixed(8),
+      filled: false,
+    })
+    .select('COALESCE(SUM(t.left),0)', 'howMuchToSell')
+    .addSelect('MIN(t.price)', 'lowestBuy')
+    .getRawOne()
+  // Const candidatesToSell = store.toSell[pair].filter((p) => bn(p.value).isLessThan(maxPrice))
 
-  if (candidatesToSell.length > 0) {
+  if (bn(howMuchToSell).isGreaterThanOrEqualTo(pair.step)) {
     vars.noAssetsToSell = false
+    const howMuchCanISell = bn(howMuchToSell).isGreaterThan(balanceCoin0) ? balanceCoin0 : howMuchToSell
 
-    if (balanceCoin0.isGreaterThanOrEqualTo(store.pairs[pair].volume)) {
+    if (bn(howMuchCanISell).isGreaterThanOrEqualTo(pair.step)) {
       const diffToHighestPrice = calculatePercentage(bidPrice, vars.highest)
-      // The lowest buy
-      const lastBuy = candidatesToSell.sort((a, b) => Number.parseFloat(a.value) - Number.parseFloat(b.value))[0]
 
-      vars.sell = calculatePercentage(bidPrice, lastBuy.value).isGreaterThan(bn(pairParameters.changeToTrend))
+      vars.sell = calculatePercentage(bidPrice, lowestBuy).isGreaterThan(bn(pair.changeToTrend))
 
       if (vars.sell) {
         vars.lastActionTime = moment().unix()
         if (bn(vars.highest).isLessThan(bn(bidPrice))) vars.highest = bidPrice
         // Trend is changing, lets sell it
-        if (diffToHighestPrice.isLessThanOrEqualTo(bn(pairParameters.changeToTrend).multipliedBy(-1))) {
-          sellFn(pair, bn(bidPrice), vars).catch((error) => {
+        if (diffToHighestPrice.isLessThanOrEqualTo(bn(pair.changeToChangeTrend).multipliedBy(-1))) {
+          sellFn(pair.name, bn(bidPrice), howMuchCanISell, vars).catch((error) => {
             console.log('cant sell', error)
           })
           // Selling
@@ -159,11 +152,4 @@ export const trade = (pair: string) => {
     vars.sell = false
     vars.highest = bidPrice
   }
-}
-
-export const startTrading = () => {
-  const activePairs = Object.entries(store.pairs)
-    .filter(([_, config]) => config.active)
-    .map(([key]) => key)
-  for (const pair of activePairs) createTradeVars(pair)
 }

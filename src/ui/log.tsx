@@ -21,7 +21,7 @@ export function Log({store, pair}: {store: IStore; pair: string}) {
 
         <div className='p-col'> </div>
         <div className='p-col-fixed' style={{width: '130px'}}>
-          <span className='p-tag gold bigger '>{store.pairs[pair].profit}</span>
+          <span className='p-tag gold bigger '>{getPair(pair).profit}</span>
         </div>
       </div>
       <div className='p-field p-grid'>

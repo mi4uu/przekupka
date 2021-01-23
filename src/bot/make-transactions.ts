@@ -1,9 +1,16 @@
 import moment from 'moment'
 import {store, IToSell} from '../api/server-store'
+import {Pair} from '../db/entity/pair'
 import {bn} from '../utils/bn'
 import {calculatePercentage} from './calculate-percentage'
 
-export const makeTransactions = (pair: string) => {
+export const makeTransactions = async (pair: string) => {
+  const pairParameters = await Pair.findOne({where: {name: pair}})
+  if (!pairParameters) {
+    console.log(`Pair ${pair} not found! in makeTransactions`)
+    return false
+  }
+
   const transaction = store.closedTransactions[store.tradeVars[pair].lastTransactionId]
   const lastStatus = transaction?.status
   if (lastStatus === 'closed') {
@@ -73,15 +80,9 @@ export const makeTransactions = (pair: string) => {
       // Remove sold transaction
       store.toSell[pair] = store.toSell[pair].filter((p) => p.id !== sold.id)
 
-      // It happened before to be empty string, just in case
-      if (bn(store.pairs[pair].profit).isNaN()) {
-        store.pairs[pair].profit = '0'
-      }
-
       // Store profit
-      store.pairs[pair].profit = store.pairs[pair].profit
-        ? bn(store.pairs[pair].profit).plus(profit).toFixed(8)
-        : profit.toFixed(8)
+      pairParameters.profit = bn(pairParameters.profit).plus(profit).toFixed(8)
+      await pairParameters.save()
     } else {
       // Kraken specyfic extra magic
       // FIXME: need to be taken care off

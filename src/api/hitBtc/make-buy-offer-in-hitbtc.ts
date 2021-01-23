@@ -12,7 +12,8 @@ export async function makeBuyOfferInHitBtc(pair: string, price: string, volume: 
       timeInForce: 'GTD',
       type: 'limit',
     })
-  } catch (error) {
+    return String(data.id)
+  } catch (error: any) {
     console.log(Object.keys(error), error.message)
     console.log(
       JSON.stringify({
@@ -29,6 +30,4 @@ export async function makeBuyOfferInHitBtc(pair: string, price: string, volume: 
     )
     return false
   }
-
-  return String(data.id)
 }

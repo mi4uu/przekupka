@@ -32,9 +32,4 @@ export const getClosedOrders = async () => {
       },
     ]),
   )
-
-  store.closedTransactions = {
-    ...receivedTransactions,
-    ...store.closedTransactions,
-  }
 }

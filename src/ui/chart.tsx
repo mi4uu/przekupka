@@ -5,7 +5,9 @@ import moment from 'moment'
 import {IStore, ITick} from '../api/server-store'
 import {calculatePercentage} from '../bot/calculate-percentage'
 import {bn} from '../utils/bn'
-export default function chart({pair, store}: {pair: string; store: IStore}) {
+import {useStoreState} from './store'
+export default function chart({pair}: {pair: string}) {
+  const store = useStoreState((state) => state)
   const log = store.tradeVars[pair]
   if (store.ticks.length === 0 || !log) return null
 
@@ -67,18 +69,18 @@ export default function chart({pair, store}: {pair: string; store: IStore}) {
   const willSellAt = log
     ? Number.parseFloat((log.highest as unknown) as string) -
       Number.parseFloat((log.highest as unknown) as string) *
-        (Number.parseFloat(store.pairs[pair].changeToChangeTrend) / 100)
+        (Number.parseFloat(store.getPair(pair)!.changeToChangeTrend) / 100)
     : 0
   const willBuyAt = log
     ? Number.parseFloat((log.lowest as unknown) as string) +
       Number.parseFloat((log.lowest as unknown) as string) *
-        (Number.parseFloat(store.pairs[pair].changeToChangeTrend) / 100)
+        (Number.parseFloat(store.getPair(pair)!.changeToChangeTrend) / 100)
     : 0
   const marketLiquidity = calculatePercentage(
     bn(store.ticks[store.ticks.length - 1].pairs[pair].a),
     bn(store.ticks[store.ticks.length - 1].pairs[pair].b),
   )
-  const minDiffToBuyPercentage = bn(store.pairs[pair].changeToTrend).plus(marketLiquidity)
+  const minDiffToBuyPercentage = bn(store.getPair(pair)!.changeToTrend).plus(marketLiquidity)
   const minDiffToBuyInPrice = bn(log.lastTransactionPrice!)
     .minus(bn(log.lastTransactionPrice!).multipliedBy(minDiffToBuyPercentage.dividedBy(100)))
     .toFixed(8)

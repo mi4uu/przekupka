@@ -9,7 +9,6 @@ jest.mock('../api/make-buy-offer-in-kraken', () => ({
 }))
 
 import {store} from '../api/server-store'
-import {processData} from './process-data'
 import {trade} from './trade'
 import {makeSellOfferInKraken} from '../api/kraken/make-sell-offer-in-kraken'
 import {makeBuyOfferInKraken} from '../api/kraken/make-buy-offer-in-kraken'
@@ -28,7 +27,6 @@ beforeEach(() => {
 
   // @ts-expect-error
   store = {
-  
     tradeVars: {
       XXBTZUSD: {
         lastTrasnactionPrice: '1',

@@ -9,7 +9,7 @@ const changeParameter = async (store: IStore, pair: string, parameter: string, v
 }
 
 export default function Parameters_({store, pair}: {store: IStore; pair: string}) {
-  const pairData = store.pairs[pair]
+  const pairData = getPair(pair)
   return (
     <div className='card'>
       <h5>Parameters</h5>

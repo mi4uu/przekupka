@@ -14,6 +14,7 @@ import {checkBalance as checkBalanceFromKraken} from './kraken/check-balance'
 import {checkBalance as checkBalanceFromHitBtc} from './hitBtc/check-balance'
 import {getClosedOrders as getClosedOrdersFromHitBtc} from './hitBtc/get-closed-orders'
 import {getClosedOrders as getClosedOrdersFromKraken} from './kraken/get-closed-orders'
+import {pairsInitialHitBtc} from './hitBtc/pairs-initial'
 
 const api = {
   hitBTC: {
@@ -24,6 +25,9 @@ const api = {
     convertTick: convertTickFromHitBtc,
     checkBalance: checkBalanceFromHitBtc,
     getClosedOrders: getClosedOrdersFromHitBtc,
+    initialValues: {
+      pairs: pairsInitialHitBtc,
+    },
   },
   kraken: {
     makePrivateCall: krakenPrivateCall,
@@ -33,6 +37,9 @@ const api = {
     convertTick: convertTickFromKraken,
     checkBalance: checkBalanceFromKraken,
     getClosedOrders: getClosedOrdersFromKraken,
+    initialValues: {
+      pairs: [],
+    },
   },
 }
 

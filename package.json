@@ -4,22 +4,34 @@
   "description": "",
   "main": "src/index.ts",
   "scripts": {
-    "start": "NODE_ENV=\"production\" ts-node  --transpile-only  src/server.ts",
-    "dev": "node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register  src/server.ts",
+    "start": "NODE_ENV=\"production\" ts-node -r tsconfig-paths/register --transpile-only  src/server.ts",
+    "dev": "node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register -r tsconfig-paths/register src/server.ts",
     "dev-server": "nodemon",
     "ui": "parcel  public/index.html",
     "build": "parcel build public/index.html",
     "deploy": "parcel build public/index.html &&  ./syncWithServer.sh",
-    "test": "jest"
+    "test": "jest",
+    "init:hitbtc": "ts-node -r tsconfig-paths/register ./src/api/hitBtc/create-initial-pairs.ts",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/.bin/typeorm",
+    "migration:create": "ts-node ./node_modules/typeorm/cli.js migration:create -n",
+    "migration:generate": "ts-node ./node_modules/typeorm/cli.js migration:generate -n",
+    "migration:up": "ts-node ./node_modules/typeorm/cli.js migration:run",
+    "migration:down": "ts-node ./node_modules/typeorm/cli.js migration:revert"
   },
   "author": "",
   "license": "ISC",
   "xo": {
     "semicolon": false,
-    "prettier": true
+    "prettier": 2,
+    "rules": {
+      "import/extensions": 0,
+      "prettier/prettier": 2
+
+    }
   },
   "dependencies": {
     "@greenlock/manager": "^3.1.0",
+    "@typegoose/typegoose": "^7.4.7",
     "@types/jest": "^26.0.20",
     "@types/kraken-js": "^2.2.4",
     "@types/react-dom": "^17.0.0",
@@ -36,15 +48,19 @@
     "cryptocurrency-icons": "^0.17.1",
     "cryptojs": "^2.5.3",
     "csv-reader": "^1.0.7",
+    "easy-peasy": "^4.0.1",
     "express": "^4.17.1",
     "greenlock": "^4.0.4",
     "greenlock-express": "^4.0.3",
     "greenlock-store-fs": "^3.2.2",
     "jest": "^26.6.3",
+    "module-alias": "^2.2.2",
     "moment": "^2.29.1",
+    "mongoose": "^5.10.18",
     "nanoseconds": "^1.0.1",
     "next": "^10.0.4",
     "node-os-utils": "^1.3.2",
+    "pg": "^8.5.1",
     "primeflex": "^2.0.0",
     "primeicons": "^4.1.0",
     "primereact": "^5.0.2",
@@ -53,7 +69,11 @@
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-transition-group": "^4.4.1",
+    "reflect-metadata": "^0.1.13",
+    "sqlite3": "^5.0.1",
     "ts-jest": "^26.4.4",
+    "tsconfig-paths": "^3.9.0",
+    "typeorm": "^0.2.30",
     "typescript": "^4.1.3"
   },
   "devDependencies": {
@@ -61,6 +81,7 @@
     "@types/crypto-js": "^4.0.1",
     "@types/cryptojs": "^3.1.29",
     "@types/express": "^4.17.9",
+    "@types/mongoose": "^5.10.3",
     "@types/node-os-utils": "^1.2.0",
     "@types/react": "^17.0.0",
     "@types/request": "^2.48.5",
