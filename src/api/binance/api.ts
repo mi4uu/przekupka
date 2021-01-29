@@ -19,6 +19,8 @@ export const binanceApi = {
   markets,
   baseCoin,
   isTransactionValid: (pair: Pair, volume: string, price: string) => {
-    return bn(volume).multipliedBy(price).isGreaterThan(pair.param0)
+    const validVolume = bn(volume).toFixed(Number.parseInt(pair.step, 10))
+
+    return bn(validVolume).multipliedBy(price).isGreaterThan(pair.param0)
   },
 }

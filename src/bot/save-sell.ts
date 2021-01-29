@@ -21,6 +21,8 @@ export async function saveSell(pair: Pair, t: ClosedTransaction) {
     .getMany()
   let soldVol = bn(t.vol)
   let profit = bn(pair.profit)
+  console.log('saveSell called. have to_sell positions sum of :', toSellPosition, '  looking for price  ', maxPrice)
+  console.log(`transaction volume: ${t.vol}`)
   if (toSellPosition.length === 0) {
     console.log(`[tid: ${t.id}]  sold ${pair.name} from price ${t.price}, no TOSELL position found!`)
   }
@@ -66,4 +68,16 @@ export async function saveSell(pair: Pair, t: ClosedTransaction) {
 
   pair.profit = profit.toFixed(pair.coin1Precision)
   await pair.save()
+
+  const toSellPosition1: ToSell[] = await getRepository(ToSell)
+    .createQueryBuilder('toSell')
+    .orderBy('toSell.price', 'DESC')
+    .where('toSell.pairName = :pair AND toSell.price <= :maxPrice AND toSell.filled = :filled', {
+      pair: pair.name,
+      maxPrice,
+      filled: false,
+    })
+    .getMany()
+
+  console.log('saveSell ended. have to_sell positions sum of :', toSellPosition1)
 }

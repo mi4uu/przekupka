@@ -20,6 +20,7 @@ import {bn} from '#utils/bn'
 import {ToSell} from '#db/entity/to-sell'
 import {calculatePercentage} from '#bot/calculate-percentage'
 import api from '#api/api'
+import BigNumber from 'bignumber.js'
 
 const args = process.argv.slice(2)
 const port = args[0] ? Number.parseInt(args[0], 10) : 3000
@@ -69,10 +70,37 @@ const getStatus = async () => {
   const profitETHinUSD = bn(profit.BTC).multipliedBy(store.ticks[store.ticks.length - 1].pairs[`ETH${api.baseCoin}`].c)
   const toSellPositions = await ToSell.find({filled: false})
   const profitSUM = profit.USD.plus(profitBTCinUSD).plus(profitETHinUSD)
+  const toSell = await Promise.all(
+    toSellPositions.map(async (p) => {
+      const pair = await p.pair
+      const price = bn(store.ticks[store.ticks.length - 1].pairs[pair.name].b)
+      const priceUSD =
+        pair.coin1 === api.baseCoin ? '1' : store.ticks[store.ticks.length - 1].pairs[`${pair.coin1}${api.baseCoin}`].c
+      return {
+        left: p.left,
+        balance: store.balance[pair.coin0],
+        pair: pair.name,
+        isSelling: sell.includes(pair.name),
+        price: p.price,
+        currentPrice: price.toFixed(8),
+        diffInPrice: bn(price).minus(p.price).toFixed(8),
+        diffInPricePercent: calculatePercentage(price, p.price).toFixed(2) + ' %',
+        diffInPriceUSD: bn(price).minus(p.price).multipliedBy(priceUSD).toFixed(2),
+        profitInUSD: bn(price).minus(p.price).multipliedBy(p.left).multipliedBy(priceUSD).toFixed(2),
+        worthInUSD: bn(price).multipliedBy(p.left).multipliedBy(priceUSD).toFixed(2),
+        canBeSold: api.isTransactionValid(pair, p.left, price),
+      }
+    }),
+  )
+
   return {
     buying: buy.length,
     selling: sell.length,
     toSellCount: toSellPositions.length,
+    toSellWorth: toSell
+      .map((ts) => bn(ts.worthInUSD))
+      .reduce((a, b): BigNumber => a.plus(b))
+      .toFixed(2),
 
     profitUSD: profit.USD.toFixed(2) + ' $',
     profitBTC: profit.BTC.toFixed(8) + ' BTC = ' + profitBTCinUSD.toFixed(2) + ' $',
@@ -96,30 +124,7 @@ const getStatus = async () => {
     buyingPairs: buy,
     sellingPairs: sell,
 
-    toSell: (
-      await Promise.all(
-        toSellPositions.map(async (p) => {
-          const pair = await p.pair
-          const price = bn(store.ticks[store.ticks.length - 1].pairs[pair.name].b)
-          const priceUSD =
-            pair.coin1 === api.baseCoin
-              ? '1'
-              : store.ticks[store.ticks.length - 1].pairs[`${pair.coin1}${api.baseCoin}`].c
-          return {
-            left: p.left,
-            balance: store.balance[pair.coin0],
-            pair: pair.name,
-            isSelling: sell.includes(pair.name),
-            price: p.price,
-            currentPrice: price.toFixed(8),
-            diffInPrice: bn(price).minus(p.price).toFixed(8),
-            diffInPricePercent: calculatePercentage(price, p.price).toFixed(2) + ' %',
-            diffInPriceUSD: bn(price).minus(p.price).multipliedBy(priceUSD).toFixed(2),
-            profitInUSD: bn(price).minus(p.price).multipliedBy(p.vol).multipliedBy(priceUSD).toFixed(2),
-          }
-        }),
-      )
-    ).sort((a, b) => bn(b.profitInUSD).minus(a.profitInUSD).toNumber()),
+    toSell: toSell.filter((t) => t.canBeSold).sort((a, b) => bn(b.profitInUSD).minus(a.profitInUSD).toNumber()),
     profitablePairs: pairsWithProfit
       .map((p) => ({
         name: p.name,
@@ -134,6 +139,33 @@ const getStatus = async () => {
       .sort((a, b) => bn(b.profitInUsd).minus(a.profitInUsd).toNumber()),
   }
 }
+
+server.get('/toSellNotIncluded', async (_request: Request, response: Response) => {
+  const toSellPositions = await ToSell.find({filled: false})
+  const toSell = await Promise.all(
+    toSellPositions.map(async (p) => {
+      const pair = await p.pair
+      return pair.coin0
+    }),
+  )
+  const b: string[] = Object.keys(store.balance)
+    .filter((ba) => bn(store.balance[ba]).isGreaterThan('0.0001'))
+    .filter((ba) => !toSell.includes(ba))
+  const result = b.map(async (b_) => {
+    const pairName = `${b_}BTC`
+    const pair = await Pair.findOne(pairName)
+    if (!pair) return {pairName}
+    const price = store.ticks[store.ticks.length - 1].pairs[pairName]?.b
+    const canBeSold = api.isTransactionValid(pair, store.balance[b_], price)
+
+    return {
+      name: b_,
+      balance: store.balance[b_],
+      canBeSold,
+    }
+  })
+  response.send((await Promise.all(result)).filter((a) => a.canBeSold))
+})
 
 server.get('/status', async (_request: Request, response: Response) => {
   response.send(await getStatus())

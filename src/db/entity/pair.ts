@@ -63,6 +63,9 @@ export class Pair extends BaseEntity {
   @column({type: 'decimal', precision: 40, scale: 20, default: 0})
   public param0!: string // Some generic param
 
+  @column({default: false})
+  public debug!: boolean
+
   @oneToMany(() => ClosedTransaction, async (closedTransaction) => closedTransaction.pair)
   public closedTransactions!: Promise<ClosedTransaction[]>
 
