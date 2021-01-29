@@ -4,8 +4,8 @@ import {createConnection} from 'typeorm'
 import {bn} from '#utils/bn'
 import {markets} from './config'
 
-const changeToTrend = 3
-const changeToChangeTrend = 0.9
+const changeToTrend = 1.5
+const changeToChangeTrend = 0.6
 const buyPerHour = 2
 const createInitialPairs = async () => {
   const connection = await createConnection()
