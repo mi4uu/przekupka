@@ -7,16 +7,15 @@ import ToSell from './to-sell'
 import {IStore} from '../api/server-store'
 export default function PairDetails({pair, store}: {pair: string; store: IStore}) {
   const transactions = Object.values(store.closedTransactions)
-    .filter((t) => t.descr.pair === pair || t.descr.pair === store.assetPairs[pair]?.altname)
+    .filter((t) => t.pair === pair || t.pair === store.assetPairs[pair]?.altname)
     .map((t) => ({
-      ...t.descr,
+      ...t,
       status: t.status,
       volume: t.vol,
-      cost: t.cost,
       fee: t.fee,
       time: t.opentm,
       date: moment.unix(t.opentm).format('YYYY-MM-DD HH:mm:ss'),
-      price: Number.parseFloat(t.price) > 0 ? t.price : t.descr.price,
+      price: Number.parseFloat(t.price),
     }))
     .sort((a, b) => b.time - a.time)
   return (

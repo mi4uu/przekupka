@@ -1,16 +1,35 @@
-![Baba ze straganem](screenshot.png?raw=true "przekupka 1.0")
-![Baba ze straganem](screenshot1.png?raw=true "przekupka 1.0")
+supported providers : hitBTC / kraken / binance
+
 
 
 **** INSTALL AND RUN:
 
-- change src/api/config.example.ts to config.ts and add credentials for kraken
-- change settings of Your traiding pairs in src/api/serverStore.ts (at the bottom) . changing form UI is not done yet
+- change src/${provider}/config.ts  add credentials 
+- change params in src/${provider}/create-initial-pairs.ts
+```
+const changeToTrend = 1.5   // how much percentage change will start considering buying/selling . it also mean minimum profit in percentage
+const changeToChangeTrend = 0.6  // how much percentage price need to change to make a move.   
+const buyPerHour = 2  // how many BUY action per pair per hour can we make 
+```
 
-- npm ci
+change db config in ./ormconfig.js
+
+install deps:
+```npm ci```
+create pairs in db:
+```PROVIDER='binance' npm run init:binance  ```
+
 
 ** and run:
-- npm run dev
+```PROVIDER='binance' npm start```
 
-** or (legacy text version)
--npm start 
+
+by default it will trade USD/BTC on kraken and hitbtc and USDT/BTC on binance. just give him some
+
+*** endpoints:
+what the hell is going on endpoint:
+http://127.0.0.1:3000/status
+
+what the hell is going on endpoint but with colors:
+http://127.0.0.1:3000/statusp
+

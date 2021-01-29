@@ -4,7 +4,7 @@ import qs from 'qs'
 
 import {getMessageSignature} from './get-message-signature'
 // @ts-expect-error
-import {ConcurrencyManager} from 'axios-concurrency'
+import {ConcurrencyManager as concurrencyManager} from 'axios-concurrency'
 
 const api = axios.create({
   baseURL: baseUrl,
@@ -14,7 +14,7 @@ const api = axios.create({
 const MAX_CONCURRENT_REQUESTS = 1
 
 // Init your manager.
-const manager = ConcurrencyManager(api, MAX_CONCURRENT_REQUESTS)
+const manager = concurrencyManager(api, MAX_CONCURRENT_REQUESTS)
 
 export const makePrivateCall = async (path: string, parameters: Record<string, any>) => {
   if (!parameters.nonce) {

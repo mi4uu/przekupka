@@ -1,92 +1,74 @@
 import axios from 'axios'
-import {IAction} from '.'
-import {IStore} from '../api/server-store'
+import {
+  IAssetPairs,
+  IBalances,
+  IClosedTransactionsGroupped,
+  ISoldPaired,
+  ITick,
+  IToSellPaired,
+  ITradeVarsPaired,
+} from '../api/server-store'
+import {createStore, State, action, Action, thunk, Thunk, createTypedHooks, computed, Computed} from 'easy-peasy'
+import {Pair} from '../db/entity/pair'
 
-export const initialState: IStore = {
+export interface IStore {
+  tradeVars: ITradeVarsPaired
+  assetPairs: IAssetPairs
+  balance: IBalances
+  toSell: IToSellPaired
+  pairs: Pair[]
+  ticks: ITick[]
+  closedTransactions: IClosedTransactionsGroupped
+  sold: ISoldPaired
+  setPairs: Action<IStore, Pair[]>
+  fetchPairs: Thunk<IStore, Pair[]>
+  getPair: Computed<IStore, (pair: string) => Pair | undefined>
+}
+
+export const store = createStore<IStore>({
   balance: {},
-  pairs: {},
+  pairs: [],
   ticks: [],
   closedTransactions: {},
   assetPairs: {},
   tradeVars: {},
   toSell: {},
-  storeLoaded: false,
   sold: {},
-}
+  setPairs: action((state, payload) => {
+    state.pairs = payload
+  }),
+  fetchPairs: thunk(async (actions, payload) => {
+    const result = await axios.get('/pairs')
+    actions.setPairs(result.data)
+  }),
+  getPair: computed((state) => (pair) => state.pairs.find((p) => p.name === pair)),
+  // FetchBalance: thunk(async (actions, payload) => {
+  //   const result = await axios.get('/balance')
+  // }),
 
-export const reducer = (state: IStore, action: IAction): IStore => {
-  if (action.type === 'SET_BALANCE') {
-    return {...state, balance: action.payload}
-  }
+  // fetchTick: thunk(async (actions, payload) => {
+  //   const result = await axios.get('/tick')
+  // }),
+  // fetchTicks: thunk(async (actions, payload) => {
+  //   const result = await axios.get('/ticks')
+  // }),
+  // fetchTransactions: thunk(async (actions, payload) => {
+  //   const result = await axios.get('/transactions')
+  // }),
+  // fetchAssetPairs: thunk(async (actions, payload) => {
+  //   const result = await axios.get('/assetPairs')
+  // }),
+  // fetchTradeVars: thunk(async (actions, payload) => {
+  //   const result = await axios.get('/tradeVars')
+  // }),
 
-  if (action.type === 'SET_PAIRS') {
-    return {...state, pairs: action.payload}
-  }
+  // fetchToSell: thunk(async (actions, payload) => {
+  //   const result = await axios.get('/toSell')
+  // }),
+})
 
-  if (action.type === 'ADD_TICK') {
-    let newTicks = state.ticks
-    if (newTicks.length > 100) {
-      newTicks = newTicks.filter((_tick, i) => i === 0 || i % 3)
-    }
+const typedHooks = createTypedHooks<IStore>()
 
-    newTicks.push(action.payload)
-    return {...state, ticks: newTicks}
-  }
-
-  if (action.type === 'SET_TICKS') {
-    return {...state, ticks: action.payload}
-  }
-
-  if (action.type === 'SET_TRANSACTIONS') {
-    return {...state, closedTransactions: action.payload}
-  }
-
-  if (action.type === 'SET_ASSETPAIRS') {
-    return {...state, assetPairs: action.payload}
-  }
-
-  if (action.type === 'SET_TRADEVARS') {
-    return {...state, tradeVars: action.payload}
-  }
-
-  if (action.type === 'SET_TOSELL') {
-    return {...state, toSell: action.payload}
-  }
-
-  return state
-}
-
-export const fetchPairs = async (dispatch: React.Dispatch<IAction>) =>
-  axios.get('/pairs').then((results) => {
-    dispatch({type: 'SET_PAIRS', payload: results.data})
-  })
-export const fetchBalance = async (dispatch: React.Dispatch<IAction>) =>
-  axios.get('/balance').then((results) => {
-    dispatch({type: 'SET_BALANCE', payload: results.data})
-  })
-
-export const fetchTick = async (dispatch: React.Dispatch<IAction>) =>
-  axios.get('/tick').then((results) => {
-    dispatch({type: 'ADD_TICK', payload: results.data})
-  })
-export const fetchTicks = async (dispatch: React.Dispatch<IAction>) =>
-  axios.get('/ticks').then((results) => {
-    dispatch({type: 'SET_TICKS', payload: results.data})
-  })
-export const fetchTransactions = async (dispatch: React.Dispatch<IAction>) =>
-  axios.get('/transactions').then((results) => {
-    dispatch({type: 'SET_TRANSACTIONS', payload: results.data})
-  })
-export const fetchAssetPairs = async (dispatch: React.Dispatch<IAction>) =>
-  axios.get('/assetPairs').then((results) => {
-    dispatch({type: 'SET_ASSETPAIRS', payload: results.data})
-  })
-export const fetchTradeVars = async (dispatch: React.Dispatch<IAction>) =>
-  axios.get('/tradeVars').then((results) => {
-    dispatch({type: 'SET_TRADEVARS', payload: results.data})
-  })
-
-export const fetchToSell = async (dispatch: React.Dispatch<IAction>) =>
-  axios.get('/toSell').then((results) => {
-    dispatch({type: 'SET_TOSELL', payload: results.data})
-  })
+export const useStoreActions = typedHooks.useStoreActions
+export const useStoreDispatch = typedHooks.useStoreDispatch
+export const useStoreState = typedHooks.useStoreState

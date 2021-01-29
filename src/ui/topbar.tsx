@@ -2,7 +2,7 @@ import React from 'react'
 import {Button} from 'primereact/button'
 import BigNumber from 'bignumber.js'
 import {IStore} from '../api/server-store'
-const primaryCoin = 'ZUSD'
+const primaryCoin = 'USD'
 
 const jump = (h: string) => {
   const top = (document.getElementById(h)?.offsetTop || 0) - 100 // Getting Y of target element
@@ -11,7 +11,7 @@ const jump = (h: string) => {
 
 export default function TopBar({store}: {store: IStore}) {
   let profit = new BigNumber(0)
-  if (store.pairs && store.ticks)
+  if (store.pairs && store.ticks.length > 0)
     Object.entries(store.pairs).map(([pair, v]) => {
       if (v.coin1 !== primaryCoin) {
         const traidingPair = Object.entries(store.pairs)

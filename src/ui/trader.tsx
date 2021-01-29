@@ -7,13 +7,14 @@ import {bn} from '../utils/bn'
 import ChartWrap from './chart-wrap'
 import PairDetails from './pair-details'
 import {IStore} from '../api/server-store'
+import {getPair} from './store'
 
 export default function Trader({pair, store}: {pair: string; store: IStore}) {
   const [opened, setOpened] = useState(false)
 
   const closedTransactionsCount = Object.values(store.closedTransactions)
-    .filter((t) => t.descr.pair === pair || t.descr.pair === store.assetPairs[pair]?.altname)
-    .filter((t) => t.status === 'closed' && t.descr.type === 'sell').length
+    .filter((t) => t.pair === pair || t.pair === store.assetPairs[pair]?.altname)
+    .filter((t) => t.status === 'closed' && t.type === 'sell').length
   const firstTick = store.ticks[0]?.pairs[pair]
   const lastTick = store.ticks[store.ticks.length - 1]?.pairs[pair]
   const price24Change = calculatePercentage(lastTick?.c, firstTick?.c)
@@ -51,14 +52,14 @@ export default function Trader({pair, store}: {pair: string; store: IStore}) {
   const header = (
     <div className='header'>
       <div className='part'>
-        <img style={{width: 16}} src={`icons/${store.pairs[pair]?.coin0FriendlyName?.toLocaleLowerCase()}.png`} />
-        {store.pairs[pair].coin0FriendlyName} /
-        <img style={{width: 16}} src={`icons/${store.pairs[pair]?.coin1FriendlyName?.toLocaleLowerCase()}.png`} />
-        {store.pairs[pair].coin1FriendlyName}
+        <img style={{width: 16}} src={`icons/${getPair(pair)?.coin0FriendlyName?.toLocaleLowerCase()}.png`} />
+        {getPair(pair).coin0FriendlyName} /
+        <img style={{width: 16}} src={`icons/${getPair(pair)?.coin1FriendlyName?.toLocaleLowerCase()}.png`} />
+        {getPair(pair).coin1FriendlyName}
       </div>
       <div className='part'>
         profit:
-        <span className='p-tag gold  '>{store.pairs[pair].profit}</span>
+        <span className='p-tag gold  '>{getPair(pair).profit}</span>
       </div>
 
       <div className='part'>
@@ -111,6 +112,7 @@ export default function Trader({pair, store}: {pair: string; store: IStore}) {
       </div>
     </div>
   )
+
   return (
     <div id={pair} className='trader'>
       <div

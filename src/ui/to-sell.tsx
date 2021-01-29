@@ -10,8 +10,8 @@ export default function ToSell({pair, store}: {pair: string; store: IStore}) {
   const transactions = store.closedTransactions
   const price = store.ticks[store.ticks.length - 1].pairs[pair].b
   const highest = bn(store.tradeVars[pair].highest)
-  const risk = bn(store.pairs[pair].changeToChangeTrend)
-  const minProfit = bn(store.pairs[pair].changeToTrend)
+  const risk = bn(getPair(pair).changeToChangeTrend)
+  const minProfit = bn(getPair(pair).changeToTrend)
   const sellPriceDiff = highest.multipliedBy(risk.dividedBy(100))
   const sellAt = highest.minus(sellPriceDiff)
   const sellAtPercentage = calculatePercentage(price, sellAt)
