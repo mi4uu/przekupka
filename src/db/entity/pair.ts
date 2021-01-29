@@ -7,6 +7,7 @@ import {
   OneToMany as oneToMany,
 } from 'typeorm'
 import {ClosedTransaction} from './closed-transactions'
+import {Profit} from './profit'
 import {Tick} from './tick'
 import {ToSell} from './to-sell'
 @entity()
@@ -14,13 +15,13 @@ export class Pair extends BaseEntity {
   @primaryColumn()
   public name!: string
 
-  @column()
+  @column({type: 'float'})
   public changeToTrend!: number
 
-  @column()
+  @column({type: 'float'})
   public changeToChangeTrend!: number
 
-  @column({type: 'decimal', precision: 16, scale: 8, default: 0})
+  @column({type: 'decimal', precision: 20, scale: 8, default: 0})
   public volume!: string
 
   @column()
@@ -56,15 +57,21 @@ export class Pair extends BaseEntity {
   @column()
   public coin1FriendlyName!: string
 
-  @column({type: 'decimal', precision: 16, scale: 8, default: 0})
+  @column({type: 'decimal', precision: 40, scale: 20, default: 0})
   public step!: string
 
-  @oneToMany((type) => ClosedTransaction, (closedTransaction) => closedTransaction.pair)
-  public closedTransactions!: ClosedTransaction[]
+  @column({type: 'decimal', precision: 40, scale: 20, default: 0})
+  public param0!: string // Some generic param
 
-  @oneToMany((type) => ToSell, (toSell) => toSell.pair)
-  public toSell!: ClosedTransaction[]
+  @oneToMany(() => ClosedTransaction, async (closedTransaction) => closedTransaction.pair)
+  public closedTransactions!: Promise<ClosedTransaction[]>
 
-  @oneToMany((type) => Tick, (tick) => tick.pair)
-  public ticks!: Tick[]
+  @oneToMany(() => ToSell, async (toSell) => toSell.pair)
+  public toSell!: Promise<ToSell[]>
+
+  @oneToMany(() => Tick, async (tick) => tick.pair)
+  public ticks!: Promise<Tick[]>
+
+  @oneToMany(() => Profit, async (profit) => profit.pair)
+  public profits!: Promise<Profit[]>
 }

@@ -37,7 +37,7 @@ const createInitialPairs = async () => {
       newPair.coin0FriendlyName = coin0Info.fullName
       newPair.coin1FriendlyName = coin1Info.fullName
       newPair.step = pair.quantityIncrement
-      newPair.volume = bn(pair.quantityIncrement).multipliedBy(10).toFixed(8)
+      newPair.volume = bn(pair.quantityIncrement).multipliedBy(10).toFixed(coin0Info.precisionPayout)
       newPair.active = true
       console.log(`creating ${pair.id}`)
       await newPair.save()

@@ -13,7 +13,7 @@ export default function fetchData() {
         store.balance = result
       })
       .catch((error) => {
-        console.log('Check balance error:', error.code)
+        console.log('Check balance error:', error)
       })
   }
 

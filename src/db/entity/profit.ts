@@ -9,7 +9,7 @@ import {
 import {Pair} from './pair'
 
 @entity()
-export class Tick extends BaseEntity {
+export class Profit extends BaseEntity {
   @primaryGeneratedColumn()
   id!: number
 
@@ -17,15 +17,12 @@ export class Tick extends BaseEntity {
   timestamp: number
 
   @index()
-  @manyToOne(() => Pair, (pair) => pair.ticks)
+  @manyToOne(() => Pair, (pair) => pair.profits)
   pair!: Promise<Pair>
 
   @column({type: 'decimal', precision: 40, scale: 20, default: 0})
-  ask!: string
+  profit!: string
 
-  @column({type: 'decimal', precision: 40, scale: 20, default: 0})
-  closed!: string
-
-  @column({type: 'decimal', precision: 40, scale: 20, default: 0})
-  bid!: string
+  @column({type: 'decimal', precision: 10, scale: 2, default: 0})
+  diff!: string
 }

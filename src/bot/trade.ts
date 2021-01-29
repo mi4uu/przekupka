@@ -11,11 +11,11 @@ import {ClosedTransaction} from '#db/entity/closed-transactions'
 import {getRepository} from 'typeorm'
 
 export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars) => {
-  console.log(pair, 'BUY!!!', price.toFixed(8))
+  // Console.log(pair, 'BUY!!!', price.toFixed(8))
   const p = await Pair.findOneOrFail(pair)
-  const result = await api.makeBuyOffer(pair, price.toFixed(8), p.volume)
+  const result = await api.makeBuyOffer(pair, price.toFixed(p.coin0Precision), bn(p.volume).toFixed(p.coin0Precision))
   if (result) {
-    vars.wait = 20
+    vars.wait = 40
   } else {
     console.log('transaction failed')
     vars.buy = false
@@ -23,10 +23,11 @@ export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars) =>
 }
 
 export const sellFn = async (pair: string, price: BigNumber, volume: string, vars: ITradeVars) => {
-  console.log(pair, 'SELL!!!', price.toFixed(8))
-  const result = await api.makeSellOffer(pair, price.toFixed(8), volume)
+  // Console.log(pair, 'SELL!!!', price.toFixed(8), volume)
+  const p = await Pair.findOneOrFail(pair)
+  const result = await api.makeSellOffer(pair, price.toFixed(p.coin0Precision), bn(volume).toFixed(p.coin0Precision))
   if (result) {
-    vars.wait = 20
+    vars.wait = 40
   } else {
     console.log('transaction failed')
     vars.sell = false
@@ -43,8 +44,8 @@ export const trade = async (pair: Pair) => {
   // For initial values
   if (!vars.lastTransactionPrice) {
     vars.lastTransactionPrice = price
-    vars.lowest = price
-    vars.highest = price
+    vars.lowest = askPrice
+    vars.highest = bidPrice
   }
 
   if (bn(bidPrice).isGreaterThan(vars.highest) && calculatePercentage(bidPrice, vars.highest).abs().isLessThan(10)) {
@@ -77,17 +78,15 @@ export const trade = async (pair: Pair) => {
       const marketLiquidity = calculatePercentage(askPrice, bidPrice)
       const changeFromLastTransaction = calculatePercentage(vars.lastTransactionPrice, askPrice)
       const minDiffToBuy = bn(pair.changeToTrend).plus(marketLiquidity)
-      if (changeFromLastTransaction.isGreaterThan(minDiffToBuy)) {
+      if (
+        changeFromLastTransaction.isGreaterThan(minDiffToBuy) &&
+        api.isTransactionValid(pair, pair.volume, askPrice)
+      ) {
         vars.buy = true
         vars.lastActionTime = moment().unix()
         if (bn(vars.lowest).isGreaterThan(bn(askPrice))) vars.lowest = askPrice
         const diffToLowest = calculatePercentage(askPrice, vars.lowest)
         if (diffToLowest.isGreaterThanOrEqualTo(minDiffToBuy)) {
-          // Log
-          console.log(
-            JSON.stringify({minDiffToBuy, askPrice, bidPrice, changeFromLastTransaction, marketLiquidity}, null, 2),
-          )
-
           buyFn(pair.name, bn(askPrice), vars).catch((error) => {
             console.log('cant buy', error)
           })
@@ -97,7 +96,7 @@ export const trade = async (pair: Pair) => {
         vars.lowest = askPrice
       }
     } else {
-      console.log(JSON.stringify({howMuchDidIBuyInLastHour, howMuchPerHourCanIBuy}))
+      //   Console.log(JSON.stringify({howMuchDidIBuyInLastHour, howMuchPerHourCanIBuy, pair: pair.name}))
       vars.limitBuyPerHourReached = true
       vars.buy = false
       vars.lowest = askPrice
@@ -110,41 +109,73 @@ export const trade = async (pair: Pair) => {
 
   // Did we buy anything to sell ?
   const minProfit = bn(bidPrice).multipliedBy(bn(pair.changeToTrend).dividedBy(100))
-  const maxPrice = bn(bidPrice).plus(minProfit)
+  const maxPrice = bn(bidPrice).minus(minProfit)
   const {howMuchToSell, lowestBuy} = await getRepository(ToSell)
     .createQueryBuilder('t')
     .where('t.pairName = :pair AND t.filled = :filled AND t.price < :maxPrice', {
       pair: pair.name,
-      maxPrice: maxPrice.toFixed(8),
+      maxPrice: maxPrice.toFixed(pair.coin0Precision),
       filled: false,
     })
     .select('COALESCE(SUM(t.left),0)', 'howMuchToSell')
     .addSelect('MIN(t.price)', 'lowestBuy')
     .getRawOne()
   // Const candidatesToSell = store.toSell[pair].filter((p) => bn(p.value).isLessThan(maxPrice))
+  // if (pair.name === 'WRXUSDT') {
+  //   console.log(
+  //     JSON.stringify(
+  //       {
+  //         pairName: pair.name,
+  //         step: pair.step,
+  //         howMuchToSell,
+  //         balanceCoin0,
+  //         minProfit,
+  //         maxPrice,
+  //         bidPrice,
+  //         lowestBuy,
+  //       },
+  //       null,
+  //       2,
+  //     ),
+  //   )
+  // }
 
-  if (bn(howMuchToSell).isGreaterThanOrEqualTo(pair.step)) {
+  if (bn(howMuchToSell).isGreaterThanOrEqualTo(0)) {
     vars.noAssetsToSell = false
     const howMuchCanISell = bn(howMuchToSell).isGreaterThan(balanceCoin0) ? balanceCoin0 : howMuchToSell
 
-    if (bn(howMuchCanISell).isGreaterThanOrEqualTo(pair.step)) {
+    if (api.isTransactionValid(pair, howMuchCanISell, bidPrice)) {
       const diffToHighestPrice = calculatePercentage(bidPrice, vars.highest)
+      vars.sell = true
 
-      vars.sell = calculatePercentage(bidPrice, lowestBuy).isGreaterThan(bn(pair.changeToTrend))
+      //  We already get all assets with min profit, no reason to check again
+      // vars.sell = calculatePercentage(bidPrice, lowestBuy).isGreaterThan(bn(pair.changeToTrend))
+      //  instead just check if it is not 0
+      // vars.sell = bn(howMuchCanISell).isGreaterThan(0)
+      // oh wait, we did check that it is more than min. step. no need to check again!
 
-      if (vars.sell) {
-        vars.lastActionTime = moment().unix()
-        if (bn(vars.highest).isLessThan(bn(bidPrice))) vars.highest = bidPrice
-        // Trend is changing, lets sell it
-        if (diffToHighestPrice.isLessThanOrEqualTo(bn(pair.changeToChangeTrend).multipliedBy(-1))) {
-          sellFn(pair.name, bn(bidPrice), howMuchCanISell, vars).catch((error) => {
-            console.log('cant sell', error)
-          })
-          // Selling
-          vars.sell = false
-        }
+      vars.lastActionTime = moment().unix()
+      if (bn(vars.highest).isLessThan(bn(bidPrice))) vars.highest = bidPrice
+      // Trend is changing, lets sell it
+      if (diffToHighestPrice.isLessThanOrEqualTo(bn(pair.changeToChangeTrend).multipliedBy(-1))) {
+        sellFn(pair.name, bn(bidPrice), howMuchCanISell, vars).catch((error) => {
+          console.log('cant sell', error)
+        })
+        // Console.log(
+        //   'sell',
+        //   JSON.stringify({
+        //     diffToHighestPrice,
+        //     howMuchCanISell,
+        //     pair: pair.name,
+        //     step: pair.step,
+        //   }),
+        // )
+        // Selling
+        vars.sell = false
       } else {
-        vars.highest = bidPrice
+        sellFn(pair.name, bn(bidPrice), howMuchCanISell, vars).catch((error) => {
+          console.log('cant sell', error)
+        })
       }
     }
   } else {

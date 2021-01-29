@@ -9,10 +9,10 @@ const saveTickEvery = 3000 // Save every 10 minutes
 export const getTick = async () => {
   try {
     const results = await api.getTick()
-    const ticks = store.ticks
+    // Const ticks = store.ticks
     const newTick = api.convertTick(results)
 
-    ticks.push({timestamp: moment().unix(), pairs: newTick})
+    const ticks = [{timestamp: moment().unix(), pairs: newTick}]
     store.ticks = ticks
     const pairs = await Pair.find({active: true})
 

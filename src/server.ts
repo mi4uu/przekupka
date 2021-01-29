@@ -18,16 +18,36 @@ import {connect} from './db/db'
 import {MoreThan as moreThan} from 'typeorm'
 import {bn} from '#utils/bn'
 import {ToSell} from '#db/entity/to-sell'
+import {calculatePercentage} from '#bot/calculate-percentage'
+import api from '#api/api'
 
 const args = process.argv.slice(2)
 const port = args[0] ? Number.parseInt(args[0], 10) : 3000
+function syntaxHighlight(json: string) {
+  json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return json.replace(
+    /("(\\u[a-zA-Z\d]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+    (match) => {
+      let cls = 'number'
+      if (match.startsWith('"')) {
+        cls = match.endsWith(':') ? 'key' : 'string'
+      } else if (/true|false/.test(match)) {
+        cls = 'boolean'
+      } else if (match.includes('null')) {
+        cls = 'null'
+      }
+
+      return '<span class="' + cls + '">' + match + '</span>'
+    },
+  )
+}
 
 // App.prepare().then(() => {
 const server = express()
 server.use(auth)
 
 server.use(bodyParser.json())
-server.get('/status', async (_request: Request, response: Response) => {
+const getStatus = async () => {
   const buy: string[] = []
   const sell: string[] = []
   Object.entries(store.tradeVars).forEach(([p, v]) => {
@@ -39,31 +59,97 @@ server.get('/status', async (_request: Request, response: Response) => {
     BTC: bn('0'),
     USD: bn('0'),
     ETH: bn('0'),
-    SUM: bn('0'),
   }
-  const pairsWithProfit = await Pair.find({profit: moreThan('0')})
+  const pairsWithProfit = (await Pair.find({profit: moreThan('0.0')})).filter((p) => Number.parseFloat(p.profit) > 0)
   pairsWithProfit.forEach((pair) => {
-    if (pair.coin1 === 'BTC' || pair.coin1 === 'ETH' || pair.coin1 === 'USD')
-      profit[pair.coin1] = profit[pair.coin1].plus(pair.profit)
-    if (pair.coin1 === 'USD') profit.SUM = profit[pair.coin1].plus(pair.profit)
-    if (pair.coin1 === 'BTC' || pair.coin1 === 'ETH') {
-      profit.SUM = profit[pair.coin1].plus(
-        bn(pair.profit).multipliedBy(store.ticks[store.ticks.length - 1].pairs[pair.name].c),
-      )
-    }
+    if (pair.coin1 === 'BTC' || pair.coin1 === 'ETH') profit[pair.coin1] = profit[pair.coin1].plus(pair.profit)
+    else profit.USD = profit.USD.plus(pair.profit)
   })
+  const profitBTCinUSD = bn(profit.BTC).multipliedBy(store.ticks[store.ticks.length - 1].pairs[`BTC${api.baseCoin}`].c)
+  const profitETHinUSD = bn(profit.BTC).multipliedBy(store.ticks[store.ticks.length - 1].pairs[`ETH${api.baseCoin}`].c)
   const toSellPositions = await ToSell.find({filled: false})
-  response.send({
-    buyingPairs: buy,
-    sellingPairs: sell,
+  const profitSUM = profit.USD.plus(profitBTCinUSD).plus(profitETHinUSD)
+  return {
     buying: buy.length,
     selling: sell.length,
-    toSell: toSellPositions,
-    profit,
-    balanceUSD: store.balance.USD,
-    balanceBTC: store.balance.BTC,
-    balanceETH: store.balance.ETH,
-  })
+    toSellCount: toSellPositions.length,
+
+    profitUSD: profit.USD.toFixed(2) + ' $',
+    profitBTC: profit.BTC.toFixed(8) + ' BTC = ' + profitBTCinUSD.toFixed(2) + ' $',
+    profitETH: profit.ETH.toFixed(8) + ' ETH = ' + profitETHinUSD.toFixed(2) + ' $',
+    profitSUM: profitSUM.toFixed(2) + ' $',
+    balanceUSD: store.balance[api.baseCoin] + '$',
+    balanceBTC:
+      store.balance.BTC +
+      'BTC = ' +
+      bn(store.balance.BTC)
+        .multipliedBy(store.ticks[store.ticks.length - 1].pairs[`BTC${api.baseCoin}`].c)
+        .toFixed(2) +
+      ' $',
+    balanceETH:
+      store.balance.ETH +
+      'ETH = ' +
+      bn(store.balance.ETH)
+        .multipliedBy(store.ticks[store.ticks.length - 1].pairs[`ETH${api.baseCoin}`].c)
+        .toFixed(2) +
+      ' $',
+    buyingPairs: buy,
+    sellingPairs: sell,
+
+    toSell: (
+      await Promise.all(
+        toSellPositions.map(async (p) => {
+          const pair = await p.pair
+          const price = bn(store.ticks[store.ticks.length - 1].pairs[pair.name].b)
+          const priceUSD =
+            pair.coin1 === api.baseCoin
+              ? '1'
+              : store.ticks[store.ticks.length - 1].pairs[`${pair.coin1}${api.baseCoin}`].c
+          return {
+            left: p.left,
+            balance: store.balance[pair.coin0],
+            pair: pair.name,
+            isSelling: sell.includes(pair.name),
+            price: p.price,
+            currentPrice: price.toFixed(8),
+            diffInPrice: bn(price).minus(p.price).toFixed(8),
+            diffInPricePercent: calculatePercentage(price, p.price).toFixed(2) + ' %',
+            diffInPriceUSD: bn(price).minus(p.price).multipliedBy(priceUSD).toFixed(2),
+            profitInUSD: bn(price).minus(p.price).multipliedBy(p.vol).multipliedBy(priceUSD).toFixed(2),
+          }
+        }),
+      )
+    ).sort((a, b) => bn(b.profitInUSD).minus(a.profitInUSD).toNumber()),
+    profitablePairs: pairsWithProfit
+      .map((p) => ({
+        name: p.name,
+        profit: p.profit,
+        profitInUsd:
+          p.coin1 === api.baseCoin
+            ? p.profit
+            : bn(p.profit)
+                .multipliedBy(store.ticks[store.ticks.length - 1].pairs[`${p.coin1}${api.baseCoin}`].c)
+                .toFixed(4),
+      }))
+      .sort((a, b) => bn(b.profitInUsd).minus(a.profitInUsd).toNumber()),
+  }
+}
+
+server.get('/status', async (_request: Request, response: Response) => {
+  response.send(await getStatus())
+})
+server.get('/statusp', async (_request: Request, response: Response) => {
+  const r = await getStatus()
+  const style = `<style>pre {outline: 1px solid #ccc; padding: 5px; margin: 5px; }
+  .string { color: green; }
+  .number { color: darkorange; }
+  .boolean { color: blue; }
+  .null { color: magenta; }
+  .key { color: red; }
+  </style>`
+  const content = syntaxHighlight(JSON.stringify(r, null, 4))
+
+  response.send(`<html><head>${style}</head><body><pre>${content}</pre></body></html>`)
 })
 server.get('/tick', (_request: Request, response: Response) => {
   response.send(store.ticks[store.ticks.length - 1])

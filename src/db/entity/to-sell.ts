@@ -5,6 +5,7 @@ import {
   BaseEntity,
   Index as index,
   ManyToOne as manyToOne,
+  JoinTable as joinTable,
 } from 'typeorm'
 import {Pair} from './pair'
 
@@ -13,19 +14,18 @@ export class ToSell extends BaseEntity {
   @primaryGeneratedColumn()
   id!: number
 
-  @index()
-  @manyToOne((type) => Pair, (pair) => pair.toSell)
-  pair!: Pair
+  @manyToOne(() => Pair, (pair) => pair.toSell)
+  pair!: Promise<Pair>
 
   @column({default: false})
   filled!: boolean
 
-  @column({type: 'decimal', precision: 16, scale: 8, default: 0})
+  @column({type: 'decimal', precision: 20, scale: 8, default: 0})
   vol!: string
 
-  @column({type: 'decimal', precision: 16, scale: 8, default: 0})
+  @column({type: 'decimal', precision: 40, scale: 20, default: 0})
   price!: string
 
-  @column({type: 'decimal', precision: 16, scale: 8, default: 0})
+  @column({type: 'decimal', precision: 40, scale: 20, default: 0})
   left!: string
 }

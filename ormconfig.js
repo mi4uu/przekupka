@@ -2,7 +2,7 @@ console.log(__dirname)
 const {provider} = require('./src/api/config')
 module.exports = {
   type: 'postgres',
-  database: `przekupka_${provider}`,
+  database: `przekupka`,
   host: '192.168.0.2',
   port:5432,
   username:'postgres',

@@ -12,6 +12,8 @@
     "deploy": "parcel build public/index.html &&  ./syncWithServer.sh",
     "test": "jest",
     "init:hitbtc": "ts-node -r tsconfig-paths/register ./src/api/hitBtc/create-initial-pairs.ts",
+    "init:binance": "ts-node -r tsconfig-paths/register ./src/api/binance/create-initial-pairs.ts",
+    "stepup": "ts-node -r tsconfig-paths/register ./src/utils/step-up-prices.ts",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/.bin/typeorm",
     "migration:create": "ts-node ./node_modules/typeorm/cli.js migration:create -n",
     "migration:generate": "ts-node ./node_modules/typeorm/cli.js migration:generate -n",

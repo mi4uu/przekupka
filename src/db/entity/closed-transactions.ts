@@ -20,7 +20,7 @@ export class ClosedTransaction extends BaseEntity {
 
   @index()
   @manyToOne((type) => Pair, (pair) => pair.closedTransactions)
-  pair!: Pair
+  pair!: Promise<Pair>
 
   @index()
   @column()
@@ -36,13 +36,13 @@ export class ClosedTransaction extends BaseEntity {
   @column()
   opentm!: number
 
-  @column({type: 'decimal', precision: 16, scale: 8, default: 0})
+  @column({type: 'decimal', precision: 40, scale: 20, default: 0})
   vol!: string
 
-  @column({type: 'decimal', precision: 16, scale: 8, default: 0})
+  @column({type: 'decimal', precision: 40, scale: 20, default: 0})
   fee!: string
 
-  @column({type: 'decimal', precision: 16, scale: 8, default: 0})
+  @column({type: 'decimal', precision: 40, scale: 20, default: 0})
   price!: string
 
   @column({
