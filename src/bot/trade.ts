@@ -77,7 +77,7 @@ export const trade = async (pair: Pair) => {
 
       const marketLiquidity = calculatePercentage(askPrice, bidPrice)
       const changeFromLastTransaction = calculatePercentage(vars.lastTransactionPrice, askPrice)
-      const minDiffToBuy = bn(pair.changeToTrend).plus(marketLiquidity)
+      const minDiffToBuy = bn(pair.changeToTrend).multipliedBy(3).plus(marketLiquidity)
       if (
         changeFromLastTransaction.isGreaterThan(minDiffToBuy) &&
         api.isTransactionValid(pair, pair.volume, askPrice)
@@ -120,25 +120,26 @@ export const trade = async (pair: Pair) => {
     .select('COALESCE(SUM(t.left),0)', 'howMuchToSell')
     .addSelect('MIN(t.price)', 'lowestBuy')
     .getRawOne()
-  // Const candidatesToSell = store.toSell[pair].filter((p) => bn(p.value).isLessThan(maxPrice))
-  // if (pair.name === 'WRXUSDT') {
-  //   console.log(
-  //     JSON.stringify(
-  //       {
-  //         pairName: pair.name,
-  //         step: pair.step,
-  //         howMuchToSell,
-  //         balanceCoin0,
-  //         minProfit,
-  //         maxPrice,
-  //         bidPrice,
-  //         lowestBuy,
-  //       },
-  //       null,
-  //       2,
-  //     ),
-  //   )
-  // }
+  if (pair.debug) {
+    const howMuchCanISell1 = bn(howMuchToSell).isGreaterThan(balanceCoin0) ? balanceCoin0 : howMuchToSell
+    console.log(
+      JSON.stringify(
+        {
+          pairName: pair.name,
+          step: pair.step,
+          howMuchToSell,
+          balanceCoin0,
+          minProfit,
+          maxPrice,
+          bidPrice,
+          lowestBuy,
+          isTransactionValid: api.isTransactionValid(pair, howMuchCanISell1, bidPrice),
+        },
+        null,
+        2,
+      ),
+    )
+  }
 
   if (bn(howMuchToSell).isGreaterThanOrEqualTo(0)) {
     vars.noAssetsToSell = false
