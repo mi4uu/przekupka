@@ -220,10 +220,6 @@ server.get('/tradeVars', (_request: Request, response: Response) => {
   response.send(store.tradeVars)
 })
 
-server.get('/toSell', (_request: Request, response: Response) => {
-  // Response.send(store.toSell)
-})
-
 if (dev) {
   server.all('*', (_request: Request, response: Response) => {
     console.log(_request.originalUrl)

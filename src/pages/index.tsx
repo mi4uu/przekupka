@@ -1,101 +1,68 @@
-import React, {useEffect, useReducer} from 'react'
+import React, {useEffect, useReducer, useState} from 'react'
 
-import 'primereact/resources/primereact.min.css'
-import 'primeicons/primeicons.css'
-import 'primeflex/primeflex.css'
-import 'primereact/resources/themes/mdc-dark-indigo/theme.css'
-
-import Topbar from '../ui/topbar'
-import {
-  fetchAssetPairs,
-  fetchBalance,
-  fetchPairs,
-  fetchTick,
-  fetchTicks,
-  fetchToSell,
-  fetchTradeVars,
-  fetchTransactions,
-  initialState,
-  reducer,
-} from '../ui/store'
-import Traders from '../ui/traders'
-import PrimeReact from 'primereact/utils'
 import '../ui/main.css'
+import axios from 'axios'
+import {ToSell} from '../ui/toSell'
 
-PrimeReact.ripple = true
 export default function layout() {
-  const [store, dispatch] = useReducer(reducer, initialState)
-  // @ts-expect-error
-  window.store = store
+  const [store, setStore] = useState({tradeVars: {}})
+  const [status, setStatus] = useState({})
+  const [orderBy, setOrderBy] = useState('pair')
+
+  const getStatus = async () => {
+    const {data} = await axios.get('/status')
+    setStatus(data)
+    setTimeout(getStatus, 2100)
+  }
+
+  const getStore = async () => {
+    const {data} = await axios.get('/store')
+    setStore(data)
+    setTimeout(getStore, 2000)
+  }
+
   useEffect(() => {
-    fetchPairs(dispatch).catch((error) => {
+    getStore().catch((error) => {
       console.log(error)
     })
-  }, [])
-  useEffect(() => {
-    fetchAssetPairs(dispatch).catch((error) => {
-      console.log(error)
-    })
-  }, [])
-  useEffect(() => {
-    fetchTradeVars(dispatch).catch((error) => {
-      console.log(error)
-    })
-  }, [])
-  useEffect(() => {
-    fetchBalance(dispatch).catch((error) => {
-      console.log(error)
-    })
-  }, [])
-  useEffect(() => {
-    fetchTicks(dispatch).catch((error) => {
-      console.log(error)
-    })
-  }, [])
-  useEffect(() => {
-    const pid = setInterval(async () => fetchBalance(dispatch), 11000)
-    return () => {
-      clearInterval(pid)
-    }
-  }, [])
-  useEffect(() => {
-    const pid = setInterval(async () => fetchTick(dispatch), 5000)
-    return () => {
-      clearInterval(pid)
-    }
-  }, [])
-  useEffect(() => {
-    const pid = setInterval(async () => fetchToSell(dispatch), 10000)
-    return () => {
-      clearInterval(pid)
-    }
   }, [])
 
   useEffect(() => {
-    fetchTransactions(dispatch).catch((error) => {
+    getStatus().catch((error) => {
       console.log(error)
     })
-    const pid = setInterval(async () => fetchTransactions(dispatch), 9000)
-    return () => {
-      clearInterval(pid)
-    }
   }, [])
-  useEffect(() => {
-    const pid = setInterval(async () => fetchTradeVars(dispatch), 6000)
-    return () => {
-      clearInterval(pid)
-    }
-  }, [])
-  useEffect(() => {
-    const pid = setInterval(async () => fetchPairs(dispatch), 80000)
-    return () => {
-      clearInterval(pid)
-    }
-  }, [])
+  if (!status?.toSell) return null
   return (
     <>
-      <Topbar store={store} />
-      <Traders store={store} />
+      <div className='table-wrapper'>
+        <table className='fl-table'>
+          <thead>
+            <tr>
+              <th>Pair</th>
+              <th>Left</th>
+              <th>Balance</th>
+              <th>Price</th>
+              <th>Current Price</th>
+              <th>Highest Price</th>
+              <th>Price diff</th>
+              <th>Price % diff</th>
+              <th>Current Highest Diff</th>
+
+              <th>Price $ diff</th>
+              <th>Profit</th>
+              <th>Worth $</th>
+              <th>Can be sold</th>
+              <th>Selling</th>
+            </tr>
+          </thead>
+          <tbody>
+            {status.toSell.map((ts) => (
+              <ToSell toSell={ts} vars={store.tradeVars[ts.pair]} key={`${ts.pair}_${ts.price}`} />
+            ))}
+          </tbody>
+        </table>
+      </div>
     </>
   )
 }

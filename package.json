@@ -5,6 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "NODE_ENV=\"production\" ts-node -r tsconfig-paths/register --transpile-only  src/server.ts",
+    "start:binance": "NODE_ENV=\"production\" PROVIDER=\"binance\" ts-node -r tsconfig-paths/register --transpile-only  src/server.ts",
     "dev": "node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register -r tsconfig-paths/register src/server.ts",
     "dev-server": "nodemon",
     "ui": "parcel  public/index.html",
@@ -99,5 +100,8 @@
     "ts-node": "^9.1.1",
     "tsmon": "^0.7.3",
     "xo": "^0.37.1"
-  }
+  },
+  "browserslist": [
+    "last 1 Chrome version"
+  ]
 }

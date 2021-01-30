@@ -16,6 +16,7 @@ export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars) =>
   const result = await api.makeBuyOffer(pair, price.toFixed(p.coin0Precision), bn(p.volume).toFixed(p.coin0Precision))
   if (result) {
     vars.wait = 40
+    vars.buy = false
   } else {
     console.log('transaction failed')
     vars.buy = false
@@ -28,6 +29,7 @@ export const sellFn = async (pair: string, price: BigNumber, volume: string, var
   const result = await api.makeSellOffer(pair, price.toFixed(p.coin0Precision), bn(volume).toFixed(p.coin0Precision))
   if (result) {
     vars.wait = 40
+    vars.sell = false
   } else {
     console.log('transaction failed')
     vars.sell = false
@@ -77,7 +79,7 @@ export const trade = async (pair: Pair) => {
 
       const marketLiquidity = calculatePercentage(askPrice, bidPrice)
       const changeFromLastTransaction = calculatePercentage(vars.lastTransactionPrice, askPrice)
-      const minDiffToBuy = bn(pair.changeToTrend).multipliedBy(3).plus(marketLiquidity)
+      const minDiffToBuy = bn(pair.changeToTrend).multipliedBy(2).plus(marketLiquidity)
       if (
         changeFromLastTransaction.isGreaterThan(minDiffToBuy) &&
         api.isTransactionValid(pair, pair.volume, askPrice)
@@ -172,12 +174,14 @@ export const trade = async (pair: Pair) => {
         //   }),
         // )
         // Selling
-        vars.sell = false
+        // vars.sell = false
       } else {
         sellFn(pair.name, bn(bidPrice), howMuchCanISell, vars).catch((error) => {
           console.log('cant sell', error)
         })
       }
+    } else {
+      vars.highest = bidPrice
     }
   } else {
     vars.noAssetsToSell = true
