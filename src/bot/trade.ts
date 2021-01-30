@@ -16,10 +16,10 @@ export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars) =>
   const result = await api.makeBuyOffer(pair, price.toFixed(p.coin0Precision), bn(p.volume).toFixed(p.coin0Precision))
   if (result) {
     vars.wait = 40
-    vars.buy = false
+  //  vars.buy = false
   } else {
     console.log('transaction failed')
-    vars.buy = false
+  //  vars.buy = false
   }
 }
 
@@ -29,10 +29,10 @@ export const sellFn = async (pair: string, price: BigNumber, volume: string, var
   const result = await api.makeSellOffer(pair, price.toFixed(p.coin0Precision), bn(volume).toFixed(p.coin0Precision))
   if (result) {
     vars.wait = 40
-    vars.sell = false
+   // vars.sell = false
   } else {
     console.log('transaction failed')
-    vars.sell = false
+    // vars.sell = false
   }
 }
 
@@ -88,7 +88,7 @@ export const trade = async (pair: Pair) => {
         vars.lastActionTime = moment().unix()
         if (bn(vars.lowest).isGreaterThan(bn(askPrice))) vars.lowest = askPrice
         const diffToLowest = calculatePercentage(askPrice, vars.lowest)
-        if (diffToLowest.isGreaterThanOrEqualTo(minDiffToBuy)) {
+        if (diffToLowest.isGreaterThanOrEqualTo(pair.changeToChangeTrend)) {
           buyFn(pair.name, bn(askPrice), vars).catch((error) => {
             console.log('cant buy', error)
           })

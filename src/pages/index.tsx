@@ -1,22 +1,25 @@
-import React, {useEffect, useReducer, useState} from 'react'
+import React, { useEffect, useReducer, useState } from 'react'
 
 import '../ui/main.css'
 import axios from 'axios'
-import {ToSell} from '../ui/toSell'
+import { ToSell } from '../ui/to-sell'
+import { ToSellList } from '../ui/to-sell-list'
+import { IStore } from '../api/server-store'
+import { BuyingList } from '../ui/buying-list'
 
 export default function layout() {
-  const [store, setStore] = useState({tradeVars: {}})
+  const [store, setStore] = useState<IStore>({ tradeVars: {}, balance: {}, ticks: [] })
   const [status, setStatus] = useState({})
   const [orderBy, setOrderBy] = useState('pair')
 
   const getStatus = async () => {
-    const {data} = await axios.get('/status')
+    const { data } = await axios.get('/status')
     setStatus(data)
     setTimeout(getStatus, 2100)
   }
 
   const getStore = async () => {
-    const {data} = await axios.get('/store')
+    const { data } = await axios.get('/store')
     setStore(data)
     setTimeout(getStore, 2000)
   }
@@ -33,36 +36,12 @@ export default function layout() {
     })
   }, [])
   if (!status?.toSell) return null
+  if (store.ticks.length === 0) return null
+
   return (
     <>
-      <div className='table-wrapper'>
-        <table className='fl-table'>
-          <thead>
-            <tr>
-              <th>Pair</th>
-              <th>Left</th>
-              <th>Balance</th>
-              <th>Price</th>
-              <th>Current Price</th>
-              <th>Highest Price</th>
-              <th>Price diff</th>
-              <th>Price % diff</th>
-              <th>Current Highest Diff</th>
-
-              <th>Price $ diff</th>
-              <th>Profit</th>
-              <th>Worth $</th>
-              <th>Can be sold</th>
-              <th>Selling</th>
-            </tr>
-          </thead>
-          <tbody>
-            {status.toSell.map((ts) => (
-              <ToSell toSell={ts} vars={store.tradeVars[ts.pair]} key={`${ts.pair}_${ts.price}`} />
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <BuyingList status={status} store={store} />
+      <ToSellList status={status} store={store} />
     </>
   )
 }

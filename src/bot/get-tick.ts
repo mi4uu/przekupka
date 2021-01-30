@@ -18,6 +18,10 @@ export const getTick = async () => {
 
     for (const pair of pairs) {
       const wait = store.tradeVars[pair.name].wait
+      if(wait ===2){
+        store.tradeVars[pair.name].sell=false
+        store.tradeVars[pair.name].buy=false
+      }
       if (wait <= 0) {
         trade(pair).catch((error) => {
           console.log('something was wrong doing trade for ' + pair.name)
@@ -28,14 +32,7 @@ export const getTick = async () => {
       }
     }
 
-    // Shortend the list of ticks
-    if (store.ticks.length > 100) {
-      const div = Math.round(store.ticks.length / 5)
-      const ticksArray = store.ticks
-      const newArray = [ticksArray[0], ...ticksArray.filter((_t, i) => i % div)]
-      store.ticks = newArray
-    }
-
+ 
     ticksCounter += 1
     if (ticksCounter > saveTickEvery) {
       ticksCounter = 0

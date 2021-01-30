@@ -1,7 +1,7 @@
-import {calculatePercentage} from '../bot/calculate-percentage'
+import { calculatePercentage } from '../bot/calculate-percentage'
 import React from 'react'
 
-export const ToSell = ({toSell, vars}) => {
+export const ToSell = ({ toSell, vars }) => {
   return (
     <tr>
       <td>{toSell.pair}</td>
@@ -17,8 +17,8 @@ export const ToSell = ({toSell, vars}) => {
       <td>{toSell.diffInPriceUSD}</td>
       <td>{toSell.profitInUSD}</td>
       <td>{toSell.worthInUSD}</td>
-      <td>{toSell.canBeSold ? <div className='pill green'>YES</div> : <div className='pill red'>NO</div>}</td>
-      <td>{toSell.isSelling ? <div className='pill green'>YES</div> : <div className='pill red'>NO</div>}</td>
+      <td>{vars.wait === 0 ? <div className='pill green'>--</div> : <div className='pill red'>vars.wait</div>}</td>
+      <td>{toSell.isSelling ? <div className='pill green'>YES</div> : <div className='pill gray'>NO</div>}</td>
     </tr>
   )
 }
