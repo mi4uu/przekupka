@@ -1,9 +1,9 @@
 import React from 'react'
-import { ToSell } from './to-sell'
-import { calculatePercentage } from '../bot/calculate-percentage'
-import { IStore } from '../api/server-store'
+import {ToSell} from './to-sell'
+import {calculatePercentage} from '../bot/calculate-percentage'
+import {IStore} from '../api/server-store'
 
-export const BuyingList = ({ status, store }: { status: any; store: IStore }) => (
+export const BuyingList = ({status, store}: {status: any; store: IStore}) => (
   <div className='table-wrapper'>
     <table className='fl-table'>
       <thead>
@@ -31,7 +31,7 @@ export const BuyingList = ({ status, store }: { status: any; store: IStore }) =>
               <td>{calculatePercentage(price, vars.lastTransactionPrice).toFixed(2)} %</td>
               <td>{calculatePercentage(price, vars.lowest).toFixed(2)} %</td>
               <td>
-                {vars.wait === 0 ? <div className='pill green'>--</div> : <div className='pill red'>vars.wait</div>}
+                {vars.wait === 0 ? <div className='pill green'>--</div> : <div className='pill red'>{vars.wait}</div>}
               </td>
             </tr>
           )

@@ -4,15 +4,15 @@ import {createConnection} from 'typeorm'
 import {bn} from '#utils/bn'
 import {markets} from './config'
 
-const changeToTrend = 3
-const changeToChangeTrend = 0.9
-const buyPerHour = 2
+const changeToTrend = 1
+const changeToChangeTrend = 1
+const buyPerHour = 1
 const createInitialPairs = async () => {
   const connection = await createConnection()
 
   const {data: ticks} = await axios.get('https://www.binance.com/api/v3/ticker/bookTicker')
   const {data: exchangeInfo} = await axios.get('https://www.binance.com/api/v3/exchangeInfo')
-  console.log(await connection.query('TRUNCATE TABLE pair CASCADE'))
+  // Console.log(await connection.query('TRUNCATE TABLE pair CASCADE'))
   const pairs = exchangeInfo.symbols
   pairs
     .filter((pair: any) => {
@@ -31,12 +31,13 @@ const createInitialPairs = async () => {
     })
     .forEach(async (pair: any) => {
       const tick = ticks.find((t: any) => t.symbol === pair.symbol)
-      const newPair = new Pair()
+      const existingPair = await Pair.findOne(pair.symbol)
+      const newPair = existingPair ? existingPair : new Pair()
       newPair.name = pair.symbol
       newPair.changeToChangeTrend = changeToChangeTrend
       newPair.changeToTrend = changeToTrend
       newPair.buyPerHour = buyPerHour
-      newPair.profit = '0.0'
+      newPair.profit = existingPair ? existingPair.profit : '0.0'
       newPair.coin0 = pair.baseAsset
       newPair.coin1 = pair.quoteAsset
       newPair.coin0Name = pair.baseAsset
@@ -51,7 +52,7 @@ const createInitialPairs = async () => {
       const step = bn(pair.filters.find((f: any) => f.filterType === 'LOT_SIZE')?.stepSize).dp()
       const minQty = pair.filters.find((f: any) => f.filterType === 'LOT_SIZE')?.minQty
 
-      const calculatedVolume = avgCost.multipliedBy(2)
+      const calculatedVolume = avgCost.multipliedBy(3)
       console.log(JSON.stringify({minQty, calculatedVolume, step}))
       const volume = calculatedVolume.isGreaterThan(minQty) ? calculatedVolume : bn(minQty)
       newPair.step = String(step)
