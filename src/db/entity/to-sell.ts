@@ -1,3 +1,4 @@
+import moment from 'moment'
 import {
   Entity as entity,
   PrimaryGeneratedColumn as primaryGeneratedColumn,
@@ -28,4 +29,9 @@ export class ToSell extends BaseEntity {
 
   @column({type: 'decimal', precision: 40, scale: 20, default: 0})
   left!: string
+
+  @column({default: moment().unix()})
+  sellUpdate!: number
+  @column({default: moment().unix()})
+  buyUpdate!: number
 }

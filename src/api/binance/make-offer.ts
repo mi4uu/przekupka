@@ -5,12 +5,14 @@ import {ClosedTransaction, TransactionType} from '#db/entity/closed-transactions
 import {Pair} from '#db/entity/pair'
 import {bn} from '#utils/bn'
 import moment from 'moment'
+
+
 import {makePrivateCall, makePrivateDeleteCall, makePrivateGetCall} from './make-private-call'
 export interface IFill {
   price: string
   qty: string
-  commision: string
-  commisionAsset: string
+  commission: string
+  commissionAsset: string
 }
 export interface IOrderInfo {
   symbol: string
@@ -44,47 +46,55 @@ export async function makeOffer(pair: string, price: string, volume: string, typ
   try {
     store.tradeVars[pair].wait = 10
     const dbPair = await Pair.findOneOrFail(pair)
-    const {data: order} = await makePrivateCall('/order', {
+    const {data: order}:{data:IOrderInfo} = await makePrivateCall('/order', {
       symbol: pair,
       side: type,
       price,
       quantity: bn(volume).toFixed(Number.parseInt(dbPair.step, 10)),
       recvWindow: 5000,
-      timeInForce: 'IOC',
+      timeInForce: 'FOK',
       type: 'LIMIT',
       newClientOrderId: myId,
     })
     const orderId = order.orderId
-    store.tradeVars[pair].lastTransactionPrice = price
-    order.fills.map(async (fill) => {
+    if(order.status==='EXPIRED') store.tradeVars[pair].wait = 0
+    console.log(
+      `|---[TRADE]-----[${order.side}]-[${pair}]-[status:${order.status}]-[qty:${order.executedQty}]-----------------------------------------------------`,
+    )
+    for(const fill of order.fills) {
       const t = new ClosedTransaction()
-      t.id = order.orderId
       t.status = 'closed'
       t.pair = dbPair
       t.refid = myId
       t.userref = order.orderId
       t.opentm = moment().unix()
       t.vol = fill.qty
-      t.fee = fill.commision
+      t.fee = fill.commission
       t.price = fill.price
       t.type = order.side === 'SELL' ? TransactionType.Sell : TransactionType.Buy
-      await t.save()
+   
       store.tradeVars[dbPair.name].lastTransactionPrice = t.price
-      await (t.type === 'buy' ? saveBuy(dbPair, t) : saveSell(dbPair, t))
-    })
+      if(t.type=== 'buy')
+      store.balance[dbPair.coin1] = bn(store.balance[dbPair.coin1]).minus(bn(fill.price).multipliedBy(fill.qty)).toFixed(8)
+      console.log(`    |--[FILL]----[${fill.qty}]---[fee: ${fill.commission} ${fill.commissionAsset}]` )
+      if(t.type === 'buy') { 
+        await saveBuy(dbPair, t)  
+      } else {
+        await saveSell(dbPair, t)
+      }
+    }
+    console.log('')
 
-    console.log(order.side, pair, order.status, myId, {executedQty: order.executedQty})
-    console.log(
-      '-------------------------------------------------------------------------------------------------------------',
-    )
+
+
     return orderId
   } catch (error: any) {
     console.log(
       '-------------------------------------------ERROR IN MAKING OFFER!!!!!!!!!!!!-------------------------------------------',
     )
-    console.log(error.response.data)
+    console.log(error?.response?.data || error?.response || error)
 
-    store.tradeVars[pair].wait = 10000
+    store.tradeVars[pair].wait = 500
 
     return false
   }

@@ -1,6 +1,6 @@
 import {
   Entity as entity,
-  PrimaryColumn as primaryColumn,
+  PrimaryGeneratedColumn as primaryGeneratedColumn,
   Column as column,
   BaseEntity,
   Index as index,
@@ -15,7 +15,7 @@ export enum TransactionType {
 
 @entity()
 export class ClosedTransaction extends BaseEntity {
-  @primaryColumn()
+  @primaryGeneratedColumn()
   id!: number
 
   @index()
@@ -44,6 +44,9 @@ export class ClosedTransaction extends BaseEntity {
 
   @column({type: 'decimal', precision: 40, scale: 20, default: 0})
   price!: string
+
+  @column({type: 'decimal', precision: 40, scale: 20, default: 0})
+  profit!: string
 
   @column({
     type: 'enum',

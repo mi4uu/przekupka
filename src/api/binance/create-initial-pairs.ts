@@ -4,9 +4,13 @@ import {createConnection} from 'typeorm'
 import {bn} from '#utils/bn'
 import {markets} from './config'
 
-const changeToTrend = 1
-const changeToChangeTrend = 1
-const buyPerHour = 1
+const changeToTrend = 1.5 // 1.5 my default , please use different (at least by 0.4) one so we wont be competition to each other
+// ^^ Less is quicker buy/sell min difference and less profit to wait for . Greter number will result wait longer to buy / sell
+// but also greater profit per transaction
+const changeToChangeTrend = 0.9 // 0.9 my default , please use different one (at least by 0.2) so we wont be competition to each other
+// ^^ less is quicker to decide about buying / selling . Greater numbers are more resilient to price change tho
+const desiredPrice = '200' // How many $ per transaction ( min 20, recomended min 40 )
+const buyPerHour = 1 // Leave it as is
 const createInitialPairs = async () => {
   const connection = await createConnection()
 
@@ -38,6 +42,7 @@ const createInitialPairs = async () => {
       newPair.changeToTrend = changeToTrend
       newPair.buyPerHour = buyPerHour
       newPair.profit = existingPair ? existingPair.profit : '0.0'
+      // NewPair.profit = '0.0'
       newPair.coin0 = pair.baseAsset
       newPair.coin1 = pair.quoteAsset
       newPair.coin0Name = pair.baseAsset
@@ -52,9 +57,23 @@ const createInitialPairs = async () => {
       const step = bn(pair.filters.find((f: any) => f.filterType === 'LOT_SIZE')?.stepSize).dp()
       const minQty = pair.filters.find((f: any) => f.filterType === 'LOT_SIZE')?.minQty
 
-      const calculatedVolume = avgCost.multipliedBy(3)
+      const calculatedVolume = avgCost.multipliedBy(5)
       console.log(JSON.stringify({minQty, calculatedVolume, step}))
-      const volume = calculatedVolume.isGreaterThan(minQty) ? calculatedVolume : bn(minQty)
+      let volume = calculatedVolume.isGreaterThan(minQty) ? calculatedVolume : bn(minQty)
+
+      const btcPrice = bn(1).dividedBy(bn(ticks.find((t: any) => t.symbol === 'BTCUSDT').askPrice))
+      const desiredPriceInBTC = btcPrice.multipliedBy(desiredPrice)
+      const bnbPrice = bn(1).dividedBy(bn(ticks.find((t: any) => t.symbol === 'BNBUSDT').askPrice))
+      const desiredPriceInBNB = bnbPrice.multipliedBy(desiredPrice)
+      if (pair.quoteAsset === 'USDT') volume = bn(desiredPrice).dividedBy(bn(tick.askPrice))
+      if (pair.quoteAsset === 'BTC') {
+        volume = bn(desiredPriceInBTC).dividedBy(bn(tick.askPrice))
+      }
+
+      if (pair.quoteAsset === 'BNB') {
+        volume = bn(desiredPriceInBNB).dividedBy(bn(tick.askPrice))
+      }
+
       newPair.step = String(step)
       newPair.param0 = minNotional
       newPair.volume = volume.dp(step).toFixed(step)

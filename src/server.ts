@@ -15,12 +15,13 @@ const dev = process.env.NODE_ENV !== 'production'
 import {store} from './api/server-store'
 import {Pair} from './db/entity/pair'
 import {connect} from './db/db'
-import {MoreThan as moreThan} from 'typeorm'
+import {getRepository, MoreThan as moreThan} from 'typeorm'
 import {bn} from '#utils/bn'
 import {ToSell} from '#db/entity/to-sell'
 import {calculatePercentage} from '#bot/calculate-percentage'
 import api from '#api/api'
 import BigNumber from 'bignumber.js'
+import { ClosedTransaction } from './db/entity/closed-transactions';
 
 const args = process.argv.slice(2)
 const port = args[0] ? Number.parseInt(args[0], 10) : 3000
@@ -59,17 +60,17 @@ const getStatus = async () => {
   const profit = {
     BTC: bn('0'),
     USD: bn('0'),
-    ETH: bn('0'),
+    BNB: bn('0'),
   }
   const pairsWithProfit = (await Pair.find({profit: moreThan('0.0')})).filter((p) => Number.parseFloat(p.profit) > 0)
   pairsWithProfit.forEach((pair) => {
-    if (pair.coin1 === 'BTC' || pair.coin1 === 'ETH') profit[pair.coin1] = profit[pair.coin1].plus(pair.profit)
+    if (pair.coin1 === 'BTC' || pair.coin1 === 'BNB') profit[pair.coin1] = profit[pair.coin1].plus(pair.profit)
     else profit.USD = profit.USD.plus(pair.profit)
   })
   const profitBTCinUSD = bn(profit.BTC).multipliedBy(store.ticks[store.ticks.length - 1].pairs[`BTC${api.baseCoin}`].c)
-  const profitETHinUSD = bn(profit.BTC).multipliedBy(store.ticks[store.ticks.length - 1].pairs[`ETH${api.baseCoin}`].c)
+  const profitBNBinUSD = bn(profit.BNB).multipliedBy(store.ticks[store.ticks.length - 1].pairs[`BNB${api.baseCoin}`].c)
   const toSellPositions = await ToSell.find({filled: false})
-  const profitSUM = profit.USD.plus(profitBTCinUSD).plus(profitETHinUSD)
+  const profitSUM = profit.USD.plus(profitBTCinUSD).plus(profitBNBinUSD)
   const toSell = await Promise.all(
     toSellPositions.map(async (p) => {
       const pair = await p.pair
@@ -77,6 +78,7 @@ const getStatus = async () => {
       const priceUSD =
         pair.coin1 === api.baseCoin ? '1' : store.ticks[store.ticks.length - 1].pairs[`${pair.coin1}${api.baseCoin}`].c
       return {
+        id:p.id,
         left: p.left,
         balance: store.balance[pair.coin0],
         pair: pair.name,
@@ -84,11 +86,13 @@ const getStatus = async () => {
         price: p.price,
         currentPrice: price.toFixed(8),
         diffInPrice: bn(price).minus(p.price).toFixed(8),
-        diffInPricePercent: calculatePercentage(price, p.price).toFixed(2) + ' %',
+        diffInPricePercent: calculatePercentage(price, p.price).toFixed(2),
         diffInPriceUSD: bn(price).minus(p.price).multipliedBy(priceUSD).toFixed(2),
         profitInUSD: bn(price).minus(p.price).multipliedBy(p.left).multipliedBy(priceUSD).toFixed(2),
         worthInUSD: bn(price).multipliedBy(p.left).multipliedBy(priceUSD).toFixed(2),
         canBeSold: api.isTransactionValid(pair, p.left, price),
+        sellUpdate:p.sellUpdate,
+        buyUpdate:p.buyUpdate,
       }
     }),
   )
@@ -104,7 +108,7 @@ const getStatus = async () => {
 
     profitUSD: profit.USD.toFixed(2) + ' $',
     profitBTC: profit.BTC.toFixed(8) + ' BTC = ' + profitBTCinUSD.toFixed(2) + ' $',
-    profitETH: profit.ETH.toFixed(8) + ' ETH = ' + profitETHinUSD.toFixed(2) + ' $',
+    profitBNB: profit.BNB.toFixed(8) + ' BNB = ' + profitBNBinUSD.toFixed(2) + ' $',
     profitSUM: profitSUM.toFixed(2) + ' $',
     balanceUSD: store.balance[api.baseCoin] + '$',
     balanceBTC:
@@ -114,17 +118,18 @@ const getStatus = async () => {
         .multipliedBy(store.ticks[store.ticks.length - 1].pairs[`BTC${api.baseCoin}`].c)
         .toFixed(2) +
       ' $',
-    balanceETH:
-      store.balance.ETH +
-      'ETH = ' +
-      bn(store.balance.ETH)
-        .multipliedBy(store.ticks[store.ticks.length - 1].pairs[`ETH${api.baseCoin}`].c)
+    balanceBNB:
+      store.balance.BNB +
+      'BNB = ' +
+      bn(store.balance.BNB)
+        .multipliedBy(store.ticks[store.ticks.length - 1].pairs[`BNB${api.baseCoin}`].c)
         .toFixed(2) +
       ' $',
     buyingPairs: buy,
     sellingPairs: sell,
 
-    toSell: toSell.filter((t) => t.canBeSold).sort((a, b) => bn(b.profitInUSD).minus(a.profitInUSD).toNumber()),
+    toSell: toSell.sort((a, b) => bn(a.diffInPricePercent).minus(b.diffInPricePercent).toNumber())
+    .sort((a,b)=>a.canBeSold ?-1:1),
     profitablePairs: pairsWithProfit
       .map((p) => ({
         name: p.name,
@@ -193,7 +198,22 @@ server.get('/ticks', (_request: Request, response: Response) => {
   response.send(store.ticks)
 })
 
-server.get('/transactions', (_request: Request, response: Response) => {
+server.get('/transactions', async (_request: Request, response: Response) => {
+  const transactions: ClosedTransaction[]= await getRepository(ClosedTransaction)
+  .createQueryBuilder('ct')
+  .orderBy('ct.opentm', 'DESC')
+  .limit(25)
+  .getMany()
+  response.send(await Promise.all(transactions.map(async  t=>({
+    id:t.id,
+    timestamp:t.opentm,
+    fee:t.fee,
+    volume:t.vol,
+    price:t.price,
+    type:t.type,
+    profit:t.profit,
+    pair:await t.pair
+  }))))
   // Response.send(store.closedTransactions)
 })
 server.get('/balance', (_request: Request, response: Response) => {

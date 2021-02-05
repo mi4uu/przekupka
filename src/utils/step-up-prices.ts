@@ -96,4 +96,4 @@ const stepUpPrices = async () => {
   )
 }
 
-stepUpPrices()
+// stepUpPrices()

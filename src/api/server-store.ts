@@ -35,7 +35,7 @@ export interface IStore {
 
   ticks: ITick[]
 }
-export const createTradeVars = (pair: string) => {
+export const createTradeVars = (pair: string, i = 0) => {
   return [
     pair,
     {
@@ -43,8 +43,8 @@ export const createTradeVars = (pair: string) => {
       lowest: '0',
       buy: false,
       sell: false,
-      wait: 0,
-      lastActionTime: moment().unix(),
+      wait: 10,
+      lastActionTime: moment().subtract(5, 'days').add(i, 'seconds').unix(),
     },
   ]
 }
@@ -60,7 +60,7 @@ export const createStore = (): IStore => {
 
 export const fillTradeVars = async (store: IStore) => {
   const pairs = await Pair.find({active: true})
-  store.tradeVars = Object.fromEntries(pairs.map((pair) => createTradeVars(pair.name)))
+  store.tradeVars = Object.fromEntries(pairs.map((pair, i) => createTradeVars(pair.name, i)))
 }
 
 export const store: IStore = createStore()

@@ -9,13 +9,14 @@ import {Pair} from '#db/entity/pair'
 import {ToSell} from '#db/entity/to-sell'
 import {ClosedTransaction} from '#db/entity/closed-transactions'
 import {getRepository} from 'typeorm'
+import {Tick} from '#db/entity/tick'
 
 export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars) => {
   // Console.log(pair, 'BUY!!!', price.toFixed(8))
   const p = await Pair.findOneOrFail(pair)
   const result = await api.makeBuyOffer(pair, price.toFixed(p.coin0Precision), bn(p.volume).toFixed(p.coin0Precision))
   if (result) {
-    vars.wait = 40
+    vars.wait += 3
     //  Vars.buy = false
   } else {
     console.log('transaction failed')
@@ -28,7 +29,7 @@ export const sellFn = async (pair: string, price: BigNumber, volume: string, var
   const p = await Pair.findOneOrFail(pair)
   const result = await api.makeSellOffer(pair, price.toFixed(p.coin0Precision), bn(volume).toFixed(p.coin0Precision))
   if (result) {
-    vars.wait = 40
+    vars.wait += 3
     // Vars.sell = false
   } else {
     console.log('transaction failed')
@@ -50,14 +51,10 @@ export const trade = async (pair: Pair) => {
     vars.highest = bidPrice
   }
 
-  if (bn(bidPrice).isGreaterThan(vars.highest) && calculatePercentage(bidPrice, vars.highest).abs().isLessThan(10)) {
-    vars.highest = bidPrice
-  }
-
   const balanceCoin0 = bn(store.balance[pair.coin0])
   const balanceCoin1 = bn(store.balance[pair.coin1])
   const hourBefore = moment().subtract(1, 'hour').unix()
-
+  const periodToTakeAvgPrice = moment().subtract(3, 'days').unix()
   if (balanceCoin1.isGreaterThanOrEqualTo(bn(askPrice).multipliedBy(pair.volume))) {
     // Can we afford that?
     vars.cantAffordToBuy = false
@@ -73,13 +70,88 @@ export const trade = async (pair: Pair) => {
       .select('COALESCE(SUM(t.vol), 0)', 'howMuchDidIBuyInLastHour')
       .getRawOne()
 
+    if (vars.lastActionTime < moment().subtract('24', 'hours').unix()) {
+      const {avgPrice} = await getRepository(Tick)
+        .createQueryBuilder('t')
+        .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
+          pair: pair.name,
+          periodToTakeAvgPrice,
+        })
+        .select('AVG(t.closed)', 'avgPrice')
+        .getRawOne()
+      const {avgPrice1} = await getRepository(Tick)
+        .createQueryBuilder('t')
+        .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
+          pair: pair.name,
+          periodToTakeAvgPrice: moment().subtract(10, 'days').unix(),
+        })
+        .select('AVG(t.closed)', 'avgPrice1')
+        .getRawOne()
+      const {shortAvgPrice} = await getRepository(Tick)
+        .createQueryBuilder('t')
+        .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
+          pair: pair.name,
+          periodToTakeAvgPrice: moment().subtract('3', 'hours').unix(),
+        })
+        .select('AVG(t.ask)', 'shortAvgPrice')
+        .getRawOne()
+      const {shortAvgPrice2} = await getRepository(Tick)
+        .createQueryBuilder('t')
+        .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
+          pair: pair.name,
+          periodToTakeAvgPrice: moment().subtract('1', 'hours').unix(),
+        })
+        .select('AVG(t.ask)', 'shortAvgPrice2')
+        .getRawOne()
+
+      const {avg2DaysAgo} = await getRepository(Tick)
+        .createQueryBuilder('t')
+        .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice AND t.timestamp > :periodToTakeAvgPrice1 ', {
+          pair: pair.name,
+          periodToTakeAvgPrice: moment().subtract('2', 'days').subtract('12', 'hours').unix(),
+          periodToTakeAvgPrice1: moment().subtract('2', 'days').unix(),
+        })
+        .select('AVG(t.ask)', 'avg2DaysAgo')
+        .getRawOne()
+      const {avg5DaysAgo} = await getRepository(Tick)
+        .createQueryBuilder('t')
+        .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice AND t.timestamp > :periodToTakeAvgPrice1 ', {
+          pair: pair.name,
+          periodToTakeAvgPrice: moment().subtract('5', 'days').subtract('12', 'hours').unix(),
+          periodToTakeAvgPrice1: moment().subtract('5', 'days').unix(),
+        })
+        .select('AVG(t.ask)', 'avg5DaysAgo')
+        .getRawOne()
+      vars.lastTransactionPrice = shortAvgPrice
+      // Console.log(
+      //   `Setting last trasnsaction price for ${pair.name} : ${shortAvgPrice}  it is ${calculatePercentage(
+      //     shortAvgPrice,
+      //     askPrice,
+      //   ).toFixed(2)} % of current price`,
+      // )
+      const prices = [avgPrice, avgPrice1, shortAvgPrice, shortAvgPrice2].filter(Boolean)
+      vars.lastTransactionPrice = BigNumber.min.apply(null, prices).toFixed(8)
+
+      // Check if this price is not constantly falling
+      if (
+        bn(avg5DaysAgo).isGreaterThan(avg2DaysAgo) &&
+        bn(avg2DaysAgo).isGreaterThan(shortAvgPrice2) &&
+        bn(shortAvgPrice2).isGreaterThan(shortAvgPrice)
+      ) {
+        // Lets set it rly low
+        vars.lastTransactionPrice = bn(shortAvgPrice).multipliedBy('0.7').toFixed(8)
+      }
+
+      vars.lastActionTime = moment().unix()
+    }
+
     if (bn(howMuchDidIBuyInLastHour).isLessThan(howMuchPerHourCanIBuy)) {
       // Limit buy per h
       vars.limitBuyPerHourReached = false
 
       const marketLiquidity = calculatePercentage(askPrice, bidPrice)
       const changeFromLastTransaction = calculatePercentage(vars.lastTransactionPrice, askPrice)
-      const minDiffToBuy = bn(pair.changeToTrend).multipliedBy(2).plus(marketLiquidity)
+      const minDiffToBuy = bn(pair.changeToTrend).multipliedBy('1').plus(marketLiquidity)
       if (
         changeFromLastTransaction.isGreaterThan(minDiffToBuy) &&
         api.isTransactionValid(pair, pair.volume, askPrice)
@@ -114,7 +186,7 @@ export const trade = async (pair: Pair) => {
   const maxPrice = bn(bidPrice).minus(minProfit)
   const {howMuchToSell, lowestBuy} = await getRepository(ToSell)
     .createQueryBuilder('t')
-    .where('t.pairName = :pair AND t.filled = :filled AND t.price < :maxPrice', {
+    .where('t.pairName = :pair AND t.filled = :filled AND t.price <= :maxPrice', {
       pair: pair.name,
       maxPrice: maxPrice.toFixed(pair.coin0Precision),
       filled: false,
@@ -123,7 +195,19 @@ export const trade = async (pair: Pair) => {
     .addSelect('MIN(t.price)', 'lowestBuy')
     .getRawOne()
   if (pair.debug) {
-    const howMuchCanISell1 = bn(howMuchToSell).isGreaterThan(balanceCoin0) ? balanceCoin0 : howMuchToSell
+    console.log(
+      getRepository(ToSell)
+        .createQueryBuilder('t')
+        .where('t.pairName = :pair AND t.filled = :filled AND t.price <= :maxPrice', {
+          pair: pair.name,
+          maxPrice: maxPrice.toFixed(pair.coin0Precision),
+          filled: false,
+        })
+        .select('COALESCE(SUM(t.left),0)', 'howMuchToSell')
+        .addSelect('MIN(t.price)', 'lowestBuy')
+        .getQueryAndParameters(),
+    )
+    const howMuchCanISell1 = bn(howMuchToSell).isGreaterThan(balanceCoin0) ? howMuchToSell : balanceCoin0
     console.log(
       JSON.stringify(
         {
@@ -131,11 +215,12 @@ export const trade = async (pair: Pair) => {
           step: pair.step,
           howMuchToSell,
           balanceCoin0,
-          minProfit,
-          maxPrice,
+          minProfit: minProfit.toFixed(8),
+          maxPrice: maxPrice.toFixed(pair.coin0Precision),
           bidPrice,
           lowestBuy,
           isTransactionValid: api.isTransactionValid(pair, howMuchCanISell1, bidPrice),
+          selling: vars.sell,
         },
         null,
         2,
@@ -145,10 +230,13 @@ export const trade = async (pair: Pair) => {
 
   if (bn(howMuchToSell).isGreaterThan(0)) {
     vars.noAssetsToSell = false
-    const howMuchCanISell = bn(howMuchToSell).isGreaterThan(balanceCoin0) ? balanceCoin0 : howMuchToSell
+    const howMuchCanISell = bn(howMuchToSell).isGreaterThan(balanceCoin0) ? howMuchToSell : balanceCoin0
 
     if (api.isTransactionValid(pair, howMuchCanISell, bidPrice)) {
-      const diffToHighestPrice = calculatePercentage(bidPrice, vars.highest)
+      if (bn(bidPrice).isGreaterThan(vars.highest)) {
+        vars.highest = bidPrice
+      }
+
       vars.sell = true
 
       //  We already get all assets with min profit, no reason to check again
@@ -160,7 +248,13 @@ export const trade = async (pair: Pair) => {
       vars.lastActionTime = moment().unix()
       if (bn(vars.highest).isLessThan(bn(bidPrice))) vars.highest = bidPrice
       // Trend is changing, lets sell it
-      if (diffToHighestPrice.isLessThanOrEqualTo(bn(pair.changeToChangeTrend).multipliedBy(-1))) {
+
+      if (calculatePercentage(vars.highest, bidPrice).isGreaterThanOrEqualTo(pair.changeToChangeTrend)) {
+        console.log(
+          `[ACTION] SELLING ${pair.name} , diff: ${calculatePercentage(bidPrice, lowestBuy).toFixed(
+            1,
+          )} % diff to Highest: ${calculatePercentage(vars.highest, bidPrice)} % `,
+        )
         sellFn(pair.name, bn(bidPrice), howMuchCanISell, vars).catch((error) => {
           console.log('cant sell', error)
         })
@@ -176,9 +270,6 @@ export const trade = async (pair: Pair) => {
         // Selling
         // vars.sell = false
       } else {
-        sellFn(pair.name, bn(bidPrice), howMuchCanISell, vars).catch((error) => {
-          console.log('cant sell', error)
-        })
       }
     } else {
       vars.highest = bidPrice

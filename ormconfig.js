@@ -1,12 +1,11 @@
 console.log(__dirname)
-const {provider} = require('./src/api/config')
 module.exports = {
   type: 'postgres',
-  database: `przekupka`,
-  host: '192.168.0.2',
+  database: `przekupka_binance`,
+  host: '10.9.96.3',
   port:5432,
   username:'postgres',
-  password:'qwerty',
+  password:'kurwaMac!',
   
   synchronize: true,
   logging: false,
