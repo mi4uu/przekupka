@@ -116,7 +116,7 @@ export default function layout() {
             {status.toSell
               .filter((ts) => ts.pair.endsWith('USDT'))
               .map((ts) => bn(ts.worthInUSD))
-              .reduce((a, b) => a.plus(b))
+              .reduce((a, b) => a.plus(b), bn('0'))
               .toFixed(2)}{' '}
             $
           </div>
@@ -127,7 +127,7 @@ export default function layout() {
             {status.toSell
               .filter((ts) => ts.pair.endsWith('BTC'))
               .map((ts) => bn(ts.worthInUSD))
-              .reduce((a, b) => a.plus(b))
+              .reduce((a, b) => a.plus(b), bn('0'))
               .toFixed(2)}
             $
           </div>
@@ -138,7 +138,7 @@ export default function layout() {
             {status.toSell
               .filter((ts) => ts.pair.endsWith('BNB'))
               .map((ts) => bn(ts.worthInUSD))
-              .reduce((a, b) => a.plus(b))
+              .reduce((a, b) => a.plus(b), bn('0'))
               .toFixed(2)}
             $
           </div>

@@ -9,7 +9,16 @@ const changeToTrend = 1.5 // 1.5 my default , please use different (at least by 
 // but also greater profit per transaction
 const changeToChangeTrend = 0.9 // 0.9 my default , please use different one (at least by 0.2) so we wont be competition to each other
 // ^^ less is quicker to decide about buying / selling . Greater numbers are more resilient to price change tho
-const desiredPrice = '200' // How many $ per transaction ( min 20, recomended min 40 )
+
+const changeToTrendBTC = 1.7
+const changeToChangeTrendBTC = 1.1
+
+const changeToTrendBNB = 3
+const changeToChangeTrendBNB = 1.2
+
+const desiredPrice = '400' // How many $ per transaction ( min 20, recomended min 40 )
+const desiredPriceBTC = '200' // How many $ per transaction ( min 20, recomended min 40 )
+const desiredPriceBNB = '40' // How many $ per transaction ( min 20, recomended min 40 )
 const buyPerHour = 1 // Leave it as is
 const createInitialPairs = async () => {
   const connection = await createConnection()
@@ -38,8 +47,20 @@ const createInitialPairs = async () => {
       const existingPair = await Pair.findOne(pair.symbol)
       const newPair = existingPair ? existingPair : new Pair()
       newPair.name = pair.symbol
+
       newPair.changeToChangeTrend = changeToChangeTrend
       newPair.changeToTrend = changeToTrend
+
+      if (pair.quoteAsset === 'BTC') {
+        newPair.changeToChangeTrend = changeToChangeTrendBTC
+        newPair.changeToTrend = changeToTrendBTC
+      }
+
+      if (pair.quoteAsset === 'BNB') {
+        newPair.changeToChangeTrend = changeToChangeTrendBNB
+        newPair.changeToTrend = changeToTrendBNB
+      }
+
       newPair.buyPerHour = buyPerHour
       newPair.profit = existingPair ? existingPair.profit : '0.0'
       // NewPair.profit = '0.0'
@@ -62,9 +83,9 @@ const createInitialPairs = async () => {
       let volume = calculatedVolume.isGreaterThan(minQty) ? calculatedVolume : bn(minQty)
 
       const btcPrice = bn(1).dividedBy(bn(ticks.find((t: any) => t.symbol === 'BTCUSDT').askPrice))
-      const desiredPriceInBTC = btcPrice.multipliedBy(desiredPrice)
+      const desiredPriceInBTC = btcPrice.multipliedBy(desiredPriceBTC)
       const bnbPrice = bn(1).dividedBy(bn(ticks.find((t: any) => t.symbol === 'BNBUSDT').askPrice))
-      const desiredPriceInBNB = bnbPrice.multipliedBy(desiredPrice)
+      const desiredPriceInBNB = bnbPrice.multipliedBy(desiredPriceBNB)
       if (pair.quoteAsset === 'USDT') volume = bn(desiredPrice).dividedBy(bn(tick.askPrice))
       if (pair.quoteAsset === 'BTC') {
         volume = bn(desiredPriceInBTC).dividedBy(bn(tick.askPrice))

@@ -10,6 +10,61 @@ import {ToSell} from '#db/entity/to-sell'
 import {ClosedTransaction} from '#db/entity/closed-transactions'
 import {getRepository} from 'typeorm'
 import {Tick} from '#db/entity/tick'
+import {getIndicators} from './indicators'
+
+const updatePrices = async (pair: Pair, vars: ITradeVars, currentPrice: string) => {
+  if (vars.lastActionTime < moment().subtract('4', 'hours').unix()) {
+    const {avgPrice} = await getRepository(Tick)
+      .createQueryBuilder('t')
+      .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
+        pair: pair.name,
+        periodToTakeAvgPrice: moment().subtract(3, 'days').unix(),
+      })
+      .select('AVG(t.closed)', 'avgPrice')
+      .getRawOne()
+    const {avgPrice1} = await getRepository(Tick)
+      .createQueryBuilder('t')
+      .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
+        pair: pair.name,
+        periodToTakeAvgPrice: moment().subtract(10, 'days').unix(),
+      })
+      .select('AVG(t.closed)', 'avgPrice1')
+      .getRawOne()
+    const {shortAvgPrice} = await getRepository(Tick)
+      .createQueryBuilder('t')
+      .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
+        pair: pair.name,
+        periodToTakeAvgPrice: moment().subtract('3', 'hours').unix(),
+      })
+      .select('AVG(t.ask)', 'shortAvgPrice')
+      .getRawOne()
+    const {shortAvgPrice2} = await getRepository(Tick)
+      .createQueryBuilder('t')
+      .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
+        pair: pair.name,
+        periodToTakeAvgPrice: moment().subtract('1', 'hours').subtract('11', 'minutes').unix(),
+      })
+      .select('AVG(t.ask)', 'shortAvgPrice2')
+      .getRawOne()
+
+    vars.lastTransactionPrice = shortAvgPrice
+    // Console.log(
+    //   `Setting last trasnsaction price for ${pair.name} : ${shortAvgPrice}  it is ${calculatePercentage(
+    //     shortAvgPrice,
+    //     askPrice,
+    //   ).toFixed(2)} % of current price`,
+    // )
+    const prices = [avgPrice, avgPrice1, shortAvgPrice, shortAvgPrice2, currentPrice].filter(Boolean)
+    vars.lastTransactionPrice = BigNumber.min.apply(null, prices).toFixed(8)
+
+    vars.lastActionTime = moment().unix()
+  }
+
+  if (vars.lastIndicatorTime < moment().subtract('15', 'minutes').unix()) {
+    vars.lastIndicatorTime = moment().unix()
+    vars.canBuy = await getIndicators(pair.name)
+  }
+}
 
 export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars) => {
   // Console.log(pair, 'BUY!!!', price.toFixed(8))
@@ -46,9 +101,9 @@ export const trade = async (pair: Pair) => {
 
   // For initial values
   if (!vars.lastTransactionPrice) {
-    vars.lastTransactionPrice = price
-    vars.lowest = askPrice
-    vars.highest = bidPrice
+    await updatePrices(pair, vars, askPrice)
+    vars.lowest = vars.lastTransactionPrice!
+    vars.highest = vars.lastTransactionPrice!
   }
 
   const balanceCoin0 = bn(store.balance[pair.coin0])
@@ -70,80 +125,7 @@ export const trade = async (pair: Pair) => {
       .select('COALESCE(SUM(t.vol), 0)', 'howMuchDidIBuyInLastHour')
       .getRawOne()
 
-    if (vars.lastActionTime < moment().subtract('24', 'hours').unix()) {
-      const {avgPrice} = await getRepository(Tick)
-        .createQueryBuilder('t')
-        .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
-          pair: pair.name,
-          periodToTakeAvgPrice,
-        })
-        .select('AVG(t.closed)', 'avgPrice')
-        .getRawOne()
-      const {avgPrice1} = await getRepository(Tick)
-        .createQueryBuilder('t')
-        .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
-          pair: pair.name,
-          periodToTakeAvgPrice: moment().subtract(10, 'days').unix(),
-        })
-        .select('AVG(t.closed)', 'avgPrice1')
-        .getRawOne()
-      const {shortAvgPrice} = await getRepository(Tick)
-        .createQueryBuilder('t')
-        .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
-          pair: pair.name,
-          periodToTakeAvgPrice: moment().subtract('3', 'hours').unix(),
-        })
-        .select('AVG(t.ask)', 'shortAvgPrice')
-        .getRawOne()
-      const {shortAvgPrice2} = await getRepository(Tick)
-        .createQueryBuilder('t')
-        .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
-          pair: pair.name,
-          periodToTakeAvgPrice: moment().subtract('1', 'hours').unix(),
-        })
-        .select('AVG(t.ask)', 'shortAvgPrice2')
-        .getRawOne()
-
-      const {avg2DaysAgo} = await getRepository(Tick)
-        .createQueryBuilder('t')
-        .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice AND t.timestamp > :periodToTakeAvgPrice1 ', {
-          pair: pair.name,
-          periodToTakeAvgPrice: moment().subtract('2', 'days').subtract('12', 'hours').unix(),
-          periodToTakeAvgPrice1: moment().subtract('2', 'days').unix(),
-        })
-        .select('AVG(t.ask)', 'avg2DaysAgo')
-        .getRawOne()
-      const {avg5DaysAgo} = await getRepository(Tick)
-        .createQueryBuilder('t')
-        .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice AND t.timestamp > :periodToTakeAvgPrice1 ', {
-          pair: pair.name,
-          periodToTakeAvgPrice: moment().subtract('5', 'days').subtract('12', 'hours').unix(),
-          periodToTakeAvgPrice1: moment().subtract('5', 'days').unix(),
-        })
-        .select('AVG(t.ask)', 'avg5DaysAgo')
-        .getRawOne()
-      vars.lastTransactionPrice = shortAvgPrice
-      // Console.log(
-      //   `Setting last trasnsaction price for ${pair.name} : ${shortAvgPrice}  it is ${calculatePercentage(
-      //     shortAvgPrice,
-      //     askPrice,
-      //   ).toFixed(2)} % of current price`,
-      // )
-      const prices = [avgPrice, avgPrice1, shortAvgPrice, shortAvgPrice2].filter(Boolean)
-      vars.lastTransactionPrice = BigNumber.min.apply(null, prices).toFixed(8)
-
-      // Check if this price is not constantly falling
-      if (
-        bn(avg5DaysAgo).isGreaterThan(avg2DaysAgo) &&
-        bn(avg2DaysAgo).isGreaterThan(shortAvgPrice2) &&
-        bn(shortAvgPrice2).isGreaterThan(shortAvgPrice)
-      ) {
-        // Lets set it rly low
-        vars.lastTransactionPrice = bn(shortAvgPrice).multipliedBy('0.7').toFixed(8)
-      }
-
-      vars.lastActionTime = moment().unix()
-    }
+    await updatePrices(pair, vars, askPrice)
 
     if (bn(howMuchDidIBuyInLastHour).isLessThan(howMuchPerHourCanIBuy)) {
       // Limit buy per h
@@ -160,7 +142,7 @@ export const trade = async (pair: Pair) => {
         vars.lastActionTime = moment().unix()
         if (bn(vars.lowest).isGreaterThan(bn(askPrice))) vars.lowest = askPrice
         const diffToLowest = calculatePercentage(askPrice, vars.lowest)
-        if (diffToLowest.isGreaterThanOrEqualTo(pair.changeToChangeTrend)) {
+        if (diffToLowest.isGreaterThanOrEqualTo(pair.changeToChangeTrend) && vars.canBuy) {
           buyFn(pair.name, bn(askPrice), vars).catch((error) => {
             console.log('cant buy', error)
           })
@@ -230,7 +212,7 @@ export const trade = async (pair: Pair) => {
 
   if (bn(howMuchToSell).isGreaterThan(0)) {
     vars.noAssetsToSell = false
-    const howMuchCanISell = bn(howMuchToSell).isGreaterThan(balanceCoin0) ? howMuchToSell : balanceCoin0
+    const howMuchCanISell = howMuchToSell
 
     if (api.isTransactionValid(pair, howMuchCanISell, bidPrice)) {
       if (bn(bidPrice).isGreaterThan(vars.highest)) {

@@ -13,45 +13,48 @@ export const BuyingList = ({status, store}: {status: any; store: IStore}) => {
       lastPrice: v.lastTransactionPrice,
       price: ticks[pair].a,
       market: pair.split('').splice(-3).join(''),
-      diff: calculatePercentage(ticks[pair].a, v.lastTransactionPrice),
+      canBuy: v.canBuy,
+      diff: calculatePercentage(ticks[pair].a, v.lastTransactionPrice).toNumber(),
     }))
-    .sort((a, b) => a.diff.minus(b.diff).toNumber())
-  const buyable = markets.filter((p) => p.diff.isLessThan('0'))
+    .sort((a, b) => a.diff - b.diff)
+  const buyable = markets.filter((p) => p.diff < 0)
 
   const buyableBTC = buyable.filter((b) => b.market === 'BTC')
   const buyableUSD = buyable.filter((b) => b.market === 'SDT')
   const buyableBNB = buyable.filter((b) => b.market === 'BNB')
+  const lowestUSD = markets.find((b) => b.market === 'SDT')
+  const lowestBTC = markets.find((b) => b.market === 'BTC')
+  const lowestBNB = markets.find((b) => b.market === 'BNB')
+  const onlyWithCanBuy = (l) => l.filter((_l) => _l.canBuy)
 
-  const lowestUSD = markets.find((b) => b.market === 'SDT')?.diff.toFixed(2)
-  const lowestBTC = markets.find((b) => b.market === 'BTC')?.diff.toFixed(2)
-  const lowestBNB = markets.find((b) => b.market === 'BNB')?.diff.toFixed(2)
-
-  window.a = markets
   return (
     <>
       <div className='table-wrapper'>
         <div className={'stats'}>
-          <b>candidates:</b> {buyable.length}
+          <b>candidates USD:</b> {onlyWithCanBuy(buyableUSD).length} / {buyableUSD.length}
         </div>
         <div className={'stats'}>
-          <b>candidates USD:</b> {buyableUSD.length}
+          <b>candidates BTC:</b> {onlyWithCanBuy(buyableBTC).length} / {buyableBTC.length}
         </div>
         <div className={'stats'}>
-          <b>candidates BTC:</b> {buyableBTC.length}
-        </div>
-        <div className={'stats'}>
-          <b>candidates BNB:</b> {buyableBNB.length}
+          <b>candidates BNB:</b> {onlyWithCanBuy(buyableBNB).length} / {buyableBNB.length}
         </div>
       </div>
       <div className='table-wrapper'>
         <div className={'stats'}>
-          <b>lowest USD:</b> {lowestUSD}
+          <b>lowest USD:</b> {lowestUSD?.diff.toFixed(2)}% <b>(</b>
+          {lowestUSD?.name}
+          <b>)</b>
         </div>
         <div className={'stats'}>
-          <b>lowest BTC:</b> {lowestBTC}
+          <b>lowest BTC:</b> {lowestBTC?.diff.toFixed(2)}% <b>(</b>
+          {lowestBTC?.name}
+          <b>)</b>
         </div>
         <div className={'stats'}>
-          <b>lowest BNB:</b> {lowestBNB}
+          <b>lowest BNB:</b> {lowestBNB?.diff.toFixed(2)}% <b>(</b>
+          {lowestBNB?.name}
+          <b>)</b>
         </div>
       </div>
       <div className='table-wrapper'>
@@ -64,6 +67,7 @@ export const BuyingList = ({status, store}: {status: any; store: IStore}) => {
               <th>Lowest Price</th>
               <th>Current to Last diff</th>
               <th>Current to Lowest Diff</th>
+              <th>Can buy?</th>
               <th>Wait</th>
             </tr>
           </thead>
@@ -82,6 +86,10 @@ export const BuyingList = ({status, store}: {status: any; store: IStore}) => {
                   <td>{vars.lowest}</td>
                   <td>{calculatePercentage(price, vars.lastTransactionPrice).toFixed(2)} %</td>
                   <td>{calculatePercentage(price, vars.lowest).toFixed(2)} %</td>
+                  <td>
+                    {vars.canBuy && <div className='pill green'>YES</div>}
+                    {vars.canBuy || <div className='pill red'>NO</div>}
+                  </td>
                   <td>{vars.wait > 0 && <div className='pill red'>{vars.wait}</div>}</td>
                 </tr>
               )

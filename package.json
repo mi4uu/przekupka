@@ -21,7 +21,8 @@
     "migration:create": "ts-node ./node_modules/typeorm/cli.js migration:create -n",
     "migration:generate": "ts-node ./node_modules/typeorm/cli.js migration:generate -n",
     "migration:up": "ts-node ./node_modules/typeorm/cli.js migration:run",
-    "migration:down": "ts-node ./node_modules/typeorm/cli.js migration:revert"
+    "migration:down": "ts-node ./node_modules/typeorm/cli.js migration:revert",
+    "e": "NODE_ENV=\"production\" node --max-old-space-size=3072 --max-semi-space-size=64 -r ts-node/register/transpile-only -r tsconfig-paths/register   src/experiment.ts"
   },
   "author": "",
   "license": "ISC",
@@ -53,7 +54,6 @@
     "cryptocurrency-icons": "^0.17.1",
     "cryptojs": "^2.5.3",
     "csv-reader": "^1.0.7",
-    "easy-peasy": "^4.0.1",
     "express": "^4.17.1",
     "greenlock": "^4.0.4",
     "greenlock-express": "^4.0.3",
@@ -77,7 +77,7 @@
     "react-dom": "^17.0.1",
     "react-transition-group": "^4.4.1",
     "reflect-metadata": "^0.1.13",
-    "sqlite3": "^5.0.1",
+    "technicalindicators": "^3.1.0",
     "trading-indicator": "^1.0.4-beta",
     "ts-jest": "^26.4.4",
     "tsconfig-paths": "^3.9.0",

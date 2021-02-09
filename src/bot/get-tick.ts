@@ -5,7 +5,7 @@ import api from '#api/api'
 import {ITradeVars, store} from '#api/server-store'
 import {trade} from './trade'
 import {createTradeVars} from '../api/server-store'
-let ticksCounter = 0
+let tickSaveTime = 0
 const saveTickEvery = 3000 // Save every 10 minutes
 let tickInProgress = false
 export const getTick = async () => {
@@ -41,9 +41,8 @@ export const getTick = async () => {
       }
     }
 
-    ticksCounter += 1
-    if (ticksCounter > saveTickEvery) {
-      ticksCounter = 0
+    if (tickSaveTime < moment().subtract(10, 'minutes').unix()) {
+      tickSaveTime = moment().unix()
       for (const pair of pairs) {
         const t = newTick[pair.name]
         const tdb = new Tick()

@@ -12,6 +12,8 @@ export interface ITradeVars {
   limitBuyPerHourReached?: boolean
   lastActionTime: number
   lastTransactionPrice?: string
+  lastIndicatorTime: number
+  canBuy?: boolean
 }
 
 export type ITradeVarsPaired = Record<string, ITradeVars>
@@ -44,7 +46,8 @@ export const createTradeVars = (pair: string, i = 0) => {
       buy: false,
       sell: false,
       wait: 10,
-      lastActionTime: moment().subtract(5, 'days').add(i, 'seconds').unix(),
+      lastActionTime: moment().subtract(1, 'year').add(i, 'seconds').unix(),
+      lastIndicatorTime: moment().subtract(1, 'year').add(i, 'seconds').unix(),
     },
   ]
 }
