@@ -13,7 +13,7 @@ export interface ITradeVars {
   lastActionTime: number
   lastTransactionPrice?: string
   lastIndicatorTime: number
-  canBuy?: boolean
+  canBuy?: number
 }
 
 export type ITradeVarsPaired = Record<string, ITradeVars>

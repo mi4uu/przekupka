@@ -25,7 +25,7 @@ export const BuyingList = ({status, store}: {status: any; store: IStore}) => {
   const lowestUSD = markets.find((b) => b.market === 'SDT')
   const lowestBTC = markets.find((b) => b.market === 'BTC')
   const lowestBNB = markets.find((b) => b.market === 'BNB')
-  const onlyWithCanBuy = (l) => l.filter((_l) => _l.canBuy)
+  const onlyWithCanBuy = (l) => l.filter((_l) => _l.canBuy > 4)
 
   return (
     <>
@@ -72,28 +72,30 @@ export const BuyingList = ({status, store}: {status: any; store: IStore}) => {
             </tr>
           </thead>
           <tbody>
-            {status.buyingPairs.map((pair: string) => {
-              const vars = store.tradeVars[pair]
-              const tick = store.ticks[store.ticks.length - 1]
+            {status.buyingPairs
+              .filter((pair) => store.tradeVars[pair].canBuy > 3)
+              .map((pair: string) => {
+                const vars = store.tradeVars[pair]
+                const tick = store.ticks[store.ticks.length - 1]
 
-              const price = tick.pairs[pair].a
+                const price = tick.pairs[pair].a
 
-              return (
-                <tr key={pair} className={vars.wait > 0 ? 'important' : ''}>
-                  <td>{pair}</td>
-                  <td>{price}</td>
-                  <td>{vars.lastTransactionPrice}</td>
-                  <td>{vars.lowest}</td>
-                  <td>{calculatePercentage(price, vars.lastTransactionPrice).toFixed(2)} %</td>
-                  <td>{calculatePercentage(price, vars.lowest).toFixed(2)} %</td>
-                  <td>
-                    {vars.canBuy && <div className='pill green'>YES</div>}
-                    {vars.canBuy || <div className='pill red'>NO</div>}
-                  </td>
-                  <td>{vars.wait > 0 && <div className='pill red'>{vars.wait}</div>}</td>
-                </tr>
-              )
-            })}
+                return (
+                  <tr key={pair} className={vars.wait > 0 ? 'important' : ''}>
+                    <td>{pair}</td>
+                    <td>{price}</td>
+                    <td>{vars.lastTransactionPrice}</td>
+                    <td>{vars.lowest}</td>
+                    <td>{calculatePercentage(price, vars.lastTransactionPrice).toFixed(2)} %</td>
+                    <td>{calculatePercentage(price, vars.lowest).toFixed(2)} %</td>
+                    <td>
+                      {vars.canBuy <= 4 && <div className='pill '>{vars.canBuy}</div>}
+                      {vars.canBuy > 4 && <div className='pill green'>{vars.canBuy}</div>}
+                    </td>
+                    <td>{vars.wait > 0 && <div className='pill red'>{vars.wait}</div>}</td>
+                  </tr>
+                )
+              })}
           </tbody>
         </table>
       </div>

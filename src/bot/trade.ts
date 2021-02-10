@@ -54,7 +54,8 @@ const updatePrices = async (pair: Pair, vars: ITradeVars, currentPrice: string) 
     //     askPrice,
     //   ).toFixed(2)} % of current price`,
     // )
-    const prices = [avgPrice, avgPrice1, shortAvgPrice, shortAvgPrice2, currentPrice].filter(Boolean)
+    //  const prices = [avgPrice, avgPrice1, shortAvgPrice, shortAvgPrice2, currentPrice].filter(Boolean)
+    const prices = [shortAvgPrice, currentPrice].filter(Boolean)
     vars.lastTransactionPrice = BigNumber.min.apply(null, prices).toFixed(8)
 
     vars.lastActionTime = moment().unix()
@@ -62,7 +63,7 @@ const updatePrices = async (pair: Pair, vars: ITradeVars, currentPrice: string) 
 
   if (vars.lastIndicatorTime < moment().subtract('15', 'minutes').unix()) {
     vars.lastIndicatorTime = moment().unix()
-    vars.canBuy = await getIndicators(pair.name)
+    vars.canBuy = await getIndicators(pair.name, currentPrice)
   }
 }
 
@@ -142,7 +143,7 @@ export const trade = async (pair: Pair) => {
         vars.lastActionTime = moment().unix()
         if (bn(vars.lowest).isGreaterThan(bn(askPrice))) vars.lowest = askPrice
         const diffToLowest = calculatePercentage(askPrice, vars.lowest)
-        if (diffToLowest.isGreaterThanOrEqualTo(pair.changeToChangeTrend) && vars.canBuy) {
+        if (diffToLowest.isGreaterThanOrEqualTo(pair.changeToChangeTrend) && vars.canBuy > 4) {
           buyFn(pair.name, bn(askPrice), vars).catch((error) => {
             console.log('cant buy', error)
           })

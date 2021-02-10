@@ -3,13 +3,14 @@ import {connect} from './db/db'
 import {MACD} from 'technicalindicators'
 import moment from 'moment'
 import {getRepository} from 'typeorm'
-const genPeriods = (count: number) =>
+const period1Day = 1440 // Minutes
+const genPeriods = (count: number, desiredPeriodInDays: number) =>
   [...new Array(count).keys()].map((i) => ({
     from: moment()
-      .subtract((i + 1) * 20, 'minutes')
+      .subtract((i + 1) * ((desiredPeriodInDays * period1Day) / count), 'minutes')
       .unix(),
     to: moment()
-      .subtract(i * 20, 'minutes')
+      .subtract(i * ((desiredPeriodInDays * period1Day) / count), 'minutes')
       .unix(),
   }))
 
@@ -26,13 +27,14 @@ const getPriceForPeriod = async (symbol: string, start: number, stop: number) =>
   return Number.parseFloat(avgPrice)
 }
 
-const getIndicators = async (symbol: string) => {
+const getIndicators = async (symbol: string, desiredPeriodInDays: number) => {
   await connect()
 
-  const prices26 = await Promise.all(genPeriods(60).map(async (p) => getPriceForPeriod(symbol, p.from, p.to)))
-  console.log(prices26)
+  const prices26 = await Promise.all(
+    genPeriods(60, desiredPeriodInDays).map(async (p) => getPriceForPeriod(symbol, p.from, p.to)),
+  )
   const macdInput = {
-    values: prices26.reverse(),
+    values: [...prices26.reverse()].filter(Boolean),
     fastPeriod: 12,
     slowPeriod: 26,
     signalPeriod: 9,
@@ -41,8 +43,8 @@ const getIndicators = async (symbol: string) => {
   }
   const macd = MACD.calculate(macdInput)
   const histogram = macd[macd.length - 1].histogram
-  const histogramString = Math.max(...macd.filter((m) => m.histogram).map((m) => m.histogram))
-  console.log(macd)
+  const histogramString = Math.max(...macd.filter((m) => m.histogram).map((m) => Math.abs(m.histogram)))
+  console.log(macd[macd.length - 1])
   console.log({
     histogramString,
     histogram,
@@ -51,4 +53,5 @@ const getIndicators = async (symbol: string) => {
   return histogram < histogramString / 2 && histogram < 0
 }
 
-getIndicators('UNIUSDT')
+getIndicators('WTCBNB', 1)
+getIndicators('WTCBNB', 3)
