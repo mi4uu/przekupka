@@ -23,15 +23,17 @@ body {
     border-radius:4px;
 }
 .green {
-    background-color: #6fcf00 !important;
+    background-color: #437e00 !important;
     color:white;
 }
 .red {
-    background-color: #cf0000 !important;
+    background-color: #970000 !important;
     color:white;
 }
 .gray {
-    background-color: #7c7c7c !important;
+    background-color: #1d1d1d !important;
+    color:white;
+
 }
 .bigger{
     font-size:12px !important;
@@ -95,7 +97,7 @@ table {
 body{
    
     -webkit-font-smoothing: antialiased;
-    background: rgba( 71, 147, 227, 1);
+     
 }
 h2{
     text-align: center;
@@ -132,6 +134,7 @@ h2{
 .fl-table td, .fl-table th {
     text-align: center;
     padding: 8px;
+   
 }
 
 .fl-table td {
@@ -141,84 +144,24 @@ h2{
 
 .fl-table thead th {
     color: #ffffff;
-    background: #4FC3A1;
+    background: #365a50;
 }
 
 
 .fl-table thead th:nth-child(odd) {
     color: #ffffff;
-    background: #324960;
+    background: #334354;
 }
 
 .fl-table tr:nth-child(even) {
-    background: #F8F8F8;
+    color:white;
+    background: #555555;
+}
+.fl-table tr:nth-child(odd) {
+    background: #3c3c3c;
+    color:rgb(230, 230, 230);
 }
 
-/* Responsive */
-
-@media (max-width: 767px) {
-    .fl-table {
-        display: block;
-        width: 100%;
-    }
-    .table-wrapper:before{
-        content: "Scroll horizontally >";
-        display: block;
-        text-align: right;
-        font-size: 11px;
-        color: white;
-        padding: 0 0 10px;
-    }
-    .fl-table thead, .fl-table tbody, .fl-table thead th {
-        display: block;
-    }
-    .fl-table thead th:last-child{
-        border-bottom: none;
-    }
-    .fl-table thead {
-        float: left;
-    }
-    .fl-table tbody {
-        width: auto;
-        position: relative;
-        overflow-x: auto;
-    }
-    .fl-table td, .fl-table th {
-        padding: 20px .625em .625em .625em;
-        height: 60px;
-        vertical-align: middle;
-        box-sizing: border-box;
-        overflow-x: hidden;
-        overflow-y: auto;
-        width: 120px;
-        font-size: 13px;
-        text-overflow: ellipsis;
-    }
-    .fl-table thead th {
-        text-align: left;
-        border-bottom: 1px solid #f7f7f9;
-    }
-    .fl-table tbody tr {
-        display: table-cell;
-    }
-    .fl-table tbody tr:nth-child(odd) {
-        background: none;
-    }
-    .fl-table tr:nth-child(even) {
-        background: transparent;
-    }
-    .fl-table tr td:nth-child(odd) {
-        background: #d0d0d0;
-        border-right: 1px solid #E6E4E4;
-    }
-    .fl-table tr td:nth-child(even) {
-        border-right: 1px solid #E6E4E4;
-    }
-    .fl-table tbody td {
-        display: block;
-        text-align: center;
-    }
-}
 .pillWrap {
     display:inline-block;
     margin-right:10px;
@@ -251,12 +194,13 @@ h1 {
 }
 .table-wrapper .stats {
     display:inline-block;
-    background:white;
+    background:rgb(34, 34, 34);
+    color:white;
     padding:5px;
     margin-left:15px;
-    border-radius:3px;
-    border: 2px solid #ccc;
-    width:150px;
+    border-radius:1px;
+    border: 2px solid rgb(63, 63, 63);
+    width:200px;
 
 }
 .table-wrapper .greenBorder {
