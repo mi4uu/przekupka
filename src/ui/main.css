@@ -159,7 +159,7 @@ h2{
 }
 .fl-table tr:nth-child(odd) {
     background: #3c3c3c;
-    color:rgb(230, 230, 230);
+    color:rgb(200, 200, 200);
 }
 
 .pillWrap {
