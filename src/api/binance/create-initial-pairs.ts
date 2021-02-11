@@ -10,15 +10,15 @@ const changeToTrend = 1.5 // 1.5 my default , please use different (at least by 
 const changeToChangeTrend = 0.9 // 0.9 my default , please use different one (at least by 0.2) so we wont be competition to each other
 // ^^ less is quicker to decide about buying / selling . Greater numbers are more resilient to price change tho
 
-const changeToTrendBTC = 1.7
+const changeToTrendBTC = 2
 const changeToChangeTrendBTC = 1.1
 
-const changeToTrendBNB = 3
-const changeToChangeTrendBNB = 1.2
+const changeToTrendBNB = 2
+const changeToChangeTrendBNB = 1.1
 
-const desiredPrice = '100' // How many $ per transaction ( min 20, recomended min 40 )
-const desiredPriceBTC = '100' // How many $ per transaction ( min 20, recomended min 40 )
-const desiredPriceBNB = '40' // How many $ per transaction ( min 20, recomended min 40 )
+const desiredPrice = '200' // How many $ per transaction ( min 20, recomended min 40 )
+const desiredPriceBTC = '200' // How many $ per transaction ( min 20, recomended min 40 )
+const desiredPriceBNB = '30' // How many $ per transaction ( min 20, recomended min 40 )
 const buyPerHour = 1 // Leave it as is
 const createInitialPairs = async () => {
   const connection = await createConnection()

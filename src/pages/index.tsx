@@ -5,7 +5,7 @@ import axios from 'axios'
 import {ToSell} from '../ui/to-sell'
 import {ToSellList} from '../ui/to-sell-list'
 import {IStore} from '../api/server-store'
-import {BuyingList} from '../ui/buying-list'
+import {Buying} from '../ui/buying'
 import {TransactionsList} from '../ui/transactions-list'
 import {bn} from '../utils/bn'
 import moment from 'moment'
@@ -73,15 +73,23 @@ export default function layout() {
     <>
       <div className='table-wrapper'>
         <div className='pillWrap'>
-          <div className='pillHeader'>Balance USD</div>
+          <div className='pillHeader'>
+            <p>Balance USD</p>
+            <i>1.00</i>
+          </div>
           <div className='pillContent'>{status.balanceUSD}</div>
         </div>
         <div className='pillWrap'>
-          <div className='pillHeader'>Balance BTC</div>
+          <div className='pillHeader'>
+            <p>Balance BTC</p>
+            <i>{store.ticks[store.ticks.length - 1].pairs.BTCUSDT.c}</i>
+          </div>
           <div className='pillContent'>{status.balanceBTC}</div>
         </div>
         <div className='pillWrap'>
-          <div className='pillHeader'>Balance BNB</div>
+          <div className='pillHeader'>
+            <p>Balance BNB</p> <i>{store.ticks[store.ticks.length - 1].pairs.BNBUSDT.c}</i>
+          </div>
           <div className='pillContent'>{status.balanceBNB}</div>
         </div>
         <div className='pillWrap'>
@@ -94,20 +102,7 @@ export default function layout() {
             $
           </div>
         </div>
-        <div className='pillWrap'>
-          <div className='pillHeader'>Total Welth</div>
-          <div className='pillContent'>
-            <b>
-              {' '}
-              {bn(status.balanceUSD.split('$')[0])
-                .plus(status.balanceBTC.split('=')[1].split('$')[0])
-                .plus(status.balanceBNB.split('=')[1].split('$')[0])
-                .plus(status.toSellWorth)
-                .toFixed(2)}
-            </b>{' '}
-            $
-          </div>
-        </div>
+
         <br />
 
         <div className='pillWrap'>
@@ -162,14 +157,31 @@ export default function layout() {
           <div className='pillContent'>{status.profitBNB}</div>
         </div>
         <div className='pillWrap'>
-          <div className='pillHeader'>Profit SUM</div>
+          <div className='pillHeader' style={{backgroundColor: 'darkred'}}>
+            Profit SUM
+          </div>
           <div className='pillContent'>{status.profitSUM}</div>
+        </div>
+        <div className='pillWrap'>
+          <div className='pillHeader' style={{backgroundColor: 'darkgreen'}}>
+            Total Welth
+          </div>
+          <div className='pillContent'>
+            <b>
+              {bn(status.balanceUSD.split('$')[0])
+                .plus(status.balanceBTC.split('=')[1].split('$')[0])
+                .plus(status.balanceBNB.split('=')[1].split('$')[0])
+                .plus(status.toSellWorth)
+                .toFixed(2)}
+            </b>{' '}
+            $
+          </div>
         </div>
       </div>
       <h1>Last Transactions :</h1>
       <TransactionsList transactions={transactions} store={store} />
       <h1>Buying :</h1>
-      <BuyingList status={status} store={store} />
+      <Buying status={status} store={store} />
       <h1>Selling :</h1>
       <ToSellList status={status} store={store} />
     </>

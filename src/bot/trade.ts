@@ -13,7 +13,7 @@ import {Tick} from '#db/entity/tick'
 import {getIndicators} from './indicators'
 
 const updatePrices = async (pair: Pair, vars: ITradeVars, currentPrice: string) => {
-  if (vars.lastActionTime < moment().subtract('4', 'hours').unix()) {
+  if (vars.lastActionTime < moment().subtract('2', 'hours').unix()) {
     const {avgPrice} = await getRepository(Tick)
       .createQueryBuilder('t')
       .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
@@ -34,17 +34,9 @@ const updatePrices = async (pair: Pair, vars: ITradeVars, currentPrice: string) 
       .createQueryBuilder('t')
       .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
         pair: pair.name,
-        periodToTakeAvgPrice: moment().subtract('3', 'hours').unix(),
+        periodToTakeAvgPrice: moment().subtract('4', 'hours').unix(),
       })
       .select('AVG(t.ask)', 'shortAvgPrice')
-      .getRawOne()
-    const {shortAvgPrice2} = await getRepository(Tick)
-      .createQueryBuilder('t')
-      .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
-        pair: pair.name,
-        periodToTakeAvgPrice: moment().subtract('1', 'hours').subtract('11', 'minutes').unix(),
-      })
-      .select('AVG(t.ask)', 'shortAvgPrice2')
       .getRawOne()
 
     vars.lastTransactionPrice = shortAvgPrice
@@ -83,7 +75,11 @@ export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars) =>
 export const sellFn = async (pair: string, price: BigNumber, volume: string, vars: ITradeVars) => {
   // Console.log(pair, 'SELL!!!', price.toFixed(8), volume)
   const p = await Pair.findOneOrFail(pair)
-  const result = await api.makeSellOffer(pair, price.toFixed(p.coin0Precision), bn(volume).toFixed(p.coin0Precision))
+  const result = await api.makeSellOffer(
+    pair,
+    price.multipliedBy('1').toFixed(p.coin0Precision),
+    bn(volume).toFixed(p.coin0Precision),
+  )
   if (result) {
     vars.wait += 3
     // Vars.sell = false
@@ -110,7 +106,6 @@ export const trade = async (pair: Pair) => {
   const balanceCoin0 = bn(store.balance[pair.coin0])
   const balanceCoin1 = bn(store.balance[pair.coin1])
   const hourBefore = moment().subtract(1, 'hour').unix()
-  const periodToTakeAvgPrice = moment().subtract(3, 'days').unix()
   if (balanceCoin1.isGreaterThanOrEqualTo(bn(askPrice).multipliedBy(pair.volume))) {
     // Can we afford that?
     vars.cantAffordToBuy = false

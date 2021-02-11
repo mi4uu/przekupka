@@ -208,7 +208,7 @@ h2{
         background: transparent;
     }
     .fl-table tr td:nth-child(odd) {
-        background: #F8F8F8;
+        background: #d0d0d0;
         border-right: 1px solid #E6E4E4;
     }
     .fl-table tr td:nth-child(even) {
@@ -222,6 +222,7 @@ h2{
 .pillWrap {
     display:inline-block;
     margin-right:10px;
+    margin-bottom:10px;
 }
 .pillHeader{
             font-size: 13px;
