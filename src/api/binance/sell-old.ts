@@ -21,10 +21,13 @@ const createInitialPairs = async () => {
     const tick = ticks.find((t: any) => t.symbol === pair.name)
     const diff = calculatePercentage(tick.askPrice, tosell.price)
     console.log(pair.name, '-', diff.toFixed(2), '%')
-    if (diff.isLessThan(-6)) {
+    if (diff.isLessThan(-3)) {
       makeOffer(pair.name, tick.bidPrice, tosell.left, 'sell')
     }
   })
 }
 
 createInitialPairs()
+setTimeout(() => {
+  process.exit(1)
+}, 10000)
