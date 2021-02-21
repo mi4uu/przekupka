@@ -46,8 +46,14 @@ export const createTradeVars = (pair: string, i = 0) => {
       buy: false,
       sell: false,
       wait: 10,
-      lastActionTime: moment().subtract(1, 'year').add(i, 'seconds').unix(),
-      lastIndicatorTime: moment().subtract(1, 'year').add(i, 'seconds').unix(),
+      lastActionTime: moment()
+        .subtract(2, 'hours')
+        .add(i * 2 - 10, 'seconds')
+        .unix(),
+      lastIndicatorTime: moment()
+        .subtract(15, 'minutes')
+        .add(i * 2, 'seconds')
+        .unix(),
     },
   ]
 }

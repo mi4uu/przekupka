@@ -21,7 +21,8 @@ import {ToSell} from '#db/entity/to-sell'
 import {calculatePercentage} from '#bot/calculate-percentage'
 import api from '#api/api'
 import BigNumber from 'bignumber.js'
-import { ClosedTransaction } from './db/entity/closed-transactions';
+import {ClosedTransaction} from './db/entity/closed-transactions'
+import moment from 'moment'
 
 const args = process.argv.slice(2)
 const port = args[0] ? Number.parseInt(args[0], 10) : 3000
@@ -78,7 +79,7 @@ const getStatus = async () => {
       const priceUSD =
         pair.coin1 === api.baseCoin ? '1' : store.ticks[store.ticks.length - 1].pairs[`${pair.coin1}${api.baseCoin}`].c
       return {
-        id:p.id,
+        id: p.id,
         left: p.left,
         balance: store.balance[pair.coin0],
         pair: pair.name,
@@ -91,13 +92,66 @@ const getStatus = async () => {
         profitInUSD: bn(price).minus(p.price).multipliedBy(p.left).multipliedBy(priceUSD).toFixed(2),
         worthInUSD: bn(price).multipliedBy(p.left).multipliedBy(priceUSD).toFixed(2),
         canBeSold: api.isTransactionValid(pair, p.left, price),
-        sellUpdate:p.sellUpdate,
-        buyUpdate:p.buyUpdate,
+        sellUpdate: p.sellUpdate,
+        buyUpdate: p.buyUpdate,
       }
     }),
   )
+  const timeFrom00 = moment(moment().format('YYYY-MM-DD 00:00')).unix()
+  const timeFrom24h = moment().subtract(24, 'hours').unix()
+  const transactions24: ClosedTransaction[] = await getRepository(ClosedTransaction)
+    .createQueryBuilder('ct')
+    .where('ct.opentm >= :timeFrom AND ct.type=:type', {
+      timeFrom: timeFrom24h,
+      type: 'sell',
+    })
+    .getMany()
+
+  const t24 = await Promise.all(
+    transactions24.map(async (t) => {
+      const pair = await t.pair
+      const priceUSD =
+        pair.coin1 === api.baseCoin ? '1' : store.ticks[store.ticks.length - 1].pairs[`${pair.coin1}${api.baseCoin}`].c
+
+      return {
+        profit: bn(t.profit).multipliedBy(priceUSD).toNumber(),
+        pair,
+        transaction: t,
+      }
+    }),
+  )
+  const t00 = t24.filter((t) => t.transaction.opentm > timeFrom00)
+  const getMinus = (a) => a.filter((aa) => aa.profit < 0)
+  const getPlus = (a) => a.filter((aa) => aa.profit > 0)
+  const sumItUp = (a) => a.map((aa) => aa.profit).reduce((x, y) => x + y, 0)
+  const last24minus = sumItUp(getMinus(t24))
+  const last24plus = sumItUp(getPlus(t24))
+  const last00minus = sumItUp(getMinus(t00))
+  const last00plus = sumItUp(getPlus(t00))
+
+  // Response.send(
+  //   await Promise.all(
+  //     transactions.map(async (t) => ({
+  //       id: t.id,
+  //       timestamp: t.opentm,
+  //       fee: t.fee,
+  //       volume: t.vol,
+  //       price: t.price,
+  //       type: t.type,
+  //       profit: t.profit,
+  //       pair: await t.pair,
+  //     })),
+  //   ),
+  // )
 
   return {
+    profits: {
+      last24minus,
+      last24plus,
+      last00minus,
+      last00plus,
+    },
+
     buying: buy.length,
     selling: sell.length,
     toSellCount: toSellPositions.length,
@@ -128,20 +182,9 @@ const getStatus = async () => {
     buyingPairs: buy,
     sellingPairs: sell,
 
-    toSell: toSell.sort((a, b) => bn(a.diffInPricePercent).minus(b.diffInPricePercent).toNumber())
-    .sort((a,b)=>a.canBeSold ?-1:1),
-    profitablePairs: pairsWithProfit
-      .map((p) => ({
-        name: p.name,
-        profit: p.profit,
-        profitInUsd:
-          p.coin1 === api.baseCoin
-            ? p.profit
-            : bn(p.profit)
-                .multipliedBy(store.ticks[store.ticks.length - 1].pairs[`${p.coin1}${api.baseCoin}`].c)
-                .toFixed(4),
-      }))
-      .sort((a, b) => bn(b.profitInUsd).minus(a.profitInUsd).toNumber()),
+    toSell: toSell
+      .sort((a, b) => bn(a.diffInPricePercent).minus(b.diffInPricePercent).toNumber())
+      .sort((a, b) => (a.canBeSold ? -1 : 1)),
   }
 }
 
@@ -199,21 +242,25 @@ server.get('/ticks', (_request: Request, response: Response) => {
 })
 
 server.get('/transactions', async (_request: Request, response: Response) => {
-  const transactions: ClosedTransaction[]= await getRepository(ClosedTransaction)
-  .createQueryBuilder('ct')
-  .orderBy('ct.opentm', 'DESC')
-  .limit(25)
-  .getMany()
-  response.send(await Promise.all(transactions.map(async  t=>({
-    id:t.id,
-    timestamp:t.opentm,
-    fee:t.fee,
-    volume:t.vol,
-    price:t.price,
-    type:t.type,
-    profit:t.profit,
-    pair:await t.pair
-  }))))
+  const transactions: ClosedTransaction[] = await getRepository(ClosedTransaction)
+    .createQueryBuilder('ct')
+    .orderBy('ct.opentm', 'DESC')
+    .limit(25)
+    .getMany()
+  response.send(
+    await Promise.all(
+      transactions.map(async (t) => ({
+        id: t.id,
+        timestamp: t.opentm,
+        fee: t.fee,
+        volume: t.vol,
+        price: t.price,
+        type: t.type,
+        profit: t.profit,
+        pair: await t.pair,
+      })),
+    ),
+  )
   // Response.send(store.closedTransactions)
 })
 server.get('/balance', (_request: Request, response: Response) => {

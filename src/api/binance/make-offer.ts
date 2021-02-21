@@ -1,4 +1,4 @@
-import {store} from '#api/server-store'
+import {createTradeVars, store} from '#api/server-store'
 import {saveBuy} from '#bot/save-buy'
 import {saveSell} from '#bot/save-sell'
 import {ClosedTransaction, TransactionType} from '#db/entity/closed-transactions'
@@ -43,6 +43,7 @@ function generateToken() {
 export async function makeOffer(pair: string, price: string, volume: string, type: string) {
   const myId = generateToken()
   try {
+    if (!store.tradeVars[pair]) store.tradeVars[pair] = createTradeVars(pair)[1]
     store.tradeVars[pair].wait = 10
     const dbPair = await Pair.findOneOrFail(pair)
     const {data: order}: {data: IOrderInfo} = await makePrivateCall('/order', {
@@ -79,11 +80,10 @@ export async function makeOffer(pair: string, price: string, volume: string, typ
           .toFixed(8)
       console.log(`    |--[FILL]----[${fill.qty}]---[fee: ${fill.commission} ${fill.commissionAsset}]`)
       await (t.type === 'buy' ? saveBuy(dbPair, t) : saveSell(dbPair, t))
+      store.tradeVars[pair].canBuy = 0
     }
 
     console.log('')
-
-    store.tradeVars[pair].wait = 500
 
     return orderId
   } catch (error: any) {
@@ -91,6 +91,7 @@ export async function makeOffer(pair: string, price: string, volume: string, typ
       '-------------------------------------------ERROR IN MAKING OFFER!!!!!!!!!!!!-------------------------------------------',
     )
     console.log(error?.response?.data || error?.response || error)
+    store.tradeVars[pair].wait = 200
 
     return false
   }

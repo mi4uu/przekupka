@@ -177,6 +177,39 @@ export default function layout() {
             $
           </div>
         </div>
+        <br />
+        <div className='pillWrap'>
+          <div className='pillHeader' style={{backgroundColor: 'darkred'}}>
+            Loss 24 h
+          </div>
+          <div className='pillContent'>
+            <b>{status.profits.last24minus}</b> $
+          </div>
+        </div>
+        <div className='pillWrap'>
+          <div className='pillHeader' style={{backgroundColor: 'darkgreen'}}>
+            Profit 24h
+          </div>
+          <div className='pillContent'>
+            <b>{status.profits.last24plus}</b> $
+          </div>
+        </div>
+        <div className='pillWrap'>
+          <div className='pillHeader' style={{backgroundColor: 'darkred'}}>
+            Loss from 00:00
+          </div>
+          <div className='pillContent'>
+            <b>{status.profits.last00minus}</b> $
+          </div>
+        </div>
+        <div className='pillWrap'>
+          <div className='pillHeader' style={{backgroundColor: 'darkgreen'}}>
+            Profit from 00:00
+          </div>
+          <div className='pillContent'>
+            <b>{status.profits.last00plus}</b> $
+          </div>
+        </div>
       </div>
       <h1>Last Transactions :</h1>
       <TransactionsList transactions={transactions} store={store} />

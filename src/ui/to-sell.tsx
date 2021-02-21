@@ -5,6 +5,7 @@ import {bn} from '../utils/bn'
 
 export const ToSell = ({toSell, vars}) => {
   const p = bn(toSell.diffInPricePercent)
+  if (!vars) return null
   return (
     <tr
       className={[

@@ -1,11 +1,18 @@
 import React from 'react'
-import { ToSell } from './to-sell'
-import { calculatePercentage } from '../bot/calculate-percentage'
-import { IStore } from '../api/server-store'
+import {ToSell} from './to-sell'
+import {calculatePercentage} from '../bot/calculate-percentage'
+import {IStore} from '../api/server-store'
 import moment from 'moment'
-import { bn } from '../utils/bn'
+import {bn} from '../utils/bn'
+const priceInUSD = (coin, store) => {
+  const m = {
+    BTC: store.ticks[store.ticks.length - 1].pairs.BTCUSDT.c,
+    BNB: store.ticks[store.ticks.length - 1].pairs.BNBUSDT.c,
+  }
+  return m[coin] || '1'
+}
 
-export const TransactionsList = ({ transactions, store }: { transactions: any; store: IStore }) => (
+export const TransactionsList = ({transactions, store}: {transactions: any; store: IStore}) => (
   <div className='table-wrapper'>
     <table className='fl-table'>
       <thead>
@@ -29,9 +36,9 @@ export const TransactionsList = ({ transactions, store }: { transactions: any; s
               <td>{t.pair.name}</td>
               <td>{t.price}</td>
               <td>{t.volume}</td>
-              <td>{t.fee}</td>
-              <td>{bn(t.price).multipliedBy(t.volume).toFixed(t.pair.coin1Precision)}</td>
-              <td>{t.profit}</td>
+              <td>{bn(t.fee).multipliedBy(priceInUSD('BNB', store)).toFixed(2)}</td>
+              <td>{bn(t.price).multipliedBy(t.volume).multipliedBy(priceInUSD(t.pair.coin1, store)).toFixed(2)}</td>
+              <td>{bn(t.profit).multipliedBy(priceInUSD(t.pair.coin1, store)).toFixed(2)} $</td>
             </tr>
           )
         })}

@@ -18,7 +18,7 @@ export const getTick = async () => {
 
     const ticks = [{timestamp: moment().unix(), pairs: newTick}]
     store.ticks = ticks
-    const pairs = await Pair.find({active: true})
+    const pairs = await Pair.find()
 
     for (const pair of pairs) {
       if (!store.tradeVars[pair.name]) {
@@ -32,10 +32,7 @@ export const getTick = async () => {
       }
 
       if (wait <= 0) {
-        trade(pair).catch((error) => {
-          console.log('something was wrong doing trade for ' + pair.name)
-          console.log(error)
-        })
+        await trade(pair)
       } else {
         store.tradeVars[pair.name].wait = wait - 1
       }

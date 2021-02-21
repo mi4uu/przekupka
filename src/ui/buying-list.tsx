@@ -39,8 +39,8 @@ export const BuyingList = ({list, vars, ticks}: {list: any; vars: any; ticks: an
                 <td>{calculatePercentage(price, v.lowest).toFixed(2)} %</td>
 
                 <td>
-                  {v.canBuy <= 4 && <div className='pill '>{v.canBuy}</div>}
-                  {v.canBuy > 4 && <div className='pill  '>{v.canBuy}</div>}
+                  {v.canBuy <= 5 && <div className='pill '>{v.canBuy}</div>}
+                  {v.canBuy > 5 && <div className='pill  '>{v.canBuy}</div>}
                 </td>
                 <td>{v.wait > 0 && <div className='pill red'>{v.wait}</div>}</td>
               </tr>
