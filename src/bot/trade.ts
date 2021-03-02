@@ -141,14 +141,14 @@ export const trade = async (pair: Pair) => {
       const changeFromLastTransaction = calculatePercentage(vars.lastTransactionPrice, askPrice)
       const minDiffToBuy = bn(pair.changeToTrend).multipliedBy('1').plus(marketLiquidity)
       if (
-        changeFromLastTransaction.isGreaterThan(minDiffToBuy) &&
+        //      ChangeFromLastTransaction.isGreaterThan(minDiffToBuy) &&
         api.isTransactionValid(pair, pair.volume, askPrice)
       ) {
         vars.buy = true
         vars.lastActionTime = moment().unix()
         if (bn(vars.lowest).isGreaterThan(bn(askPrice))) vars.lowest = askPrice
         const diffToLowest = calculatePercentage(askPrice, vars.lowest)
-        if (diffToLowest.isGreaterThanOrEqualTo(pair.changeToChangeTrend) && vars.canBuy > 5) {
+        if (vars.canBuy > 5) {
           buyFn(pair.name, bn(askPrice), vars).catch((error) => {
             console.log('cant buy', error)
           })

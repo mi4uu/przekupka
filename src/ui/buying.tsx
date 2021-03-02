@@ -19,7 +19,7 @@ export const Buying = ({status, store}: {status: any; store: IStore}) => {
       diff: calculatePercentage(ticks[pair].a, v.lastTransactionPrice).toNumber(),
     }))
     .sort((a, b) => a.diff - b.diff)
-  const buyable = markets.filter((p) => p.diff < 0)
+  const buyable = markets
 
   const buyableBTC = buyable.filter((b) => b.market === 'BTC')
   const buyableUSD = buyable.filter((b) => b.market === 'SDT')

@@ -21,7 +21,7 @@ const createInitialPairs = async () => {
     const tick = ticks.find((t: any) => t.symbol === pair.name)
     const diff = calculatePercentage(tick.bidPrice, tosell.price)
     console.log(pair.name, '-', diff.toFixed(2), '%')
-    if (diff.isLessThan(-3)) {
+    if (diff.isLessThan(999999)) {
       await makeOffer(pair.name, tick.bidPrice, tosell.left, 'sell')
       pair.active = false
       await pair.save()
