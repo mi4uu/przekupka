@@ -96,15 +96,18 @@ export const getTick = async () => {
         ts.dust = true
         await ts.save()
       }
-      // Buy   2.5%   6%      15%    25%
-      // 10 -> 15 -> 22.5  ->  45 -> 90
-      // 50 -> 75 -> 112.5 -> 225 -> 450
 
-      const safeBuyMultipliers = [1] // [1, 1, 1, 1, 1]
-      const safeBuyTresholds = [999999] // [3, 7, 12, 20, 35]
+      // Buy ->
+      //        drop 6% ->  3%
+      //        drop 10% -> 5%
+      //        drop 20% -> 6%
+      const safeBuyMultipliers = [1, 1, 2]
+      const safeBuyTresholds = [6, 10, 20]
       const maxSafeBuys = safeBuyMultipliers.length
 
       if (
+        safeBuyTresholds[ts.safeBuy] &&
+        ts.buyUpdate - moment().unix() > 100 &&
         calculatePercentage(ts.price, store.ticks[store.ticks.length - 1].pairs[pair.name].c).isGreaterThan(
           safeBuyTresholds[ts.safeBuy],
         )

@@ -143,7 +143,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
         ? priceLongAgo0Diff < 70 || priceLongAgo1Diff < 70 || priceLongAgo2Diff < 70
         : false
     const strats = [rsi[rsi.length - 1] < 20, longBand, shortBand, isStrongBullish].filter(Boolean)
-    const stratFilled = strats.length >= 2
+    const stratFilled = strats.length >= 3
     vars.stats = {
       belowBB0: shortBand,
       belowBB1: longBand,
@@ -168,7 +168,9 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     if (
       allowBuying &&
       vars.buy &&
-      (bn(candles[candles.length - 1].close).isGreaterThan(candles[candles.length - 2].close) || strats.length >= 3) &&
+      (bn(candles[candles.length - 1].close).isGreaterThan(candles[candles.length - 2].close) ||
+        strats.length >= 4 ||
+        (strats.length >= 3 && isBullish)) &&
       !isDroppingAfterBigRise
     ) {
       // Limit buy per h

@@ -6,8 +6,17 @@ import moment from 'moment'
 
 export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: string) {
   const dbToSellPositions = await ToSell.find({pair, filled: false, dust: false})
+  const toSellPosition = new ToSell()
+  toSellPosition.pair = pair
+  toSellPosition.price = t.price
+  toSellPosition.vol = t.vol
+  toSellPosition.left = t.vol
+  toSellPosition.strategy = strategy || ''
+  toSellPosition.buyUpdate = moment().unix()
+
   if (dbToSellPositions.length > 0) {
     const dbToSellPosition = dbToSellPositions[0]
+
     console.log(`  price: ${dbToSellPosition.price}  volume: ${dbToSellPosition.left}`)
     console.log(`+ price: ${t.price}  volume: ${t.vol}`)
 
@@ -18,29 +27,25 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
     const newPrice = weightedDbPosition.plus(weightedIncommingPosition).dividedBy(weights)
 
     // Add volume
-    dbToSellPosition.vol = bn(dbToSellPosition.vol).plus(t.vol).toFixed(8)
-    dbToSellPosition.left = bn(dbToSellPosition.left).plus(t.vol).toFixed(8)
+    const vol = bn(dbToSellPosition.vol).plus(t.vol).toFixed(8)
+    const left = bn(dbToSellPosition.left).plus(t.vol).toFixed(8)
     // Set new price
-    dbToSellPosition.price = newPrice.toFixed(8)
-    // DbToSellPosition.strategy = strategy ? strategy : dbToSellPosition.strategy
+    const price = newPrice.toFixed(8)
 
-    dbToSellPosition.buyUpdate = moment().unix()
-    await dbToSellPosition.save()
-    console.log(`= price: ${dbToSellPosition.price}  volume: ${dbToSellPosition.left}`)
+    toSellPosition.price = price
+    toSellPosition.vol = vol
+    toSellPosition.left = left
+    toSellPosition.safeBuy = dbToSellPosition.safeBuy + 1
+    await dbToSellPosition.remove()
 
-    console.log('    |-------updated tosell:', dbToSellPosition.id)
-  } else {
-    const toSellPosition = new ToSell()
-    toSellPosition.pair = pair
-    toSellPosition.price = t.price
-    toSellPosition.vol = t.vol
-    toSellPosition.left = t.vol
-    toSellPosition.strategy = strategy ? strategy : ''
+    //   Await dbToSellPosition.save()
+    console.log(`= price: ${price}  volume: ${left}`)
 
-    toSellPosition.buyUpdate = moment().unix()
-    await toSellPosition.save()
-    console.log('    |-------added tosell:', toSellPosition.id)
+    console.log('    |-------(removed) tosell:', dbToSellPosition.id)
   }
+
+  await toSellPosition.save()
+  console.log('    |-------added tosell:', toSellPosition.id)
 
   await t.save()
 }
