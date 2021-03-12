@@ -184,13 +184,14 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
       console.log('price diff 10h ago:', priceLongAgo2Diff)
 
       console.log({shortBand, longBand})
-      let strategy = ''
-      if (shortBand) strategy += `[EMA20 - ${shortPeriodMinDiff}%]`
-      if (longBand) strategy += `[EMA100 - ${longPeriodMinDiff}%]`
+      let strategy = `${strats.length} - `
+      if (shortBand) strategy += `[EMA20 - ${bn(shortPeriodMinDiff).toFixed(1)}%]`
+      if (longBand) strategy += `[EMA100 - ${bn(longPeriodMinDiff).toFixed(1)}%]`
       if (isStrongBullish) strategy += `[STRONG BULLISH]`
-      strategy += '[RSI - ' + rsi[rsi.length - 1] + ']'
-      if (macd[macd.length - 1]) strategy += isBullish ? '[BULL]' : '[BEAR]'
-      else strategy += '[MACD err]'
+      else if (macd[macd.length - 1]) strategy += isBullish ? '[BULL]' : '[BEAR]'
+
+      strategy += '[RSI - ' + bn(rsi[rsi.length - 1]).toFixed(0) + ']'
+
       if (!macd[macd.length - 1]) {
         console.log('candles 30m length:', candles30m.length)
         console.log('first candles 30m', candles30m[0], candles30m[1])

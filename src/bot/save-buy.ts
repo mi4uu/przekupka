@@ -35,6 +35,7 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
     toSellPosition.price = price
     toSellPosition.vol = vol
     toSellPosition.left = left
+    toSellPosition.strategy = dbToSellPosition.strategy + '#'
     toSellPosition.safeBuy = dbToSellPosition.safeBuy + 1
     await dbToSellPosition.remove()
 
