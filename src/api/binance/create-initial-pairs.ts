@@ -4,21 +4,21 @@ import {createConnection} from 'typeorm'
 import {bn} from '#utils/bn'
 import {markets} from './config'
 
-const changeToTrend = 1.5 // 1.5 my default , please use different (at least by 0.4) one so we wont be competition to each other
+const changeToTrend = 1 // 1.5 my default , please use different (at least by 0.4) one so we wont be competition to each other
 // ^^ Less is quicker buy/sell min difference and less profit to wait for . Greter number will result wait longer to buy / sell
 // but also greater profit per transaction
-const changeToChangeTrend = 0.9 // 0.9 my default , please use different one (at least by 0.2) so we wont be competition to each other
+const changeToChangeTrend = 0.05 // 0.9 my default , please use different one (at least by 0.2) so we wont be competition to each other
 // ^^ less is quicker to decide about buying / selling . Greater numbers are more resilient to price change tho
 
 const changeToTrendBTC = 1.5
-const changeToChangeTrendBTC = 0.9
+const changeToChangeTrendBTC = 0.05
 
-const changeToTrendBNB = 1.5
-const changeToChangeTrendBNB = 0.9
+const changeToTrendBNB = 2
+const changeToChangeTrendBNB = 0.05
 
-const desiredPrice = '40' // How many $ per transaction ( min 20, recomended min 40 )
-const desiredPriceBTC = '40' // How many $ per transaction ( min 20, recomended min 40 )
-const desiredPriceBNB = '40' // How many $ per transaction ( min 20, recomended min 40 )
+const desiredPrice = '50' // How many $ per transaction ( min 20, recomended min 40 )
+const desiredPriceBTC = '50' // How many $ per transaction ( min 20, recomended min 40 )
+const desiredPriceBNB = '20' // How many $ per transaction ( min 20, recomended min 40 )
 const buyPerHour = 1 // Leave it as is
 const createInitialPairs = async () => {
   const connection = await createConnection()
@@ -63,15 +63,14 @@ const createInitialPairs = async () => {
 
       newPair.buyPerHour = buyPerHour
       newPair.profit = existingPair ? existingPair.profit : '0.0'
-      // NewPair.profit = '0.0'
+      newPair.profit = '0.0'
       newPair.coin0 = pair.baseAsset
       newPair.coin1 = pair.quoteAsset
       newPair.coin0Name = pair.baseAsset
       newPair.coin1Name = pair.quoteAsset
       newPair.coin0Precision = pair.baseAssetPrecision
       newPair.coin1Precision = pair.quoteAssetPrecision
-      newPair.coin0FriendlyName = pair.baseAsset
-      newPair.coin1FriendlyName = pair.quoteAsset
+
       // Try to find min volume
       const minNotional = pair.filters.find((f: any) => bn(f.minNotional).isGreaterThan(0))?.minNotional
       const avgCost = bn(minNotional).dividedBy(bn(tick.askPrice))
@@ -98,7 +97,7 @@ const createInitialPairs = async () => {
       newPair.step = String(step)
       newPair.param0 = minNotional
       newPair.volume = volume.dp(step).toFixed(step)
-      newPair.active = true
+      newPair.active = existingPair ? existingPair.active : true
       console.log(
         `creating ${newPair.name} with volume ${newPair.volume} worth of ${bn(tick.askPrice)
           .multipliedBy(newPair.volume)

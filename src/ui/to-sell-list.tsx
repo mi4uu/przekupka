@@ -63,9 +63,10 @@ export const ToSellList = ({status, store}) => {
               <th>Price $ diff</th>
               <th>Profit</th>
               <th>Worth $</th>
-              <th>Wait</th>
               <th>Soldable</th>
               <th>Selling</th>
+              <th>Safe buys</th>
+              <th>strategy</th>
               <th>Sell Update</th>
               <th>Buy Update</th>
             </tr>

@@ -37,23 +37,23 @@ export interface IOrderInfo {
 function generateToken() {
   return Math.floor(1000000000000000 + Math.random() * 9000000000000000)
     .toString(36)
-    .slice(0, 10)
+    .slice(0, 6)
 }
 
-export async function makeOffer(pair: string, price: string, volume: string, type: string) {
+export async function makeOffer(pair: string, price: string, volume: string, type: string, strategy?: string) {
   const myId = generateToken()
   try {
     if (!store.tradeVars[pair]) store.tradeVars[pair] = createTradeVars(pair)[1]
-    store.tradeVars[pair].wait = 10
+    store.tradeVars[pair].wait = 0
     const dbPair = await Pair.findOneOrFail(pair)
     const {data: order}: {data: IOrderInfo} = await makePrivateCall('/order', {
       symbol: pair,
       side: type,
-      price,
+      // Price,
       quantity: bn(volume).toFixed(Number.parseInt(dbPair.step, 10)),
       recvWindow: 5000,
-      timeInForce: 'FOK',
-      type: 'LIMIT',
+      // TimeInForce: 'FOK',
+      type: 'MARKET',
       newClientOrderId: myId,
     })
     const orderId = order.orderId
@@ -66,7 +66,7 @@ export async function makeOffer(pair: string, price: string, volume: string, typ
       t.status = 'closed'
       t.pair = dbPair
       t.refid = myId
-      t.userref = order.orderId
+      t.userref = 111
       t.opentm = moment().unix()
       t.vol = fill.qty
       t.fee = fill.commission
@@ -79,7 +79,7 @@ export async function makeOffer(pair: string, price: string, volume: string, typ
           .minus(bn(fill.price).multipliedBy(fill.qty))
           .toFixed(8)
       console.log(`    |--[FILL]----[${fill.qty}]---[fee: ${fill.commission} ${fill.commissionAsset}]`)
-      await (t.type === 'buy' ? saveBuy(dbPair, t) : saveSell(dbPair, t))
+      await (t.type === 'buy' ? saveBuy(dbPair, t, strategy) : saveSell(dbPair, t))
       store.tradeVars[pair].canBuy = 0
     }
 
@@ -91,7 +91,7 @@ export async function makeOffer(pair: string, price: string, volume: string, typ
       '-------------------------------------------ERROR IN MAKING OFFER!!!!!!!!!!!!-------------------------------------------',
     )
     console.log(error?.response?.data || error?.response || error)
-    store.tradeVars[pair].wait = 200
+    // Store.tradeVars[pair].wait = 30
 
     return false
   }

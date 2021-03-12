@@ -23,6 +23,7 @@ import api from '#api/api'
 import BigNumber from 'bignumber.js'
 import {ClosedTransaction} from './db/entity/closed-transactions'
 import moment from 'moment'
+import {buyFn, sellFn} from '#bot/trade'
 
 const args = process.argv.slice(2)
 const port = args[0] ? Number.parseInt(args[0], 10) : 3000
@@ -51,6 +52,7 @@ server.use(auth)
 
 server.use(bodyParser.json())
 const getStatus = async () => {
+  if (store.ticks.length === 0) return false
   const buy: string[] = []
   const sell: string[] = []
   Object.entries(store.tradeVars).forEach(([p, v]) => {
@@ -94,6 +96,8 @@ const getStatus = async () => {
         canBeSold: api.isTransactionValid(pair, p.left, price),
         sellUpdate: p.sellUpdate,
         buyUpdate: p.buyUpdate,
+        strategy: p.strategy,
+        safeBuy: p.safeBuy,
       }
     }),
   )
@@ -157,7 +161,7 @@ const getStatus = async () => {
     toSellCount: toSellPositions.length,
     toSellWorth: toSell
       .map((ts) => bn(ts.worthInUSD))
-      .reduce((a, b): BigNumber => a.plus(b))
+      .reduce((a, b): BigNumber => a.plus(b), bn('0'))
       .toFixed(2),
 
     profitUSD: profit.USD.toFixed(2) + ' $',
@@ -235,10 +239,54 @@ server.get('/tick', (_request: Request, response: Response) => {
   response.send(store.ticks[store.ticks.length - 1])
 })
 server.get('/store', (_request: Request, response: Response) => {
-  response.send(store)
+  response.send({...store, ticks: [store.ticks[store.ticks.length - 1]]})
 })
 server.get('/ticks', (_request: Request, response: Response) => {
   response.send(store.ticks)
+})
+
+server.post('/buy', async (request: Request, response: Response) => {
+  const {pair} = request.body
+  const currentPrice = store.ticks[0].pairs[pair].a
+
+  console.log('BUY signal received for', pair)
+  const {howMuchToSell, lowestBuy} = await getRepository(ToSell)
+    .createQueryBuilder('t')
+    .where('t.pairName = :pair AND t.filled = :filled ', {
+      pair,
+      //   MaxPrice: maxPrice.toFixed(pair.coin0Precision),
+      filled: false,
+    })
+    .select('COALESCE(SUM(t.left),0)', 'howMuchToSell')
+    .addSelect('COALESCE(MIN(t.price),0)', 'lowestBuy')
+    .getRawOne()
+  console.log(`current price: ${currentPrice}`)
+  console.log(`to sell price: ${lowestBuy}`)
+
+  if (bn(lowestBuy).isGreaterThan(currentPrice) || bn(lowestBuy).isZero())
+    await buyFn(pair, bn('1'), store.tradeVars[pair])
+  else console.log('price is higher that what we have')
+  // Else console.log(pair, 'price is droping. skipping for now')
+  response.send('ok')
+})
+server.post('/sell_disabled', async (request: Request, response: Response) => {
+  const {pair} = request.body
+  console.log('SELL signal received for', pair)
+
+  const {howMuchToSell, lowestBuy} = await getRepository(ToSell)
+    .createQueryBuilder('t')
+    .where('t.pairName = :pair AND t.filled = :filled ', {
+      pair,
+      //   MaxPrice: maxPrice.toFixed(pair.coin0Precision),
+      filled: false,
+    })
+    .select('COALESCE(SUM(t.left),0)', 'howMuchToSell')
+    .addSelect('COALESCE(MIN(t.price),0)', 'lowestBuy')
+    .getRawOne()
+  if (howMuchToSell && bn(howMuchToSell).isGreaterThan(0) && api.isTransactionValid(pair, howMuchToSell, lowestBuy))
+    await sellFn(pair, bn('1'), howMuchToSell, store.tradeVars[pair])
+  else console.log('nothing to sell')
+  response.send('ok')
 })
 
 server.get('/transactions', async (_request: Request, response: Response) => {
@@ -258,6 +306,9 @@ server.get('/transactions', async (_request: Request, response: Response) => {
         type: t.type,
         profit: t.profit,
         pair: await t.pair,
+        strategy: t.strategy,
+        timeToSell: t.timeToSell,
+        diff: t.diff,
       })),
     ),
   )

@@ -10,7 +10,8 @@ import {bn} from '#utils/bn'
 
 export const binanceApi = {
   makePrivateCall: hitBtcPrivateCall,
-  makeBuyOffer: async (pair: string, price: string, volume: string) => makeOffer(pair, price, volume, 'BUY'),
+  makeBuyOffer: async (pair: string, price: string, volume: string, strategy?: string) =>
+    makeOffer(pair, price, volume, 'BUY', strategy),
   makeSellOffer: async (pair: string, price: string, volume: string) => makeOffer(pair, price, volume, 'SELL'),
   getTick,
   convertTick,

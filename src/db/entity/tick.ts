@@ -13,19 +13,23 @@ export class Tick extends BaseEntity {
   @primaryGeneratedColumn()
   id!: number
 
+  @index()
   @column()
   timestamp: number
 
   @index()
-  @manyToOne(() => Pair, (pair) => pair.ticks)
+  @manyToOne(() => Pair, async (pair) => pair.ticks)
   pair!: Promise<Pair>
 
-  @column({type: 'decimal', precision: 40, scale: 20, default: 0})
-  ask!: string
+  @column({type: 'decimal', precision: 40, scale: 8, default: 0})
+  open!: string
 
-  @column({type: 'decimal', precision: 40, scale: 20, default: 0})
-  closed!: string
+  @column({type: 'decimal', precision: 40, scale: 8, default: 0})
+  close!: string
 
-  @column({type: 'decimal', precision: 40, scale: 20, default: 0})
-  bid!: string
+  @column({type: 'decimal', precision: 40, scale: 8, default: 0})
+  high!: string
+
+  @column({type: 'decimal', precision: 40, scale: 8, default: 0})
+  low!: string
 }

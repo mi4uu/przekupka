@@ -80,28 +80,35 @@ const isMaValid = (ma, prices, price) =>
   bn(ma[ma.length - 1]).isLessThan(price)
 
 export const getIndicators = async (symbol: string, price: string, vars: ITradeVars) => {
-  if (1 < 2) return 0
+  const price4 = await getPriceForPeriod(symbol, moment().subtract(15, 'minutes').unix(), moment().unix())
+  const price3 = await getPriceForPeriod(
+    symbol,
+    moment().subtract(30, 'minutes').unix(),
+    moment().subtract(15, 'minutes').unix(),
+  )
+  const price2 = await getPriceForPeriod(
+    symbol,
+    moment().subtract(45, 'minutes').unix(),
+    moment().subtract(30, 'minutes').unix(),
+  )
+  const price1 = await getPriceForPeriod(
+    symbol,
+    moment().subtract(60, 'minutes').unix(),
+    moment().subtract(45, 'minutes').unix(),
+  )
+  const price0 = await getPriceForPeriod(
+    symbol,
+    moment().subtract(80, 'minutes').unix(),
+    moment().subtract(60, 'minutes').unix(),
+  )
+  let points = 0
+  if (price4 > price3) points += 1
+  if (price3 > price2) points += 1
+  if (price2 > price1) points += 1
+  if (price1 > price0) points += 1
+  if (price4 > price0) points += 1
+  console.log('prices for', symbol, 'points:', points)
+  console.log(price0, price1, price2, price3, price4)
 
-  const [macd, prices, macdData] = await getIndicator(symbol, 13, price) // ~ 5 days for 26 slow period
-  const sma = SMA.calculate({period: 10, values: prices})
-  const growing = sma[0] < sma[sma.length - 1] || sma[2] < sma[sma.length - 1] || sma[4] < sma[sma.length - 1]
-  const [macd_, pricesShort, macdData_] = await getIndicator(symbol, 2.6, price) // ~ 1 day for 26 slow period
-  const min = Math.min(...pricesShort)
-  const max = Math.max(...pricesShort)
-  const diff = (min / max) * 100
-  let score = 0
-  if (macd) score += 1
-  if (growing) score += 1
-  if (diff) score += 1
-  if (!macdData_) return false
-  const shortMACD = macdData_[macdData_.length - 1]
-  if (macd && growing && diff < 95 && shortMACD.MACD > 0 && shortMACD.histogram > 0) {
-    vars.lastTransactionPrice = bn(price).multipliedBy('1.2').toFixed(8)
-    vars.lowest = bn(price).multipliedBy('0.9').toFixed(8)
-    return 6
-  }
-
-  if (score === 2 && macd) console.log(symbol, `growing: ${growing}  diff: ${diff}`)
-
-  return 0
+  return points
 }

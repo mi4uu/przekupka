@@ -51,16 +51,10 @@ export class Pair extends BaseEntity {
   @column()
   public coin1Name!: string
 
-  @column()
-  public coin0FriendlyName!: string
-
-  @column()
-  public coin1FriendlyName!: string
-
-  @column({type: 'decimal', precision: 40, scale: 20, default: 0})
+  @column({type: 'decimal', precision: 40, scale: 8, default: 0})
   public step!: string
 
-  @column({type: 'decimal', precision: 40, scale: 20, default: 0})
+  @column({type: 'decimal', precision: 40, scale: 8, default: 0})
   public param0!: string // Some generic param
 
   @column({default: false})

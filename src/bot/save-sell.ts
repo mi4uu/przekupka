@@ -5,6 +5,7 @@ import {ToSell} from '#db/entity/to-sell'
 import {bn} from '#utils/bn'
 import {calculateProfit} from './calculate-profit'
 import moment from 'moment'
+import {calculatePercentage} from './calculate-percentage'
 
 export async function saveSell(pair: Pair, t: ClosedTransaction) {
   const maxPrice = bn(t.price)
@@ -34,14 +35,18 @@ export async function saveSell(pair: Pair, t: ClosedTransaction) {
     console.log(`        |--[tid: ${t.id}]  sold ${pair.name} from price ${t.price}, no TOSELL position found!`)
   }
 
+  let lastActiveToSell = toSellPosition[0]
+
   for (const ts of toSellPosition) {
     const left = bn(ts.left)
     if (soldVol.isGreaterThan('0')) {
+      lastActiveToSell = ts
+
       if (left.isEqualTo(soldVol)) {
         ts.filled = true
         console.log(`        |--* ts=t [ts id: ${ts.id}] left ${ts.left} - ${soldVol.toFixed(0)} = 0 END`)
         ts.left = '0.0'
-        ts.sellUpdate = moment().unix()
+        // Ts.sellUpdate = moment().unix()
         profit = profit.plus(calculateProfit({volume: soldVol, buyPrice: bn(ts.price), sellPrice: bn(t.price)}))
         soldVol = bn('0')
       } else if (left.isLessThan(soldVol)) {
@@ -54,7 +59,7 @@ export async function saveSell(pair: Pair, t: ClosedTransaction) {
         ts.filled = true
         soldVol = soldVol.minus(bn(ts.left))
         ts.left = '0.0'
-        ts.sellUpdate = moment().unix()
+        //   Ts.sellUpdate = moment().unix()
         profit = profit.plus(calculateProfit({volume: left, buyPrice: bn(ts.price), sellPrice: bn(t.price)}))
       } else {
         console.log(
@@ -62,8 +67,9 @@ export async function saveSell(pair: Pair, t: ClosedTransaction) {
             .minus(bn(ts.vol))
             .toFixed(8)}`,
         )
+
         ts.left = bn(ts.left).minus(soldVol).toFixed(pair.coin0Precision)
-        ts.sellUpdate = moment().unix()
+        //   Ts.sellUpdate = moment().unix()
         profit = profit.plus(calculateProfit({volume: soldVol, buyPrice: bn(ts.price), sellPrice: bn(t.price)}))
         console.log(`        |--* ts>t (2/2) [ts id: ${ts.id}] leaving transaction with ${ts.left} `)
         soldVol = bn('0')
@@ -84,6 +90,10 @@ export async function saveSell(pair: Pair, t: ClosedTransaction) {
   const fee = bn(t.fee).multipliedBy(2)
   pair.profit = profit.plus(pair.profit).toFixed(pair.coin1Precision)
   t.profit = profit.toFixed(pair.coin1Precision)
+  t.strategy = lastActiveToSell.strategy
+  t.timeToSell = moment().unix() - lastActiveToSell.sellUpdate
+  t.diff = calculatePercentage(t.price, lastActiveToSell?.price).toFixed()
+
   await t.save()
   await pair.save()
 

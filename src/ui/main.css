@@ -118,7 +118,12 @@ h2{
     box-shadow: 0px 35px 50px rgba( 0, 0, 0, 0.2 );
     width:100%;
 }
-
+a {
+    color:white
+}
+a:hover {
+    color:#ffcc00
+}
 .fl-table {
     border-radius: 5px;
     font-size: 12px;
@@ -128,7 +133,7 @@ h2{
     width: 100%;
     max-width: 100%;
     white-space: nowrap;
-    background-color: white;
+    background-color: #222;
 }
 
 .fl-table td, .fl-table th {

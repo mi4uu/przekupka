@@ -100,20 +100,20 @@ const cleanUp = async () => {
               type: 'buy',
             })
             .getOne()
-          if (ct) {
-            const pn = await ct.pair
+          // If (ct) {
+          //   const pn = await ct.pair
 
-            console.log(log, 'last transaction price was ' + ct.price)
-            const nt = new ToSell()
-            nt.pair = pn
-            nt.price = ct.price
-            nt.vol = b
-            nt.left = b
-            if (pn) await nt.save()
-            console.log(nt.id, pn.name, coin0)
-          } else {
-            console.log(log, 'NOOOO TRANSACTIONS!')
-          }
+          //   console.log(log, 'last transaction price was ' + ct.price)
+          //   const nt = new ToSell()
+          //   nt.pair = pn
+          //   nt.price = ct.price
+          //   nt.vol = b
+          //   nt.left = b
+          //   if (pn) await nt.save()
+          //   console.log(nt.id, pn.name, coin0)
+          // } else {
+          //   console.log(log, 'NOOOO TRANSACTIONS!')
+          // }
         }
       }
     })

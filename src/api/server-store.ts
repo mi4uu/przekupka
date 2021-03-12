@@ -2,6 +2,18 @@ import {Pair} from '#db/entity/pair'
 import moment from 'moment'
 
 export interface ITradeVars {
+  stats: {
+    belowBB0: boolean
+    belowBB1: boolean
+    rsi: number
+    macd: number | undefined
+    isDroppingAfterBigRise: boolean
+    allowBuying: boolean
+    iHaveOneToSell: number
+    shortPeriodMinDiff: number
+    longPeriodMinDiff: number
+    belowLastSma: boolean
+  }
   buy: boolean
   sell: boolean
   highest: string
@@ -45,7 +57,7 @@ export const createTradeVars = (pair: string, i = 0) => {
       lowest: '0',
       buy: false,
       sell: false,
-      wait: 10,
+      wait: 0,
       lastActionTime: moment()
         .subtract(2, 'hours')
         .add(i * 2 - 10, 'seconds')

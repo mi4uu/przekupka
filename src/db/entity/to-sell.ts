@@ -15,11 +15,14 @@ export class ToSell extends BaseEntity {
   @primaryGeneratedColumn()
   id!: number
 
-  @manyToOne(() => Pair, (pair) => pair.toSell)
+  @manyToOne(() => Pair, async (pair) => pair.toSell)
   pair!: Promise<Pair>
 
   @column({default: false})
   filled!: boolean
+
+  @column({default: false})
+  dust!: boolean
 
   @column({type: 'decimal', precision: 20, scale: 8, default: 0})
   vol!: string
@@ -32,6 +35,13 @@ export class ToSell extends BaseEntity {
 
   @column({default: moment().unix()})
   sellUpdate!: number
+
   @column({default: moment().unix()})
   buyUpdate!: number
+
+  @column({default: ''})
+  strategy!: string
+
+  @column({default: 0})
+  safeBuy!: number
 }
