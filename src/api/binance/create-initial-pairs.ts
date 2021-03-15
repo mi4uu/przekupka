@@ -16,9 +16,9 @@ const changeToChangeTrendBTC = 0.05
 const changeToTrendBNB = 2
 const changeToChangeTrendBNB = 0.05
 
-const desiredPrice = '50' // How many $ per transaction ( min 20, recomended min 40 )
-const desiredPriceBTC = '50' // How many $ per transaction ( min 20, recomended min 40 )
-const desiredPriceBNB = '20' // How many $ per transaction ( min 20, recomended min 40 )
+const desiredPrice = '150' // How many $ per transaction ( min 20, recomended min 40 )
+const desiredPriceBTC = '150' // How many $ per transaction ( min 20, recomended min 40 )
+const desiredPriceBNB = '60' // How many $ per transaction ( min 20, recomended min 40 )
 const buyPerHour = 1 // Leave it as is
 const createInitialPairs = async () => {
   const connection = await createConnection()

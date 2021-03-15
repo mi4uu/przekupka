@@ -2,6 +2,7 @@ import {calculatePercentage} from '../bot/calculate-percentage'
 import React from 'react'
 import moment from 'moment'
 import {bn} from '../utils/bn'
+import axios from 'axios'
 
 export const ToSell = ({toSell, vars}) => {
   const p = bn(toSell.diffInPricePercent)
@@ -29,12 +30,28 @@ export const ToSell = ({toSell, vars}) => {
       <td>{toSell.balance}</td>
       <td>{bn(toSell.price).toFixed(8)}</td>
       <td>{toSell.currentPrice}</td>
-      <td>{vars.highest}</td>
 
-      <td>{toSell.diffInPrice}</td>
       <td>{toSell.diffInPricePercent}</td>
-      <td>{calculatePercentage(vars.highest, toSell.currentPrice).toFixed(2)}</td>
-      <td>{toSell.diffInPriceUSD}</td>
+
+      <td>
+        <button
+          className='panicButton'
+          onClick={() => {
+            if (confirm('Are you sure you want to sell ' + toSell.pair + ' for market price?'))
+              axios
+                .post('/sell', {pair: toSell.pair})
+                .then((r) => {
+                  window.location.reload()
+                })
+                .catch((error) => {
+                  console.log(error)
+                  alert(error.response.data)
+                })
+          }}
+        >
+          PANIC BUTTON
+        </button>
+      </td>
       <td>{toSell.profitInUSD}</td>
       <td>{toSell.worthInUSD}</td>
       <td>{toSell.canBeSold ? <div className='pill green'>YES</div> : <div className='pill red'>NO</div>}</td>

@@ -4,6 +4,14 @@ import bodyParser from 'body-parser'
 import fetchData from './api/fetch-data'
 import auth from './auth'
 import request from 'request'
+const lastLogs: string[] = []
+const cl = console.log
+console.log = (...args) => {
+  cl(...args)
+  lastLogs.push(args.map((c) => (typeof c === 'object' ? JSON.stringify(c) : c)).join(''))
+  if (lastLogs.length > 20) lastLogs.splice(1)
+}
+
 process.on('uncaughtException', (error) => {
   console.log('##########################################################################################')
   console.log(error)
@@ -269,7 +277,7 @@ server.post('/buy', async (request: Request, response: Response) => {
   // Else console.log(pair, 'price is droping. skipping for now')
   response.send('ok')
 })
-server.post('/sell_disabled', async (request: Request, response: Response) => {
+server.post('/sell', async (request: Request, response: Response) => {
   const {pair} = request.body
   console.log('SELL signal received for', pair)
 
@@ -277,16 +285,20 @@ server.post('/sell_disabled', async (request: Request, response: Response) => {
     .createQueryBuilder('t')
     .where('t.pairName = :pair AND t.filled = :filled ', {
       pair,
-      //   MaxPrice: maxPrice.toFixed(pair.coin0Precision),
       filled: false,
     })
     .select('COALESCE(SUM(t.left),0)', 'howMuchToSell')
     .addSelect('COALESCE(MIN(t.price),0)', 'lowestBuy')
     .getRawOne()
-  if (howMuchToSell && bn(howMuchToSell).isGreaterThan(0) && api.isTransactionValid(pair, howMuchToSell, lowestBuy))
-    await sellFn(pair, bn('1'), howMuchToSell, store.tradeVars[pair])
-  else console.log('nothing to sell')
-  response.send('ok')
+  console.log('PANIC SELL', pair, 'volume:', howMuchToSell, 'was bought for:', lowestBuy)
+  if (howMuchToSell && bn(howMuchToSell).isGreaterThan('0')) {
+    const r = await sellFn(pair, bn('1'), howMuchToSell, store.tradeVars[pair])
+    if (r) response.send('ok')
+    else {
+      response.status(500)
+      response.send('error, last logs:\n\n' + lastLogs.splice(-2).join('\n'))
+    }
+  } else console.log('nothing to sell')
 })
 
 server.get('/transactions', async (_request: Request, response: Response) => {

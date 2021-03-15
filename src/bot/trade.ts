@@ -48,6 +48,8 @@ export const sellFn = async (pair: string, price: BigNumber, volume: string, var
     console.log('transaction failed')
     // Vars.sell = false
   }
+
+  return result
 }
 
 function chunkArray(myArray_: number[], chunk_size: number) {
@@ -105,7 +107,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
   const minValue = Math.min(...candles30m)
   const maxValue = Math.max(...candles30m)
   const pricesHistoryDiff = 100 - (minValue / maxValue) * 100
-  const shortPeriodMinDiff = pair.changeToTrend > pricesHistoryDiff / 8 ? pair.changeToTrend : pricesHistoryDiff / 8
+  const shortPeriodMinDiff = pair.changeToTrend > pricesHistoryDiff / 5 ? pair.changeToTrend : pricesHistoryDiff / 5
   const longPeriodMinDiff = shortPeriodMinDiff * 2
   const macd = MACD.calculate({
     values: candles30m,
@@ -115,10 +117,15 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     SimpleMAOscillator: false,
     SimpleMASignal: false,
   })
-  const isStrongBullish =
-    macd[macd.length - 1].histogram > macd[macd.length - 2].histogram &&
-    macd[macd.length - 2].histogram > macd[macd.length - 3].histogram
-  const isBullish = macd[macd.length - 1] ? macd[macd.length - 1].histogram > 0 : false
+  let isStrongBullish = false
+  if (macd[macd.length - 1] && macd[macd.length - 3])
+    isStrongBullish =
+      macd[macd.length - 1].MACD > macd[macd.length - 3].MACD &&
+      macd[macd.length - 1].MACD > 0 &&
+      macd[macd.length - 1].histogram
+  const isBullish = macd[macd.length - 1]
+    ? macd[macd.length - 1]?.MACD > 0 && macd[macd.length - 1]?.MACD > macd[macd.length - 2]?.MACD
+    : false
   const rsi_ = await ti.indicators.rsi.indicator([closeValues], [14])
   const rsi = rsi_[0]
 
@@ -148,7 +155,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
       belowBB0: shortBand,
       belowBB1: longBand,
       rsi: Math.round(rsi[rsi.length - 1]),
-      macd: bn(macd[macd.length - 1]?.histogram).toFixed(2),
+      macd: bn(macd[macd.length - 1]?.MACD).toFixed(2),
       isDroppingAfterBigRise,
       allowBuying,
       iHaveOneToSell,

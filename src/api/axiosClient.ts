@@ -31,8 +31,10 @@ axiosClient.interceptors.response.use(
   async (error) => {
     // Any status codes that falls outside the range of 2xx cause this function to trigger
     // Do something with response error
-    console.log(error?.response?.data)
-    console.log(error?.response?.config?.data)
+    console.log(error?.code)
+    console.log(error?.errno)
+
+    console.log(error?.config?.url)
     if (error?.response?.code === 429) {
       tooManyRequest = true
       console.log('ERROR , too many requests')

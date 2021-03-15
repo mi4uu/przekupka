@@ -13,7 +13,7 @@ import {getRepository} from 'typeorm'
 let tickSaveTime = moment().unix()
 let tickInProgress = false
 const tickCount = {}
-
+let tick_ = 0
 export const getTick = async () => {
   if (tickInProgress) return false
   tickInProgress = true
@@ -86,8 +86,8 @@ export const getTick = async () => {
       })
     }
 
-    console.log('tick -', moment().unix() - startTime, 's')
-
+    console.log(moment().format('YYYY-MM-DD hh:mm'), ']', tick_, 'tick -  took', moment().unix() - startTime, 's')
+    tick_ += 1
     const toSell = await ToSell.find({dust: false})
     for (const ts of toSell) {
       // Position price multiplied by 104% < price = drop by 4 %
@@ -107,7 +107,7 @@ export const getTick = async () => {
 
       if (
         safeBuyTresholds[ts.safeBuy] &&
-        ts.buyUpdate - moment().unix() > 100 &&
+        moment().unix() - ts.buyUpdate > 60 * 10 &&
         calculatePercentage(ts.price, store.ticks[store.ticks.length - 1].pairs[pair.name].c).isGreaterThan(
           safeBuyTresholds[ts.safeBuy],
         )

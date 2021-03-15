@@ -8,10 +8,7 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
   const dbToSellPositions = await ToSell.find({pair, filled: false, dust: false})
   const toSellPosition = new ToSell()
   toSellPosition.pair = pair
-  toSellPosition.price = t.price
-  toSellPosition.vol = t.vol
-  toSellPosition.left = t.vol
-  toSellPosition.strategy = strategy || ''
+
   toSellPosition.buyUpdate = moment().unix()
 
   if (dbToSellPositions.length > 0) {
@@ -37,12 +34,17 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
     toSellPosition.left = left
     toSellPosition.strategy = dbToSellPosition.strategy + '#'
     toSellPosition.safeBuy = dbToSellPosition.safeBuy + 1
+    console.log('    |-------(removed) tosell:', dbToSellPosition.id)
+
     await dbToSellPosition.remove()
 
     //   Await dbToSellPosition.save()
     console.log(`= price: ${price}  volume: ${left}`)
-
-    console.log('    |-------(removed) tosell:', dbToSellPosition.id)
+  } else {
+    toSellPosition.price = t.price
+    toSellPosition.vol = t.vol
+    toSellPosition.left = t.vol
+    toSellPosition.strategy = strategy || ''
   }
 
   await toSellPosition.save()
