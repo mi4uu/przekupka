@@ -68,7 +68,7 @@ export const getTick = async () => {
       const values = store.ticks.map((tick) => bn(tick.pairs[pair.name].c))
       tdb.high = BigNumber.maximum(...values).toFixed(8)
       tdb.low = BigNumber.minimum(...values).toFixed(8)
-      if (tickCount[pair.name] > 100) {
+      if (tickCount[pair.name] > 24 * 60) {
         const balance =
           pair.coin1 === 'USDT'
             ? bn(store.balance[pair.coin1])
@@ -76,8 +76,14 @@ export const getTick = async () => {
                 store.ticks[store.ticks.length - 1].pairs[`${pair.coin1}USDT`].c,
               )
 
-        await trade(pair, tdb, balance.isGreaterThan(500) && btcIsStable && Number.parseFloat(tdb.close) > 0.00000099)
-      } else console.log(`[${pair.name}] ticks count ${tickCount[pair.name]} < 101`)
+        await trade(
+          pair,
+          tdb,
+          balance.isGreaterThan(api.config.dontBuybelow[pair.coin1]) &&
+            btcIsStable &&
+            Number.parseFloat(tdb.close) > 0.00000099,
+        )
+      } else console.log(`[${pair.name}] ticks count ${tickCount[pair.name]} <  24*60`)
       store.ticks = [store.ticks[store.ticks.length - 1]]
       tdb.save().catch((error) => {
         console.log('something was wrong saving tick for ')
@@ -101,8 +107,8 @@ export const getTick = async () => {
       //        drop 6% ->  3%
       //        drop 10% -> 5%
       //        drop 20% -> 6%
-      const safeBuyMultipliers = [1, 1, 2]
-      const safeBuyTresholds = [6, 10, 20]
+      const safeBuyMultipliers = api.config.safeBuyTresholds
+      const safeBuyTresholds = api.config.safeBuyTresholds
       const maxSafeBuys = safeBuyMultipliers.length
 
       if (

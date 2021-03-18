@@ -33,7 +33,8 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
     toSellPosition.vol = vol
     toSellPosition.left = left
     toSellPosition.strategy = dbToSellPosition.strategy + '#'
-    toSellPosition.safeBuy = dbToSellPosition.safeBuy + 1
+    const timeDiff = moment().unix() - dbToSellPosition.buyUpdate
+    toSellPosition.safeBuy = timeDiff > 60 ? dbToSellPosition.safeBuy + 1 : dbToSellPosition.safeBuy
     console.log('    |-------(removed) tosell:', dbToSellPosition.id)
 
     await dbToSellPosition.remove()

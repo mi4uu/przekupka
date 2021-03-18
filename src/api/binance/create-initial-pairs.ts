@@ -2,24 +2,21 @@ import axios from 'axios'
 import {Pair} from '../../db/entity/pair'
 import {createConnection} from 'typeorm'
 import {bn} from '#utils/bn'
-import {markets} from './config'
+import {markets, desiredPriceBTC, desiredPriceBNB, desiredPrice} from './config'
 
-const changeToTrend = 1 // 1.5 my default , please use different (at least by 0.4) one so we wont be competition to each other
+const changeToTrend = 1 //  Legacy 1.5 my default , please use different (at least by 0.4) one so we wont be competition to each other
 // ^^ Less is quicker buy/sell min difference and less profit to wait for . Greter number will result wait longer to buy / sell
 // but also greater profit per transaction
-const changeToChangeTrend = 0.05 // 0.9 my default , please use different one (at least by 0.2) so we wont be competition to each other
+const changeToChangeTrend = 0.05 // Legacy  0.9 my default , please use different one (at least by 0.2) so we wont be competition to each other
 // ^^ less is quicker to decide about buying / selling . Greater numbers are more resilient to price change tho
 
-const changeToTrendBTC = 1.5
-const changeToChangeTrendBTC = 0.05
+const changeToTrendBTC = 1.5 // Legacy
+const changeToChangeTrendBTC = 0.05 // Legacy
 
-const changeToTrendBNB = 2
-const changeToChangeTrendBNB = 0.05
+const changeToTrendBNB = 2 // Legacy
+const changeToChangeTrendBNB = 0.05 // Legacy
 
-const desiredPrice = '150' // How many $ per transaction ( min 20, recomended min 40 )
-const desiredPriceBTC = '150' // How many $ per transaction ( min 20, recomended min 40 )
-const desiredPriceBNB = '60' // How many $ per transaction ( min 20, recomended min 40 )
-const buyPerHour = 1 // Leave it as is
+const buyPerHour = 1 // Leave it as is legacy
 const createInitialPairs = async () => {
   const connection = await createConnection()
 

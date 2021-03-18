@@ -220,6 +220,20 @@ export default function layout() {
       <ToSellList status={status} store={store} />
       <h1>Buying :</h1>
       <Buying status={status} store={store} />
+      <h1>Logs :</h1>
+      <div className='table-wrapper'>
+        <pre
+          style={{
+            padding: 10,
+            margin: 10,
+            background: '#333',
+            color: 'white',
+            fontSize: 14,
+          }}
+        >
+          {status?.lastLogs?.join('\n')}
+        </pre>
+      </div>
     </>
   )
 }

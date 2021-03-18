@@ -31,7 +31,8 @@ export const ToSell = ({toSell, vars}) => {
       <td>{bn(toSell.price).toFixed(8)}</td>
       <td>{toSell.currentPrice}</td>
 
-      <td>{toSell.diffInPricePercent}</td>
+      <td>{toSell.diffInPricePercent} %</td>
+      <td>{bn(vars.takeProfit).toFixed(2)} %</td>
 
       <td>
         <button
@@ -50,6 +51,23 @@ export const ToSell = ({toSell, vars}) => {
           }}
         >
           PANIC BUTTON
+        </button>
+        <button
+          className='safeBuy'
+          onClick={() => {
+            if (confirm('Are you sure you want to buy ' + toSell.pair + ' for market price?'))
+              axios
+                .post('/buy', {pair: toSell.pair})
+                .then((r) => {
+                  window.location.reload()
+                })
+                .catch((error) => {
+                  console.log(error)
+                  alert(error.response.data)
+                })
+          }}
+        >
+          ADD SAFE BUY
         </button>
       </td>
       <td>{toSell.profitInUSD}</td>

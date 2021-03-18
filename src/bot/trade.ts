@@ -13,8 +13,6 @@ import {getRepository} from 'typeorm'
 import {Tick} from '#db/entity/tick'
 import {getIndicators} from './indicators'
 
-const minProfitPercentage = 0.8
-
 export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars, strategy?: string) => {
   // Console.log(pair, 'BUY!!!', price.toFixed(8))
   const p = await Pair.findOneOrFail(pair)
@@ -25,7 +23,7 @@ export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars, st
     strategy,
   )
   if (result) {
-    vars.wait += 3
+    // Vars.wait += 3
     //  Vars.buy = false
   } else {
     console.log('transaction failed')
@@ -84,7 +82,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     .createQueryBuilder('t')
     .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
       pair: pair.name,
-      periodToTakeAvgPrice: moment().subtract('24', 'hours').unix(),
+      periodToTakeAvgPrice: moment().subtract('90', 'hours').unix(),
     })
     .orderBy('t.timestamp', 'ASC')
     .getMany()
@@ -104,13 +102,18 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
   })
   const lastSma = sma[sma.length - 1]
   const candles30m = chunkArray(closeValues, 30).map((v) => v.reduce((a, b) => a + b, 0) / v.length)
+  const candles90m = chunkArray(candles30m, 3).map((v) => v.reduce((a, b) => a + b, 0) / v.length)
+
   const minValue = Math.min(...candles30m)
   const maxValue = Math.max(...candles30m)
   const pricesHistoryDiff = 100 - (minValue / maxValue) * 100
-  const shortPeriodMinDiff = pair.changeToTrend > pricesHistoryDiff / 5 ? pair.changeToTrend : pricesHistoryDiff / 5
+  const shortPeriodMinDiff =
+    api.config.minPriceDrop > pricesHistoryDiff / api.config.marketVelocityDivider
+      ? api.config.minPriceDrop
+      : pricesHistoryDiff / api.config.marketVelocityDivider
   const longPeriodMinDiff = shortPeriodMinDiff * 2
   const macd = MACD.calculate({
-    values: candles30m,
+    values: candles90m,
     fastPeriod: 12,
     slowPeriod: 26,
     signalPeriod: 9,
@@ -149,7 +152,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
       priceLongAgo0Diff && priceLongAgo1Diff && priceLongAgo2Diff
         ? priceLongAgo0Diff < 70 || priceLongAgo1Diff < 70 || priceLongAgo2Diff < 70
         : false
-    const strats = [rsi[rsi.length - 1] < 20, longBand, shortBand, isStrongBullish].filter(Boolean)
+    const strats = [rsi[rsi.length - 1] < 22, longBand, shortBand, isStrongBullish].filter(Boolean)
     const stratFilled = strats.length >= 3
     vars.stats = {
       belowBB0: shortBand,
@@ -168,7 +171,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
       isStrongBullish,
       candle,
     }
-    vars.canBuy = [rsi[rsi.length - 1] < 20, longBand, shortBand].filter(Boolean).length
+    vars.canBuy = strats.length
     vars.buy =
       stratFilled && iHaveOneToSell === 0 && rsi[rsi.length - 1] < 70 && lastSma > Number.parseFloat(candle.close)
 
@@ -220,6 +223,10 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     vars.lowest = askPrice
   }
 
+  const takeProfitAt_ = pricesHistoryDiff / api.config.targetTakeProfitFromVelocityDivider
+  const minProfitPercentage =
+    takeProfitAt_ > api.config.takeTrailingProfitFrom ? takeProfitAt_ : api.config.takeTrailingProfitFrom
+  vars.takeProfit = minProfitPercentage
   // Did we buy anything to sell ?
   const minProfit = bn(bidPrice).multipliedBy(bn(minProfitPercentage).dividedBy(100))
   const maxPrice = bn(bidPrice).minus(minProfit)
@@ -290,7 +297,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
       vars.lastActionTime = moment().unix()
       // Trend is changing, lets sell it
 
-      if (bn(candles[candles.length - 2].close).isGreaterThan(candle.close)) {
+      if (calculatePercentage(vars.highest, candle.close).isGreaterThan(api.config.trailing)) {
         console.log(
           `[ACTION] SELLING ${pair.name} , diff: ${calculatePercentage(bidPrice, lowestBuy).toFixed(
             1,

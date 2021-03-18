@@ -9,7 +9,7 @@ const cl = console.log
 console.log = (...args) => {
   cl(...args)
   lastLogs.push(args.map((c) => (typeof c === 'object' ? JSON.stringify(c) : c)).join(''))
-  if (lastLogs.length > 20) lastLogs.splice(1)
+  if (lastLogs.length > 100) lastLogs.splice(1)
 }
 
 process.on('uncaughtException', (error) => {
@@ -157,6 +157,7 @@ const getStatus = async () => {
   // )
 
   return {
+    lastLogs,
     profits: {
       last24minus,
       last24plus,
@@ -254,28 +255,25 @@ server.get('/ticks', (_request: Request, response: Response) => {
 })
 
 server.post('/buy', async (request: Request, response: Response) => {
-  const {pair} = request.body
-  const currentPrice = store.ticks[0].pairs[pair].a
-
+  const {pair}: {pair: string} = request.body
   console.log('BUY signal received for', pair)
+
   const {howMuchToSell, lowestBuy} = await getRepository(ToSell)
     .createQueryBuilder('t')
     .where('t.pairName = :pair AND t.filled = :filled ', {
       pair,
-      //   MaxPrice: maxPrice.toFixed(pair.coin0Precision),
       filled: false,
     })
     .select('COALESCE(SUM(t.left),0)', 'howMuchToSell')
     .addSelect('COALESCE(MIN(t.price),0)', 'lowestBuy')
     .getRawOne()
-  console.log(`current price: ${currentPrice}`)
-  console.log(`to sell price: ${lowestBuy}`)
-
-  if (bn(lowestBuy).isGreaterThan(currentPrice) || bn(lowestBuy).isZero())
-    await buyFn(pair, bn('1'), store.tradeVars[pair])
-  else console.log('price is higher that what we have')
-  // Else console.log(pair, 'price is droping. skipping for now')
-  response.send('ok')
+  console.log('SAFETY BUY', pair, 'volume:', howMuchToSell)
+  const r = await buyFn(pair, bn('1'), howMuchToSell, store.tradeVars[pair], 'Manual safety buy')
+  if (r) response.send('ok')
+  else {
+    response.status(500)
+    response.send('error, last logs:\n\n' + [...lastLogs].splice(-2).join('\n'))
+  }
 })
 server.post('/sell', async (request: Request, response: Response) => {
   const {pair} = request.body
@@ -296,7 +294,7 @@ server.post('/sell', async (request: Request, response: Response) => {
     if (r) response.send('ok')
     else {
       response.status(500)
-      response.send('error, last logs:\n\n' + lastLogs.splice(-2).join('\n'))
+      response.send('error, last logs:\n\n' + [...lastLogs].splice(-2).join('\n'))
     }
   } else console.log('nothing to sell')
 })

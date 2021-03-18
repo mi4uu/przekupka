@@ -4,11 +4,12 @@ import {getTick} from './get-tick'
 import {convertTick} from './convert-tick'
 import {checkBalance} from './check-balance'
 import {getClosedOrders} from './get-closed-orders'
-import {markets, baseCoin} from './config'
 import {Pair} from '#db/entity/pair'
 import {bn} from '#utils/bn'
-
+import * as config from './config'
+const {markets, baseCoin} = config
 export const binanceApi = {
+  config,
   makePrivateCall: hitBtcPrivateCall,
   makeBuyOffer: async (pair: string, price: string, volume: string, strategy?: string) =>
     makeOffer(pair, price, volume, 'BUY', strategy),
