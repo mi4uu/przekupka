@@ -102,7 +102,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
   })
   const lastSma = sma[sma.length - 1]
   const candles30m = chunkArray(closeValues, 30).map((v) => v.reduce((a, b) => a + b, 0) / v.length)
-  const candles90m = chunkArray(candles30m, 3).map((v) => v.reduce((a, b) => a + b, 0) / v.length)
+  const candles90m = chunkArray(candles30m, 4).map((v) => v.reduce((a, b) => a + b, 0) / v.length)
 
   const minValue = Math.min(...candles30m)
   const maxValue = Math.max(...candles30m)
@@ -121,11 +121,13 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     SimpleMASignal: false,
   })
   let isStrongBullish = false
-  if (macd[macd.length - 1] && macd[macd.length - 3])
+
+  if (macd[macd.length - 1] && macd[macd.length - 5])
     isStrongBullish =
       macd[macd.length - 1].MACD > macd[macd.length - 3].MACD &&
       macd[macd.length - 1].MACD > 0 &&
-      macd[macd.length - 1].histogram
+      macd[macd.length - 1].histogram &&
+      (macd[macd.length - 3].MACD < 0 || macd[macd.length - 4].MACD < 0 || macd[macd.length - 5].MACD < 0)
   const isBullish = macd[macd.length - 1]
     ? macd[macd.length - 1]?.MACD > 0 && macd[macd.length - 1]?.MACD > macd[macd.length - 2]?.MACD
     : false
