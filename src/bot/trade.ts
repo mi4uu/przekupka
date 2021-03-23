@@ -12,6 +12,7 @@ import {ClosedTransaction} from '#db/entity/closed-transactions'
 import {getRepository} from 'typeorm'
 import {Tick} from '#db/entity/tick'
 import {getIndicators} from './indicators'
+import {greed} from '#api/binance/config'
 
 export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars, strategy?: string) => {
   // Console.log(pair, 'BUY!!!', price.toFixed(8))
@@ -279,7 +280,6 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     .getRawOne()
   const profit = calculatePercentage(bidPrice, lowestBuy).toNumber()
   if (!vars.profit || vars.profit < profit) vars.profit = profit
-  const greed = 0.7
   vars.takeProfit = minProfitPercentage > vars.profit * greed ? minProfitPercentage : vars.profit * greed
   minProfitPercentage = vars.takeProfit
   if (bn(howMuchToSell).isGreaterThan(0)) {
