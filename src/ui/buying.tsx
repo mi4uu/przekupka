@@ -28,7 +28,7 @@ export const Buying = ({status, store}: {status: any; store: IStore}) => {
   const lowestBTC = markets.find((b) => b.market === 'BTC')
   const lowestBNB = markets.find((b) => b.market === 'BNB')
   const onlyWithCanBuy = (l: typeof markets) =>
-    l.filter((_l) => _l.canBuy >= 2).sort((a, b) => b.canBuy - a.canBuy || 0)
+    l.filter((_l) => _l.canBuy >= 4).sort((a, b) => b.canBuy - a.canBuy || 0)
 
   return (
     <>

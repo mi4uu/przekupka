@@ -53,6 +53,15 @@ export const TransactionsList = ({transactions, store}: {transactions: any; stor
                   <td>{bn(t.diff).toFixed(2)} %</td>
                 </>
               )}
+              {t.type === 'buy' && (
+                <>
+                  <td> </td>
+
+                  <td> </td>
+                  <td>{t.strategy}</td>
+                  <td> </td>
+                </>
+              )}
             </tr>
           )
         })}

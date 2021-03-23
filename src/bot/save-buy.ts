@@ -5,7 +5,7 @@ import {bn} from '#utils/bn'
 import moment from 'moment'
 
 export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: string) {
-  const dbToSellPositions = await ToSell.find({pair, filled: false, dust: false})
+  const dbToSellPositions = await ToSell.find({pair, filled: false})
   const toSellPosition = new ToSell()
   toSellPosition.pair = pair
 
@@ -13,6 +13,7 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
 
   if (dbToSellPositions.length > 0) {
     const dbToSellPosition = dbToSellPositions[0]
+    toSellPosition.sellUpdate = dbToSellPosition.sellUpdate
 
     console.log(`  price: ${dbToSellPosition.price}  volume: ${dbToSellPosition.left}`)
     console.log(`+ price: ${t.price}  volume: ${t.vol}`)
@@ -37,11 +38,15 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
     toSellPosition.safeBuy = timeDiff > 60 ? dbToSellPosition.safeBuy + 1 : dbToSellPosition.safeBuy
     console.log('    |-------(removed) tosell:', dbToSellPosition.id)
 
-    await dbToSellPosition.remove()
+    for (const p of dbToSellPositions) {
+      p.filled = true
+      p.save()
+    }
 
     //   Await dbToSellPosition.save()
     console.log(`= price: ${price}  volume: ${left}`)
   } else {
+    console.log('DID NOT FIND ANY OTHER', pair.name, 'to sell position')
     toSellPosition.price = t.price
     toSellPosition.vol = t.vol
     toSellPosition.left = t.vol

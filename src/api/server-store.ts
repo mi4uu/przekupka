@@ -2,6 +2,7 @@ import {Pair} from '#db/entity/pair'
 import moment from 'moment'
 
 export interface ITradeVars {
+  profit: number
   takeProfit: any
   stats: {
     belowBB0: boolean

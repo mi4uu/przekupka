@@ -10,6 +10,8 @@ import BigNumber from 'bignumber.js'
 import {ToSell} from '#db/entity/to-sell'
 import {calculatePercentage} from './calculate-percentage'
 import {getRepository} from 'typeorm'
+import {default as PQueue} from 'p-queue'
+
 let tickSaveTime = moment().unix()
 let tickInProgress = false
 const tickCount = {}
@@ -58,6 +60,10 @@ export const getTick = async () => {
     }
 
     tickSaveTime = moment().unix()
+    const queueArray = []
+    const queue = new PQueue({concurrency: 10})
+    tick_ += 1
+    const toSellCount = await ToSell.count({dust: false, filled: false})
     for (const pair of pairs) {
       const t = newTick[pair.name]
       const tdb = new Tick()
@@ -76,12 +82,15 @@ export const getTick = async () => {
                 store.ticks[store.ticks.length - 1].pairs[`${pair.coin1}USDT`].c,
               )
 
-        await trade(
-          pair,
-          tdb,
-          balance.isGreaterThan(api.config.dontBuybelow[pair.coin1]) &&
-            btcIsStable &&
-            Number.parseFloat(tdb.close) > 0.00000099,
+        queueArray.push(async () =>
+          trade(
+            pair,
+            tdb,
+            balance.isGreaterThan(api.config.dontBuybelow[pair.coin1]) &&
+              btcIsStable &&
+              Number.parseFloat(tdb.close) > 0.00000099 &&
+              toSellCount < 10,
+          ),
         )
       } else console.log(`[${pair.name}] ticks count ${tickCount[pair.name]} <  24*60`)
       store.ticks = [store.ticks[store.ticks.length - 1]]
@@ -91,6 +100,8 @@ export const getTick = async () => {
         console.log(error)
       })
     }
+
+    await queue.addAll(queueArray)
 
     console.log(moment().format('YYYY-MM-DD hh:mm'), ']', tick_, 'tick -  took', moment().unix() - startTime, 's')
     tick_ += 1
