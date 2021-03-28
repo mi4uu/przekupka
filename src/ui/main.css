@@ -108,8 +108,59 @@ h2{
     padding: 30px 0;
 }
 .important {
-    background: #ffcc00 !important;
+    border: 2px solid  #ffcc00 !important;
 }
+
+.panicButton {
+	box-shadow: 3px 4px 0px 0px #8a2a21;
+	background:linear-gradient(to bottom, #c62d1f 5%, #f24437 100%);
+	background-color:#c62d1f;
+	border-radius:18px;
+	border:1px solid #d02718;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	padding:3px 8px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #810e05;
+}
+.panicButton:hover {
+	background:linear-gradient(to bottom, #f24437 5%, #c62d1f 100%);
+	background-color:#f24437;
+}
+.panicButton:active {
+	position:relative;
+	top:1px;
+}
+
+.safeBuy {
+	box-shadow: 3px 4px 0px 0px #002a99;
+	background:linear-gradient(to bottom, #002d99 5%, #004499 100%);
+	background-color:#002d1f;
+	border-radius:18px;
+	border:1px solid #002718;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	padding:3px 8px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #000e99;
+}
+.safeBuy:hover {
+	background:linear-gradient(to bottom, #004499 5%, #002d99 100%);
+	background-color:#004499;
+}
+.safeBuy:active {
+	position:relative;
+	top:1px;
+}
+
+   .disabled {
+       opacity:0.3
+   }     
+
 /* Table Styles */
 
 .table-wrapper{
@@ -118,7 +169,12 @@ h2{
     box-shadow: 0px 35px 50px rgba( 0, 0, 0, 0.2 );
     width:100%;
 }
-
+a {
+    color:white
+}
+a:hover {
+    color:#ffcc00
+}
 .fl-table {
     border-radius: 5px;
     font-size: 12px;
@@ -128,7 +184,7 @@ h2{
     width: 100%;
     max-width: 100%;
     white-space: nowrap;
-    background-color: white;
+    background-color: #222;
 }
 
 .fl-table td, .fl-table th {

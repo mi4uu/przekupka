@@ -24,7 +24,6 @@
     "migration:down": "ts-node ./node_modules/typeorm/cli.js migration:revert",
     "e": "NODE_ENV=\"production\" node --max-old-space-size=3072 --max-semi-space-size=64 -r ts-node/register/transpile-only -r tsconfig-paths/register   src/experiment.ts",
     "sellOld": "NODE_ENV=\"production\" node --max-old-space-size=3072 --max-semi-space-size=64 -r ts-node/register/transpile-only -r tsconfig-paths/register   src/api/binance/sell-old.ts"
-
   },
   "author": "",
   "license": "ISC",
@@ -67,6 +66,7 @@
     "nanoseconds": "^1.0.1",
     "next": "^10.0.4",
     "node-os-utils": "^1.3.2",
+    "p-queue": "^6.6.2",
     "parcel": "^1.12.4",
     "pg": "^8.5.1",
     "primeflex": "^2.0.0",
@@ -83,6 +83,7 @@
     "trading-indicator": "^1.0.4-beta",
     "ts-jest": "^26.4.4",
     "tsconfig-paths": "^3.9.0",
+    "tulind": "^0.8.18",
     "typeorm": "^0.2.30",
     "typescript": "^4.1.3"
   },

@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js'
 import {store, ITradeVars} from '../api/server-store'
-
+import {EMA, MACD, SMA, SD, RSI} from 'technicalindicators'
+import ti from 'tulind'
 import moment from 'moment'
 import {calculatePercentage} from './calculate-percentage'
 import {bn} from '../utils/bn'
@@ -11,61 +12,19 @@ import {ClosedTransaction} from '#db/entity/closed-transactions'
 import {getRepository} from 'typeorm'
 import {Tick} from '#db/entity/tick'
 import {getIndicators} from './indicators'
+import {greed} from '#api/binance/config'
 
-const updatePrices = async (pair: Pair, vars: ITradeVars, currentPrice: string) => {
-  // If (vars.lastActionTime < moment().subtract('2', 'hours').unix()) {
-  //   const {avgPrice} = await getRepository(Tick)
-  //     .createQueryBuilder('t')
-  //     .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
-  //       pair: pair.name,
-  //       periodToTakeAvgPrice: moment().subtract(3, 'days').unix(),
-  //     })
-  //     .select('AVG(t.closed)', 'avgPrice')
-  //     .getRawOne()
-  //   const {avgPrice1} = await getRepository(Tick)
-  //     .createQueryBuilder('t')
-  //     .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
-  //       pair: pair.name,
-  //       periodToTakeAvgPrice: moment().subtract(10, 'days').unix(),
-  //     })
-  //     .select('AVG(t.closed)', 'avgPrice1')
-  //     .getRawOne()
-  //   const {shortAvgPrice} = await getRepository(Tick)
-  //     .createQueryBuilder('t')
-  //     .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
-  //       pair: pair.name,
-  //       periodToTakeAvgPrice: moment().subtract('4', 'hours').unix(),
-  //     })
-  //     .select('AVG(t.ask)', 'shortAvgPrice')
-  //     .getRawOne()
-
-  //   vars.lastTransactionPrice = shortAvgPrice
-  //   // Console.log(
-  //   //   `Setting last trasnsaction price for ${pair.name} : ${shortAvgPrice}  it is ${calculatePercentage(
-  //   //     shortAvgPrice,
-  //   //     askPrice,
-  //   //   ).toFixed(2)} % of current price`,
-  //   // )
-  //   //  const prices = [avgPrice, avgPrice1, shortAvgPrice, shortAvgPrice2, currentPrice].filter(Boolean)
-  //   const prices = [shortAvgPrice, currentPrice].filter(Boolean)
-  //   vars.lastTransactionPrice = BigNumber.min.apply(null, prices).toFixed(8)
-
-  //   vars.lastActionTime = moment().unix()
-  // }
-
-  if (vars.lastIndicatorTime < moment().subtract('15', 'minutes').unix()) {
-    vars.lastIndicatorTime = moment().unix()
-    vars.lastTransactionPrice = currentPrice
-    vars.canBuy = await getIndicators(pair.name, currentPrice, vars)
-  }
-}
-
-export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars) => {
+export const buyFn = async (pair: string, price: BigNumber, vars: ITradeVars, strategy?: string) => {
   // Console.log(pair, 'BUY!!!', price.toFixed(8))
   const p = await Pair.findOneOrFail(pair)
-  const result = await api.makeBuyOffer(pair, price.toFixed(p.coin0Precision), bn(p.volume).toFixed(p.coin0Precision))
+  const result = await api.makeBuyOffer(
+    pair,
+    price.toFixed(p.coin0Precision),
+    bn(p.volume).toFixed(p.coin0Precision),
+    strategy,
+  )
   if (result) {
-    vars.wait += 3
+    // Vars.wait += 3
     //  Vars.buy = false
   } else {
     console.log('transaction failed')
@@ -88,18 +47,30 @@ export const sellFn = async (pair: string, price: BigNumber, volume: string, var
     console.log('transaction failed')
     // Vars.sell = false
   }
+
+  return result
 }
 
-export const trade = async (pair: Pair) => {
+function chunkArray(myArray_: number[], chunk_size: number) {
+  const results = []
+  const myArray = [...myArray_]
+
+  while (myArray.length > 0) {
+    results.push(myArray.splice(0, chunk_size))
+  }
+
+  return results
+}
+
+export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
   const vars = store.tradeVars[pair.name]
-  const lastTick = store.ticks[store.ticks.length - 1].pairs[pair.name]
-  const price = lastTick.c
-  const askPrice = lastTick.a
-  const bidPrice = lastTick.b
+  const lastTick = candle
+  const price = candle.close
+  const askPrice = candle.close
+  const bidPrice = candle.close
 
   // For initial values
   if (!vars.lastTransactionPrice) {
-    await updatePrices(pair, vars, askPrice)
     vars.lowest = askPrice
     vars.highest = bidPrice
   }
@@ -107,70 +78,181 @@ export const trade = async (pair: Pair) => {
   const balanceCoin0 = bn(store.balance[pair.coin0])
   const balanceCoin1 = bn(store.balance[pair.coin1])
   const hourBefore = moment().subtract(8, 'hour').unix()
-  if (pair.active && balanceCoin1.isGreaterThanOrEqualTo(bn(askPrice).multipliedBy(pair.volume))) {
+
+  const candles = await getRepository(Tick)
+    .createQueryBuilder('t')
+    .select('t.close')
+    .where('t.pairName = :pair AND t.timestamp > :periodToTakeAvgPrice', {
+      pair: pair.name,
+      periodToTakeAvgPrice: moment().subtract('40', 'hours').unix(),
+    })
+    .orderBy('t.timestamp', 'ASC')
+    .getMany()
+  const closeValues = candles.map((c) => Number.parseFloat(c.close))
+
+  const ema1 = EMA.calculate({
+    values: closeValues,
+    period: 100,
+  })
+  const ema0 = EMA.calculate({
+    values: closeValues,
+    period: 20,
+  })
+  const sma = EMA.calculate({
+    values: closeValues,
+    period: 100,
+  })
+  const lastSma = sma[sma.length - 1]
+
+  const candles30m = chunkArray(closeValues, 30).map((v) => v.reduce((a, b) => a + b, 0) / v.length)
+
+  const minValue = Math.min(...candles30m)
+  const maxValue = Math.max(...candles30m)
+  const pricesHistoryDiff = 100 - (minValue / maxValue) * 100
+  const shortPeriodMinDiff =
+    api.config.minPriceDrop > pricesHistoryDiff / api.config.marketVelocityDivider
+      ? api.config.minPriceDrop
+      : pricesHistoryDiff / api.config.marketVelocityDivider
+  const longPeriodMinDiff = shortPeriodMinDiff * 2
+  pair.volume = bn(store.balance[pair.coin1Name]).dividedBy(3).dividedBy(askPrice).toFixed(pair.coin0Precision)
+
+  const macd = await ti.indicators.macd.indicator([candles30m], [12, 26, 9])
+  // Macd output [macd, macd_signal, histogram]
+  const isMacadBullish = (m) => {
+    return m[0][m.length - 1] > 0 && m[0][m.length - 2] < m[0][m.length - 1] && m[0][m.length - 3] < m[0][m.length - 2]
+  }
+
+  const rsi_ = await ti.indicators.rsi.indicator([closeValues], [14])
+  const rsi = rsi_[0]
+
+  let isStrongBullish = false
+
+  if (macd[macd.length - 1] && macd[macd.length - 5])
+    isStrongBullish =
+      macd[0][macd.length - 1] > macd[0][macd.length - 2] &&
+      macd[0][macd.length - 2] < 0 &&
+      macd[0][macd.length - 1] > 0 &&
+      macd[2][macd.length - 1] &&
+      macd[2][macd.length - 1] > macd[2][macd.length - 2]
+
+  const macadStrat = {
+    macd: isMacadBullish(macd),
+    isStrongBullish,
+    rsi: rsi[rsi.length - 1] <= 40,
+    lastmacd: [...macd][0].splice(4),
+  }
+
+  const isBullish = macd[macd.length - 1]
+    ? macd[0][macd.length - 1] > 0 && macd[0][macd.length - 1] > macd[0][macd.length - 2]
+    : false
+
+  const bband = ema0[ema0.length - 1] - ema0[ema0.length - 1] * (shortPeriodMinDiff / 100)
+  const bband1 = ema1[ema1.length - 1] - ema1[ema1.length - 1] * (longPeriodMinDiff / 100)
+  vars.lastTransactionPrice =
+    Number.parseFloat(price) < ema0[ema0.length - 1] ? String(ema0[ema0.length - 1]) : String(ema1[ema1.length - 1])
+
+  if (pair.active) {
     // Can we afford that?
     vars.cantAffordToBuy = false
 
-    const howMuchPerHourCanIBuy = bn(pair.buyPerHour).multipliedBy(pair.volume)
-    const {howMuchDidIBuyInLastHour} = await getRepository(ClosedTransaction)
-      .createQueryBuilder('t')
-      .where('t.pairName = :pair AND t.type = :type AND t.opentm > :hourBefore', {
-        pair: pair.name,
-        hourBefore,
-        type: 'buy',
-      })
-      .select('COALESCE(SUM(t.vol), 0)', 'howMuchDidIBuyInLastHour')
-      .getRawOne()
-    const {howMuchDidISellInLastHour} = await getRepository(ClosedTransaction)
-      .createQueryBuilder('t')
-      .where('t.pairName = :pair AND t.type = :type AND t.opentm > :hourBefore', {
-        pair: pair.name,
-        hourBefore,
-        type: 'sell',
-      })
-      .select('COALESCE(SUM(t.vol), 0)', 'howMuchDidISellInLastHour')
-      .getRawOne()
+    const iHaveOneToSell = await ToSell.count({pair}) // FIXME - cound be passed, should reduce time
+    const shortBand = Number.parseFloat(candle.close) < bband
+    const longBand = Number.parseFloat(candle.close) < bband1
 
-    await updatePrices(pair, vars, askPrice)
+    const priceLongAgo0Diff = (candles30m[0] / candles30m[candles30m.length - 1]) * 100 // 24h ago
+    const priceLongAgo1Diff = (candles30m[8] / candles30m[candles30m.length - 1]) * 100 // 20 h ago
+    const priceLongAgo2Diff = (candles30m[28] / candles30m[candles30m.length - 1]) * 100 // 10 h ago
+    const isDroppingAfterBigRise =
+      priceLongAgo0Diff && priceLongAgo1Diff && priceLongAgo2Diff
+        ? priceLongAgo0Diff < 70 || priceLongAgo1Diff < 70 || priceLongAgo2Diff < 70
+        : false
+    const strats = [rsi[rsi.length - 1] < 22, longBand, shortBand, isStrongBullish].filter(Boolean)
+    vars.canBuy = strats.length > 2 ? strats.length : 0
+    if (isStrongBullish) vars.canBuy = 4
+    if (isStrongBullish) console.log(pair.name, 'is strong bullish')
+    const stratFilled = strats.length >= 3
+    vars.stats = {
+      belowBB0: shortBand,
+      belowBB1: longBand,
+      rsi: Math.round(rsi[rsi.length - 1]),
+      macd: bn(macd[0][macd.length - 1]).toFixed(2),
+      isDroppingAfterBigRise,
+      allowBuying,
+      iHaveOneToSell,
+      shortPeriodMinDiff,
+      longPeriodMinDiff,
+      belowLastSma: lastSma > Number.parseFloat(candle.close),
+      sma: lastSma,
+      bb0: bband,
+      bb1: bband1,
+      isStrongBullish,
+      candle,
+    }
+    if (pair.debug) console.log(JSON.stringify(macadStrat, null, 2), JSON.stringify(vars.stats, null, 2))
+    const strategies = []
+    strategies[0] =
+      stratFilled && iHaveOneToSell === 0 && rsi[rsi.length - 1] < 70 && lastSma > Number.parseFloat(candle.close)
+    strategies[1] = iHaveOneToSell === 0 && rsi[rsi.length - 1] <= 30 && isStrongBullish
 
-    if (bn(howMuchDidIBuyInLastHour).minus(howMuchDidISellInLastHour).isLessThan(howMuchPerHourCanIBuy)) {
+    strategies[0] =
+      strategies[0] &&
+      (bn(candles[candles.length - 1].close).isGreaterThan(candles[candles.length - 2].close) || strats.length >= 4) &&
+      !isDroppingAfterBigRise
+
+    vars.buy = strategies[0] || strategies[1]
+    if (vars.lowest > askPrice) vars.lowest = askPrice
+
+    if (allowBuying && vars.buy && balanceCoin1.isGreaterThanOrEqualTo(bn(askPrice).multipliedBy(pair.volume))) {
       // Limit buy per h
-      vars.limitBuyPerHourReached = false
 
-      const marketLiquidity = calculatePercentage(askPrice, bidPrice)
-      const changeFromLastTransaction = calculatePercentage(vars.lastTransactionPrice, askPrice)
-      const minDiffToBuy = bn(pair.changeToTrend).multipliedBy('1').plus(marketLiquidity)
-      if (
-        //      ChangeFromLastTransaction.isGreaterThan(minDiffToBuy) &&
-        api.isTransactionValid(pair, pair.volume, askPrice)
-      ) {
-        vars.buy = true
-        vars.lastActionTime = moment().unix()
-        if (bn(vars.lowest).isGreaterThan(bn(askPrice))) vars.lowest = askPrice
-        const diffToLowest = calculatePercentage(askPrice, vars.lowest)
-        if (vars.canBuy > 5) {
-          buyFn(pair.name, bn(askPrice), vars).catch((error) => {
-            console.log('cant buy', error)
-          })
-        }
+      console.log('BUYING', pair.name, 'at price', candle.close)
+      console.log('EMA:', ema0[ema0.length - 1], 'bb:', bband)
+      console.log('Market is', isBullish ? 'BULLish' : 'BEARish')
+      console.log('histogram:', macd[2][macd.length - 1])
+      console.log('price diff 24h ago:', priceLongAgo0Diff)
+      console.log('price diff 20h ago:', priceLongAgo1Diff)
+      console.log('price diff 10h ago:', priceLongAgo2Diff)
+
+      let strategy = strategies[0] ? '[S0]' : '[S1]'
+      if (strategies[0]) {
+        if (shortBand) strategy += `[EMA20 - ${bn(shortPeriodMinDiff).toFixed(1)}%]`
+        if (longBand) strategy += `[EMA100 - ${bn(longPeriodMinDiff).toFixed(1)}%]`
+        if (isStrongBullish) strategy += `[STRONG BULLISH]`
+        else if (macd[0][macd.length - 1]) strategy += isBullish ? '[BULL]' : '[BEAR]'
+
+        strategy += '[RSI - ' + bn(rsi[rsi.length - 1]).toFixed(0) + ']'
       } else {
-        vars.buy = false
-        vars.lowest = askPrice
+        strategy += JSON.stringify(macadStrat)
       }
+
+      if (!macd[0][macd.length - 1]) {
+        console.log('candles 30m length:', candles30m.length)
+        console.log('first candles 30m', candles30m[0], candles30m[1])
+
+        console.log('last candles 30m', candles30m[candles30m.length - 2], candles30m[candles30m.length - 1])
+      }
+
+      buyFn(pair.name, bn(askPrice), vars, strategy).catch((error) => {
+        console.log('cant buy', error)
+      })
+      vars.buy = false
     } else {
       //   Console.log(JSON.stringify({howMuchDidIBuyInLastHour, howMuchPerHourCanIBuy, pair: pair.name}))
       vars.limitBuyPerHourReached = true
-      vars.buy = false
       vars.lowest = askPrice
     }
   } else {
     vars.cantAffordToBuy = true
-    vars.buy = false
     vars.lowest = askPrice
   }
 
+  const takeProfitAt_ = pricesHistoryDiff / api.config.targetTakeProfitFromVelocityDivider
+  let minProfitPercentage =
+    takeProfitAt_ > api.config.takeTrailingProfitFrom ? takeProfitAt_ : api.config.takeTrailingProfitFrom
+  minProfitPercentage = 1
+  vars.takeProfit = minProfitPercentage > vars.profit * greed ? minProfitPercentage : vars.profit * greed
   // Did we buy anything to sell ?
-  const minProfit = bn(bidPrice).multipliedBy(bn(pair.changeToTrend).dividedBy(100))
+  const minProfit = bn(bidPrice).multipliedBy(bn(minProfitPercentage).dividedBy(100))
   const maxPrice = bn(bidPrice).minus(minProfit)
   const {howMuchToSell, lowestBuy} = await getRepository(ToSell)
     .createQueryBuilder('t')
@@ -182,45 +264,17 @@ export const trade = async (pair: Pair) => {
     .select('COALESCE(SUM(t.left),0)', 'howMuchToSell')
     .addSelect('MIN(t.price)', 'lowestBuy')
     .getRawOne()
-  if (pair.debug) {
-    console.log(
-      getRepository(ToSell)
-        .createQueryBuilder('t')
-        .where('t.pairName = :pair AND t.filled = :filled AND t.price <= :maxPrice', {
-          pair: pair.name,
-          maxPrice: maxPrice.toFixed(pair.coin0Precision),
-          filled: false,
-        })
-        .select('COALESCE(SUM(t.left),0)', 'howMuchToSell')
-        .addSelect('MIN(t.price)', 'lowestBuy')
-        .getQueryAndParameters(),
-    )
-    const howMuchCanISell1 = bn(howMuchToSell).isGreaterThan(balanceCoin0) ? howMuchToSell : balanceCoin0
-    console.log(
-      JSON.stringify(
-        {
-          pairName: pair.name,
-          step: pair.step,
-          howMuchToSell,
-          balanceCoin0,
-          minProfit: minProfit.toFixed(8),
-          maxPrice: maxPrice.toFixed(pair.coin0Precision),
-          bidPrice,
-          lowestBuy,
-          isTransactionValid: api.isTransactionValid(pair, howMuchCanISell1, bidPrice),
-          selling: vars.sell,
-        },
-        null,
-        2,
-      ),
-    )
-  }
-
+  const profit = calculatePercentage(bidPrice, lowestBuy).toNumber()
+  if (!vars.profit || vars.profit < profit) vars.profit = profit
+  minProfitPercentage = vars.takeProfit
   if (bn(howMuchToSell).isGreaterThan(0)) {
     vars.noAssetsToSell = false
     const howMuchCanISell = howMuchToSell
 
-    if (api.isTransactionValid(pair, howMuchCanISell, bidPrice)) {
+    if (
+      api.isTransactionValid(pair, howMuchCanISell, bidPrice) &&
+      calculatePercentage(bidPrice, lowestBuy).isGreaterThanOrEqualTo(minProfitPercentage)
+    ) {
       if (bn(bidPrice).isGreaterThan(vars.highest)) {
         vars.highest = bidPrice
       }
@@ -234,30 +288,17 @@ export const trade = async (pair: Pair) => {
       // oh wait, we did check that it is more than min. step. no need to check again!
 
       vars.lastActionTime = moment().unix()
-      if (bn(vars.highest).isLessThan(bn(bidPrice))) vars.highest = bidPrice
       // Trend is changing, lets sell it
 
-      if (calculatePercentage(vars.highest, bidPrice).isGreaterThanOrEqualTo(pair.changeToChangeTrend)) {
+      if (calculatePercentage(vars.highest, candle.close).isGreaterThan(api.config.trailing)) {
         console.log(
           `[ACTION] SELLING ${pair.name} , diff: ${calculatePercentage(bidPrice, lowestBuy).toFixed(
             1,
-          )} % diff to Highest: ${calculatePercentage(vars.highest, bidPrice)} % `,
+          )} % diff to Highest: ${calculatePercentage(vars.highest, bidPrice).toFixed(2)} % `,
         )
         sellFn(pair.name, bn(bidPrice), howMuchCanISell, vars).catch((error) => {
           console.log('cant sell', error)
         })
-        // Console.log(
-        //   'sell',
-        //   JSON.stringify({
-        //     diffToHighestPrice,
-        //     howMuchCanISell,
-        //     pair: pair.name,
-        //     step: pair.step,
-        //   }),
-        // )
-        // Selling
-        // vars.sell = false
-      } else {
       }
     } else {
       vars.highest = bidPrice

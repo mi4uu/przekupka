@@ -21,7 +21,7 @@ export default function fetchData() {
 
   setInterval(setBalance, 20000)
 
-  setInterval(getTick, 1000)
+  setInterval(getTick, 10000)
 }
 
 setTimeout(async () => {

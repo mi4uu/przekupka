@@ -25,7 +25,7 @@ export default function layout() {
       console.log(error)
     }
 
-    setTimeout(getStatus, 4100)
+    setTimeout(getStatus, 6000)
   }
 
   const getTransactions = async () => {
@@ -47,7 +47,7 @@ export default function layout() {
       console.log(error)
     }
 
-    setTimeout(getStore, 3700)
+    setTimeout(getStore, 6000)
   }
 
   useEffect(() => {
@@ -213,10 +213,27 @@ export default function layout() {
       </div>
       <h1>Last Transactions :</h1>
       <TransactionsList transactions={transactions} store={store} />
-      <h1>Buying :</h1>
-      <Buying status={status} store={store} />
+      {/*
+    
+   */}
       <h1>Selling :</h1>
       <ToSellList status={status} store={store} />
+      <h1>Buying :</h1>
+      <Buying status={status} store={store} />
+      <h1>Logs :</h1>
+      <div className='table-wrapper'>
+        <pre
+          style={{
+            padding: 10,
+            margin: 10,
+            background: '#333',
+            color: 'white',
+            fontSize: 14,
+          }}
+        >
+          {status?.lastLogs?.join('\n')}
+        </pre>
+      </div>
     </>
   )
 }

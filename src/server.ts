@@ -4,6 +4,14 @@ import bodyParser from 'body-parser'
 import fetchData from './api/fetch-data'
 import auth from './auth'
 import request from 'request'
+const lastLogs: string[] = []
+const cl = console.log
+console.log = (...args) => {
+  cl(...args)
+  lastLogs.push(args.map((c) => (typeof c === 'object' ? JSON.stringify(c) : c)).join(''))
+  if (lastLogs.length > 100) lastLogs.splice(1)
+}
+
 process.on('uncaughtException', (error) => {
   console.log('##########################################################################################')
   console.log(error)
@@ -23,6 +31,7 @@ import api from '#api/api'
 import BigNumber from 'bignumber.js'
 import {ClosedTransaction} from './db/entity/closed-transactions'
 import moment from 'moment'
+import {buyFn, sellFn} from '#bot/trade'
 
 const args = process.argv.slice(2)
 const port = args[0] ? Number.parseInt(args[0], 10) : 3000
@@ -51,6 +60,7 @@ server.use(auth)
 
 server.use(bodyParser.json())
 const getStatus = async () => {
+  if (store.ticks.length === 0) return false
   const buy: string[] = []
   const sell: string[] = []
   Object.entries(store.tradeVars).forEach(([p, v]) => {
@@ -94,6 +104,8 @@ const getStatus = async () => {
         canBeSold: api.isTransactionValid(pair, p.left, price),
         sellUpdate: p.sellUpdate,
         buyUpdate: p.buyUpdate,
+        strategy: p.strategy,
+        safeBuy: p.safeBuy,
       }
     }),
   )
@@ -145,6 +157,7 @@ const getStatus = async () => {
   // )
 
   return {
+    lastLogs,
     profits: {
       last24minus,
       last24plus,
@@ -157,7 +170,7 @@ const getStatus = async () => {
     toSellCount: toSellPositions.length,
     toSellWorth: toSell
       .map((ts) => bn(ts.worthInUSD))
-      .reduce((a, b): BigNumber => a.plus(b))
+      .reduce((a, b): BigNumber => a.plus(b), bn('0'))
       .toFixed(2),
 
     profitUSD: profit.USD.toFixed(2) + ' $',
@@ -235,10 +248,55 @@ server.get('/tick', (_request: Request, response: Response) => {
   response.send(store.ticks[store.ticks.length - 1])
 })
 server.get('/store', (_request: Request, response: Response) => {
-  response.send(store)
+  response.send({...store, ticks: [store.ticks[store.ticks.length - 1]]})
 })
 server.get('/ticks', (_request: Request, response: Response) => {
   response.send(store.ticks)
+})
+
+server.post('/buy', async (request: Request, response: Response) => {
+  const {pair}: {pair: string} = request.body
+  console.log('BUY signal received for', pair)
+
+  const {howMuchToSell, lowestBuy} = await getRepository(ToSell)
+    .createQueryBuilder('t')
+    .where('t.pairName = :pair AND t.filled = :filled ', {
+      pair,
+      filled: false,
+    })
+    .select('COALESCE(SUM(t.left),0)', 'howMuchToSell')
+    .addSelect('COALESCE(MIN(t.price),0)', 'lowestBuy')
+    .getRawOne()
+  console.log('SAFETY BUY', pair, 'volume:', howMuchToSell)
+  const r = await buyFn(pair, bn('1'), howMuchToSell, store.tradeVars[pair], 'Manual safety buy')
+  if (r) response.send('ok')
+  else {
+    response.status(500)
+    response.send('error, last logs:\n\n' + [...lastLogs].splice(-2).join('\n'))
+  }
+})
+server.post('/sell', async (request: Request, response: Response) => {
+  const {pair} = request.body
+  console.log('SELL signal received for', pair)
+
+  const {howMuchToSell, lowestBuy} = await getRepository(ToSell)
+    .createQueryBuilder('t')
+    .where('t.pairName = :pair AND t.filled = :filled ', {
+      pair,
+      filled: false,
+    })
+    .select('COALESCE(SUM(t.left),0)', 'howMuchToSell')
+    .addSelect('COALESCE(MIN(t.price),0)', 'lowestBuy')
+    .getRawOne()
+  console.log('PANIC SELL', pair, 'volume:', howMuchToSell, 'was bought for:', lowestBuy)
+  if (howMuchToSell && bn(howMuchToSell).isGreaterThan('0')) {
+    const r = await sellFn(pair, bn('1'), howMuchToSell, store.tradeVars[pair])
+    if (r) response.send('ok')
+    else {
+      response.status(500)
+      response.send('error, last logs:\n\n' + [...lastLogs].splice(-2).join('\n'))
+    }
+  } else console.log('nothing to sell')
 })
 
 server.get('/transactions', async (_request: Request, response: Response) => {
@@ -258,6 +316,9 @@ server.get('/transactions', async (_request: Request, response: Response) => {
         type: t.type,
         profit: t.profit,
         pair: await t.pair,
+        strategy: t.strategy,
+        timeToSell: t.timeToSell,
+        diff: t.diff,
       })),
     ),
   )
