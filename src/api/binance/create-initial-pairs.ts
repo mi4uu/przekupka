@@ -17,6 +17,7 @@ const changeToTrendBNB = 2 // Legacy
 const changeToChangeTrendBNB = 0.05 // Legacy
 
 const buyPerHour = 1 // Leave it as is legacy
+const activePairs = new Set(['AUDIOUSDT', 'COSBTC', 'CELRUSDT', 'POLYBTC'])
 const createInitialPairs = async () => {
   const connection = await createConnection()
 
@@ -75,7 +76,6 @@ const createInitialPairs = async () => {
       const minQty = pair.filters.find((f: any) => f.filterType === 'LOT_SIZE')?.minQty
 
       const calculatedVolume = avgCost.multipliedBy(5)
-      console.log(JSON.stringify({minQty, calculatedVolume, step}))
       let volume = calculatedVolume.isGreaterThan(minQty) ? calculatedVolume : bn(minQty)
 
       const btcPrice = bn(1).dividedBy(bn(ticks.find((t: any) => t.symbol === 'BTCUSDT').askPrice))
@@ -94,12 +94,13 @@ const createInitialPairs = async () => {
       newPair.step = String(step)
       newPair.param0 = minNotional
       newPair.volume = volume.dp(step).toFixed(step)
-      newPair.active = existingPair ? existingPair.active : true
-      console.log(
-        `creating ${newPair.name} with volume ${newPair.volume} worth of ${bn(tick.askPrice)
-          .multipliedBy(newPair.volume)
-          .toFixed(8)}`,
-      )
+      newPair.active = activePairs.has(pair.symbol)
+      if (newPair.active)
+        console.log(
+          `creating ${newPair.name} with volume ${newPair.volume} worth of ${bn(tick.askPrice)
+            .multipliedBy(newPair.volume)
+            .toFixed(8)}`,
+        )
 
       await newPair.save()
     })

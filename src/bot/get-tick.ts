@@ -133,6 +133,8 @@ export const getTick = async () => {
         await ts.save()
       }
 
+      // Disable safe buy for this strat
+      usedPairs.push(pair.name)
       if (usedPairs.includes(pair.name)) continue
       usedPairs.push(pair.name)
 
