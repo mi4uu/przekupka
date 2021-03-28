@@ -15,12 +15,12 @@ export const minPriceDrop = 1.5
 export const takeTrailingProfitFrom = 0.6
 export const trailing = 0.1
 export const marketVelocityDivider = 6
-export const targetTakeProfitFromVelocityDivider = 14
+export const targetTakeProfitFromVelocityDivider = 17
 export const dontBuybelow = {
   USDT: Number.parseInt(desiredPrice, 10) * 5,
   BTC: Number.parseInt(desiredPriceBTC, 10) * 5,
   BNB: Number.parseInt(desiredPriceBNB, 10) * 5,
 }
-export const safeBuyTresholds = [3, 6, 12, 20]
+export const safeBuyTresholds = [5, 6, 12, 20]
 export const safeBuyMultipliers = [1, 1, 1, 2]
 export const greed = 0.7

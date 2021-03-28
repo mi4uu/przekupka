@@ -12,10 +12,11 @@ export const ToSell = ({toSell, vars}) => {
       className={[
         vars.wait > 0 && 'important',
         toSell.isSelling && 'selling',
-        p.isGreaterThanOrEqualTo('0') && !toSell.isSelling && 'neutral',
-        p.isLessThan('0') && p.isGreaterThanOrEqualTo('-1') && 'negative0',
-        p.isLessThan('-1') && p.isGreaterThanOrEqualTo('-2') && 'negative1',
-        p.isLessThan('-2') && 'negative2',
+        toSell.canBeSold && p.isGreaterThanOrEqualTo('0') && !toSell.isSelling && 'neutral',
+        toSell.canBeSold && p.isLessThan('0') && p.isGreaterThanOrEqualTo('-3') && 'negative0',
+        toSell.canBeSold && p.isLessThan(-3) && p.isGreaterThanOrEqualTo(-10) && 'negative1',
+        toSell.canBeSold && p.isLessThan('-10') && 'negative2',
+        !toSell.canBeSold && 'disabled',
       ]
         .filter(Boolean)
         .join(' ')}

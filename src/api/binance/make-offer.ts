@@ -80,7 +80,7 @@ export async function makeOffer(pair: string, price: string, volume: string, typ
           .toFixed(8)
       console.log(`    |--[FILL]----[${fill.qty}]---[fee: ${fill.commission} ${fill.commissionAsset}]`)
       await (t.type === 'buy' ? saveBuy(dbPair, t, strategy) : saveSell(dbPair, t))
-      store.tradeVars[pair].canBuy = 0
+      store.tradeVars[pair].canBuy = -1
     }
 
     console.log('')

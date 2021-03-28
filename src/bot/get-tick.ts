@@ -3,7 +3,7 @@ import {Tick} from '#db/entity/tick'
 import moment from 'moment'
 import api from '#api/api'
 import {ITradeVars, store} from '#api/server-store'
-import {trade} from './trade'
+import {buyFn, trade} from './trade'
 import {createTradeVars} from '../api/server-store'
 import {bn} from '#utils/bn'
 import BigNumber from 'bignumber.js'
@@ -15,6 +15,23 @@ import {default as PQueue} from 'p-queue'
 let tickSaveTime = moment().unix()
 let tickInProgress = false
 const tickCount = {}
+let counting = false
+let countRotator = 0
+const countInit = async () => {
+  countRotator -= 1
+  if (countRotator > 0) return false
+  if (counting) return false
+  counting = true
+  const pairs = await Pair.find()
+  for (const pair of pairs) {
+    tickCount[pair.name] = await Tick.count({pair})
+  }
+
+  counting = false
+  countRotator = 30
+}
+
+setTimeout(countInit, 2000)
 let tick_ = 0
 export const getTick = async () => {
   if (tickInProgress) return false
@@ -87,7 +104,6 @@ export const getTick = async () => {
             pair,
             tdb,
             balance.isGreaterThan(api.config.dontBuybelow[pair.coin1]) &&
-              btcIsStable &&
               Number.parseFloat(tdb.close) > 0.00000099 &&
               toSellCount < 10,
           ),
@@ -106,13 +122,19 @@ export const getTick = async () => {
     console.log(moment().format('YYYY-MM-DD hh:mm'), ']', tick_, 'tick -  took', moment().unix() - startTime, 's')
     tick_ += 1
     const toSell = await ToSell.find({dust: false})
+    const usedPairs: string[] = []
     for (const ts of toSell) {
       // Position price multiplied by 104% < price = drop by 4 %
+
       const pair = await ts.pair
+
       if (!api.isTransactionValid(pair, ts.left, ts.price)) {
         ts.dust = true
         await ts.save()
       }
+
+      if (usedPairs.includes(pair.name)) continue
+      usedPairs.push(pair.name)
 
       // Buy ->
       //        drop 6% ->  3%
@@ -134,9 +156,15 @@ export const getTick = async () => {
 
         if (ts.safeBuy < maxSafeBuys) {
           if (bn(store.balance[pair.coin1]).isGreaterThan(amount.multipliedBy(ts.price))) {
-            const result = await api.makeBuyOffer(pair.name, '0000', amount.toFixed(pair.coin0Precision))
-            ts.safeBuy += 1
-            await ts.save()
+            const result = await api.makeBuyOffer(
+              pair.name,
+              amount.toFixed(pair.coin0Precision),
+              amount.toFixed(pair.coin0Precision),
+              'safety buy',
+            )
+
+            // Ts.safeBuy += 1
+            // await ts.save()
             console.log(result)
           } else {
             console.log(
@@ -157,9 +185,9 @@ export const getTick = async () => {
     }
 
     // Counting ticks
-    for (const pair of pairs) {
-      tickCount[pair.name] = await Tick.count({pair})
-    }
+    countInit().catch((error) => {
+      console.log('error counting')
+    })
   }
 
   tickInProgress = false

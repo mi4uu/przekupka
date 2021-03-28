@@ -108,7 +108,7 @@ h2{
     padding: 30px 0;
 }
 .important {
-    background: #ffcc00 !important;
+    border: 2px solid  #ffcc00 !important;
 }
 
 .panicButton {
@@ -157,7 +157,9 @@ h2{
 	top:1px;
 }
 
-        
+   .disabled {
+       opacity:0.3
+   }     
 
 /* Table Styles */
 
