@@ -2,6 +2,8 @@ import {Pair} from '#db/entity/pair'
 import moment from 'moment'
 
 export interface ITradeVars {
+  buyBelowPrice: string
+  mustDropBy: string
   buyAtDropBy: number
   profit: number
   takeProfit: any

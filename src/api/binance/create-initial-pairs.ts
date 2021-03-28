@@ -17,7 +17,7 @@ const changeToTrendBNB = 2 // Legacy
 const changeToChangeTrendBNB = 0.05 // Legacy
 
 const buyPerHour = 1 // Leave it as is legacy
-const activePairs = new Set(['AUDIOUSDT', 'COSBTC', 'CELRUSDT', 'POLYBTC'])
+const activePairs = new Set(['AUDIOUSDT', 'COSBTC', 'CELRUSDT', 'POLYBTC', 'ONTUSDT', 'SCUSDT'])
 const createInitialPairs = async () => {
   const connection = await createConnection()
 

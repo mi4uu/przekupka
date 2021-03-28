@@ -20,7 +20,9 @@ export const BuyingList = ({list, vars, ticks}: {list: any; vars: any; ticks: an
           <tr>
             <th>Buying</th>
             <th>Pair</th>
-            <th>Price</th>
+            <th>
+              <b>Price</b>/Target
+            </th>
             <th>last transaction diff</th>
             <th>target diff</th>
 
@@ -43,9 +45,13 @@ export const BuyingList = ({list, vars, ticks}: {list: any; vars: any; ticks: an
               <tr key={pair.name}>
                 <YesNo condition={v.buy} green={true} red={false} />
                 <td>{pair.name}</td>
-                <td>{price}</td>
-                <td>{calculatePercentage(v.lastTransactionPrice, price).toFixed(2)} %</td>
-                <td>-{v.mustDropBy}</td>
+                <td>
+                  <b>{price}</b>
+                  <br />
+                  {v.buyBelowPrice}
+                </td>
+                <td>{calculatePercentage(price, v.lastTransactionPrice).toFixed(2)} %</td>
+                <td>-{v.buyAtDropBy}</td>
 
                 <td>{v.canBuy}</td>
                 <YesNo condition={v.cantAffordToBuy} green={true} red={false} />

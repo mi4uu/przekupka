@@ -60,6 +60,11 @@ function chunkArray(myArray_: number[], chunk_size: number) {
 
 export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
   const vars = store.tradeVars[pair.name]
+  if (!vars) {
+    //   Console.log('no vars for', pair.name)
+    return false
+  }
+
   const lastTick = candle
   const price = candle.close
   const askPrice = candle.close
@@ -70,7 +75,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     vars.lowest = askPrice
     vars.highest = bidPrice
     vars.lastTransactionPrice = askPrice
-    vars.lastActionTime < moment().subtract(50, 'minutes').unix()
+    vars.lastActionTime = moment().subtract(50, 'minutes').unix()
   }
 
   const balanceCoin0 = bn(store.balance[pair.coin0])
@@ -80,14 +85,29 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     vars.canBuy = 10
     // Can we afford that?
     vars.limitBuyPerHourReached = vars.lastActionTime >= moment().subtract(5, 'minutes').unix()
+    if (vars.lastActionTime <= moment().subtract(120, 'minutes').unix()) {
+      vars.lastActionTime = moment().unix()
+      vars.lastTransactionPrice = candle.close
+      console.log(`setting new price for ${pair.name}`)
+    }
 
     const howManyInToSell = await ToSell.count({pair}) // FIXME - cound be passed, should reduce time
     const buyAtDropBy = howManyInToSell + 1
     vars.buyAtDropBy = buyAtDropBy
     const mustDropBy = bn(vars.lastTransactionPrice).multipliedBy(buyAtDropBy / 100)
+    vars.mustDropBy = mustDropBy.toFixed(8)
     const buyBelowPrice = bn(vars.lastTransactionPrice).minus(mustDropBy)
+    vars.buyBelowPrice = buyBelowPrice.toFixed(8)
     vars.buy = bn(candle.close).isLessThan(buyBelowPrice)
-
+    // Console.log(`${candle.close} < ${buyBelowPrice} = ${vars.buy}`)
+    // console.log({
+    //   pair: pair.name,
+    //   mustDropBy: vars.mustDropBy,
+    //   buyAtDropBy: vars.buyAtDropBy,
+    //   buyBelowPrice: vars.buyBelowPrice,
+    //   lastTransactionPrice: vars.lastTransactionPrice,
+    //   price: candle.close,
+    // })
     vars.cantAffordToBuy = balanceCoin1.isLessThan(bn(askPrice).multipliedBy(pair.volume))
     if (!vars.cantAffordToBuy && vars.buy && !vars.limitBuyPerHourReached) {
       vars.lastActionTime = moment().unix()

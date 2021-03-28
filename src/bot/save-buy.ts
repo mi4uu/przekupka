@@ -10,7 +10,7 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
   const maxPrice = bn(t.price).plus(bn(t.price).multipliedBy(1 / 100))
   const {dbToSellPositions} = await getRepository(ToSell)
     .createQueryBuilder('t')
-    .where('t.pairName = :pair AND t.filled = :filled AND t.price <= :maxPrice AND AND t.price >= :minPrice', {
+    .where('t.pairName = :pair AND t.filled = :filled AND t.price <= :maxPrice AND t.price >= :minPrice', {
       pair: pair.name,
       maxPrice: maxPrice.toFixed(pair.coin0Precision),
       minPrice: minPrice.toFixed(pair.coin0Precision),
@@ -24,7 +24,7 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
 
   toSellPosition.buyUpdate = moment().unix()
 
-  if (dbToSellPositions.length > 0) {
+  if (dbToSellPositions && dbToSellPositions.length > 0) {
     for (const dbToSellPosition of dbToSellPositions) {
       toSellPosition.sellUpdate = dbToSellPosition.sellUpdate
 
