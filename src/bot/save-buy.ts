@@ -8,7 +8,7 @@ import {getRepository} from 'typeorm'
 export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: string) {
   const minPrice = bn(t.price).minus(bn(t.price).multipliedBy(1 / 100))
   const maxPrice = bn(t.price).plus(bn(t.price).multipliedBy(1 / 100))
-  const {dbToSellPositions} = await getRepository(ToSell)
+  const result = await getRepository(ToSell)
     .createQueryBuilder('t')
     .where('t.pairName = :pair AND t.filled = :filled AND t.price <= :maxPrice AND t.price >= :minPrice', {
       pair: pair.name,
@@ -17,15 +17,15 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
 
       filled: false,
     })
-    .select('t.*', 'dbToSellPositions')
-    .getRawMany()
+    .getMany()
   const toSellPosition = new ToSell()
+  console.log({result})
   toSellPosition.pair = pair
 
   toSellPosition.buyUpdate = moment().unix()
 
-  if (dbToSellPositions && dbToSellPositions.length > 0) {
-    for (const dbToSellPosition of dbToSellPositions) {
+  if (result && result.length > 0) {
+    for (const dbToSellPosition of result) {
       toSellPosition.sellUpdate = dbToSellPosition.sellUpdate
 
       console.log(`  price: ${dbToSellPosition.price}  volume: ${dbToSellPosition.left}`)

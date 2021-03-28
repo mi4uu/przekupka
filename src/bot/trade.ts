@@ -85,14 +85,20 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     vars.canBuy = 10
     // Can we afford that?
     vars.limitBuyPerHourReached = vars.lastActionTime >= moment().subtract(5, 'minutes').unix()
-    if (vars.lastActionTime <= moment().subtract(120, 'minutes').unix()) {
+
+    const howManyInToSell = await ToSell.count({pair, filled: false, dust: false}) // FIXME - cound be passed, should reduce time
+    const buyAtDropBy = howManyInToSell + 1
+    if (
+      vars.lastActionTime <=
+      moment()
+        .subtract(60 * buyAtDropBy, 'minutes')
+        .unix()
+    ) {
       vars.lastActionTime = moment().unix()
       vars.lastTransactionPrice = candle.close
       console.log(`setting new price for ${pair.name}`)
     }
 
-    const howManyInToSell = await ToSell.count({pair}) // FIXME - cound be passed, should reduce time
-    const buyAtDropBy = howManyInToSell + 1
     vars.buyAtDropBy = buyAtDropBy
     const mustDropBy = bn(vars.lastTransactionPrice).multipliedBy(buyAtDropBy / 100)
     vars.mustDropBy = mustDropBy.toFixed(8)
@@ -112,7 +118,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     if (!vars.cantAffordToBuy && vars.buy && !vars.limitBuyPerHourReached) {
       vars.lastActionTime = moment().unix()
       vars.lastTransactionPrice = candle.close
-      buyFn(pair.name, bn(askPrice), vars, `${buyBelowPrice}`).catch((error) => {
+      buyFn(pair.name, bn(askPrice), vars, `-${mustDropBy}%`).catch((error) => {
         console.log('cant buy', error)
       })
       vars.buy = false
@@ -173,6 +179,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
             1,
           )} % diff to Highest: ${calculatePercentage(vars.highest, bidPrice).toFixed(2)} % `,
         )
+        vars.profit = 0
         sellFn(pair.name, bn(bidPrice), howMuchCanISell, vars).catch((error) => {
           console.log('cant sell', error)
         })
