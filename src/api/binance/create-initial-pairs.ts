@@ -2,7 +2,7 @@ import axios from 'axios'
 import {Pair} from '../../db/entity/pair'
 import {createConnection} from 'typeorm'
 import {bn} from '#utils/bn'
-import {markets, desiredPriceBTC, desiredPriceBNB, desiredPrice} from './config'
+import {markets, desiredPriceBTC, desiredPriceBNB, desiredPrice, activePairs} from './config'
 
 const changeToTrend = 1 //  Legacy 1.5 my default , please use different (at least by 0.4) one so we wont be competition to each other
 // ^^ Less is quicker buy/sell min difference and less profit to wait for . Greter number will result wait longer to buy / sell
@@ -17,7 +17,7 @@ const changeToTrendBNB = 2 // Legacy
 const changeToChangeTrendBNB = 0.05 // Legacy
 
 const buyPerHour = 1 // Leave it as is legacy
-const activePairs = new Set(['AUDIOUSDT', 'COSBTC', 'CELRUSDT', 'POLYBTC', 'ONTUSDT', 'SCUSDT', 'BNBBTC', 'BTCUSDT'])
+
 const createInitialPairs = async () => {
   const connection = await createConnection()
 

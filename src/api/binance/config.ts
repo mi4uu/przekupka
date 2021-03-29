@@ -8,10 +8,21 @@ export const secret = prodSecret
 export const baseUrl = 'https://api.binance.com/api/v3'
 export const baseCoin = 'USDT'
 export const markets = new Set(['USDT', 'BTC', 'BNB'])
+export const activePairs = new Set([
+  'AUDIOUSDT',
+  'COSBTC',
+  'CELRUSDT',
+  'POLYBTC',
+  'ONTUSDT',
+  'SCUSDT',
+  'BNBBTC',
+  'BTCUSDT',
+  'ENJBNB',
+])
 export const desiredPrice = '100' // How many $ per transaction ( min 20, recomended min 40 )
 export const desiredPriceBTC = '100' // How many $ per transaction ( min 20, recomended min 40 )
 export const desiredPriceBNB = '20' // How many $ per transaction ( min 20, recomended min 40 )
-export const minPriceDrop = 1.5
+export const minPriceDrop = 1.2
 export const takeTrailingProfitFrom = 1
 export const trailing = 0.2
 export const marketVelocityDivider = 6

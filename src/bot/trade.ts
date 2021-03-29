@@ -88,7 +88,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     vars.limitBuyPerHourReached = vars.lastActionTime >= moment().subtract(5, 'minutes').unix()
 
     const howManyInToSell = await ToSell.count({pair, filled: false, dust: false}) // FIXME - cound be passed, should reduce time
-    const buyAtDropBy = howManyInToSell + 1
+    const buyAtDropBy = api.config.minPriceDrop * (howManyInToSell + 1)
     if (
       vars.lastActionTime <=
       moment()
