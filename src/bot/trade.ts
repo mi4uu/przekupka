@@ -75,7 +75,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     vars.lowest = askPrice
     vars.highest = bidPrice
     vars.lastTransactionPrice = askPrice
-    vars.lastActionTime = moment().subtract(50, 'minutes').unix()
+    vars.lastActionTime = moment().subtract(10, 'minutes').unix()
   }
 
   const balanceCoin0 = bn(store.balance[pair.coin0])
@@ -91,7 +91,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     if (
       vars.lastActionTime <=
       moment()
-        .subtract(60 * buyAtDropBy, 'minutes')
+        .subtract(160 * buyAtDropBy, 'minutes')
         .unix()
     ) {
       vars.lastActionTime = moment().unix()

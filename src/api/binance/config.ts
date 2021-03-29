@@ -23,4 +23,4 @@ export const dontBuybelow = {
 }
 export const safeBuyTresholds = [5, 6, 12, 20]
 export const safeBuyMultipliers = [1, 1, 1, 2]
-export const greed = 0.7
+export const greed = 0.3
