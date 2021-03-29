@@ -51,7 +51,7 @@ export const BuyingList = ({list, vars, ticks}: {list: any; vars: any; ticks: an
                   {v.buyBelowPrice}
                 </td>
                 <td>{calculatePercentage(price, v.lastTransactionPrice).toFixed(2)} %</td>
-                <td>-{v.buyAtDropBy}</td>
+                <td>-{v.buyAtDropBy.toFixed(1)}</td>
 
                 <td>{v.canBuy}</td>
                 <YesNo condition={v.cantAffordToBuy} green={true} red={false} />

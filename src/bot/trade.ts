@@ -119,7 +119,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     if (!vars.cantAffordToBuy && vars.buy && !vars.limitBuyPerHourReached) {
       vars.lastActionTime = moment().unix()
       vars.lastTransactionPrice = candle.close
-      buyFn(pair.name, bn(askPrice), vars, `- ${buyAtDropBy}%`).catch((error) => {
+      buyFn(pair.name, bn(askPrice), vars, `- ${buyAtDropBy.toFixed(2)}%`).catch((error) => {
         console.log('cant buy', error)
       })
       vars.buy = false
