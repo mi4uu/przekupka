@@ -76,6 +76,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     vars.highest = bidPrice
     vars.lastTransactionPrice = askPrice
     vars.lastActionTime = moment().subtract(10, 'minutes').unix()
+    vars.takeProfit = api.config.takeTrailingProfitFrom
   }
 
   const balanceCoin0 = bn(store.balance[pair.coin0])
