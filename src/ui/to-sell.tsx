@@ -33,7 +33,7 @@ export const ToSell = ({toSell, vars}) => {
       <td>{toSell.currentPrice}</td>
 
       <td>{toSell.diffInPricePercent} %</td>
-      <td>{bn(vars.takeProfit).toFixed(2)} %</td>
+      <td>{vars.takeProfit} %</td>
 
       <td>
         <button

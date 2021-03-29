@@ -79,6 +79,8 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     vars.takeProfit = api.config.takeTrailingProfitFrom
   }
 
+  if (!vars.takeProfit || bn(vars.takeProfit).isNaN()) vars.takeProfit = api.config.takeTrailingProfitFrom
+
   const balanceCoin0 = bn(store.balance[pair.coin0])
   const balanceCoin1 = bn(store.balance[pair.coin1])
 
@@ -119,7 +121,7 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
     if (!vars.cantAffordToBuy && vars.buy && !vars.limitBuyPerHourReached) {
       vars.lastActionTime = moment().unix()
       vars.lastTransactionPrice = candle.close
-      buyFn(pair.name, bn(askPrice), vars, `- ${buyAtDropBy.toFixed(2)}%`).catch((error) => {
+      buyFn(pair.name, bn(askPrice), vars, `- ${bn(buyAtDropBy).toFixed(2)}%`).catch((error) => {
         console.log('cant buy', error)
       })
       vars.buy = false
@@ -133,8 +135,9 @@ export const trade = async (pair: Pair, candle: Tick, allowBuying: boolean) => {
   }
 
   let minProfitPercentage = api.config.takeTrailingProfitFrom
-  minProfitPercentage = 1
   vars.takeProfit = minProfitPercentage > vars.profit * greed ? minProfitPercentage : vars.profit * greed
+  if (!vars.takeProfit || bn(vars.takeProfit).isNaN()) vars.takeProfit = api.config.takeTrailingProfitFrom
+
   // Did we buy anything to sell ?
   const minProfit = bn(bidPrice).multipliedBy(bn(minProfitPercentage).dividedBy(100))
   const maxPrice = bn(bidPrice).minus(minProfit)
