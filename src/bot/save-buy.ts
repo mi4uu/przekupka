@@ -9,7 +9,9 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
   const minPrice = bn(t.price).minus(bn(t.price).multipliedBy(1 / 100))
   const maxPrice = bn(t.price).plus(bn(t.price).multipliedBy(1 / 100))
   let result
+  let safeBuy = false
   if (strategy && strategy.includes('safetyBuy::')) {
+    safeBuy = true
     const id = strategy.split('::')[1]
 
     console.log(`safety buy for`, id)
@@ -31,7 +33,6 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
       })
       .getMany()
   const toSellPosition = new ToSell()
-  console.log({result})
   toSellPosition.pair = pair
 
   toSellPosition.buyUpdate = moment().unix()
@@ -60,7 +61,7 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
       toSellPosition.left = left
       toSellPosition.strategy = dbToSellPosition.strategy + '#'
       const timeDiff = moment().unix() - dbToSellPosition.buyUpdate
-      toSellPosition.safeBuy = timeDiff > 60 ? dbToSellPosition.safeBuy + 1 : dbToSellPosition.safeBuy
+      toSellPosition.safeBuy = timeDiff > 60 && safeBuy ? dbToSellPosition.safeBuy + 1 : dbToSellPosition.safeBuy
       console.log('    |-------(removed) tosell:', dbToSellPosition.id)
       console.log(`= price: ${price}  volume: ${left}`)
 
