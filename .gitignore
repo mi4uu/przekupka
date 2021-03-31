@@ -1,7 +1,7 @@
 /*.csv
 .next
 node_modules
-//src/api/config.ts
+**/credentials.ts
 .cache
 .history
 dist

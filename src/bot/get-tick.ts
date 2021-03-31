@@ -42,16 +42,19 @@ export const getTick = async () => {
 
   const tick = {timestamp: moment().unix(), pairs: newTick}
   store.ticks.push(tick)
-  const pairs = await Pair.find()
+  const pairs = await Pair.find({active: true})
   for (const pair of pairs) {
     if (!store.tradeVars[pair.name]) {
       store.tradeVars[pair.name] = createTradeVars(pair.name)[1] as ITradeVars
     }
 
     store.tradeVars[pair.name].wait = 0
+    trade(pair, {close: tick.pairs[pair.name].c}, true)
   }
 
   if (tickSaveTime < moment().subtract(1, 'minutes').unix()) {
+    const inactivePairs = await Pair.find({active: false})
+
     const startTime = moment().unix()
     let btcIsStable = true
     const {avgBTCPricePrice24hAgo} = await getRepository(Tick)
@@ -81,7 +84,7 @@ export const getTick = async () => {
     const queue = new PQueue({concurrency: 10})
     tick_ += 1
     const toSellCount = await ToSell.count({dust: false, filled: false})
-    for (const pair of pairs) {
+    for (const pair of inactivePairs) {
       const t = newTick[pair.name]
       const tdb = new Tick()
       tdb.pair = pair
@@ -108,7 +111,8 @@ export const getTick = async () => {
               toSellCount < 10,
           ),
         )
-      } else console.log(`[${pair.name}] ticks count ${tickCount[pair.name]} <  24*60`)
+      } // Else console.log(`[${pair.name}] ticks count ${tickCount[pair.name]} <  24*60`)
+
       store.ticks = [store.ticks[store.ticks.length - 1]]
       tdb.save().catch((error) => {
         console.log('something was wrong saving tick for ')
@@ -131,10 +135,13 @@ export const getTick = async () => {
       if (!api.isTransactionValid(pair, ts.left, ts.price)) {
         ts.dust = true
         await ts.save()
+        continue
       }
 
+      if (ts.buyUpdate > moment().subtract(5, 'minutes').unix()) continue
+
+      // Disable safe buy for this strat
       if (usedPairs.includes(pair.name)) continue
-      usedPairs.push(pair.name)
 
       // Buy ->
       //        drop 6% ->  3%
@@ -151,7 +158,9 @@ export const getTick = async () => {
           safeBuyTresholds[ts.safeBuy],
         )
       ) {
-        console.log('SAFETY BUY FOR', pair.name, 'price dropped over', safeBuyTresholds[ts.safeBuy], '%.')
+        usedPairs.push(pair.name)
+
+        console.log('SAFETY BUY FOR', pair.name, `(${ts.id}) price dropped over`, safeBuyTresholds[ts.safeBuy], '%.')
         const amount = bn(ts.left).multipliedBy(safeBuyMultipliers[ts.safeBuy])
 
         if (ts.safeBuy < maxSafeBuys) {
@@ -160,7 +169,7 @@ export const getTick = async () => {
               pair.name,
               amount.toFixed(pair.coin0Precision),
               amount.toFixed(pair.coin0Precision),
-              'safety buy',
+              `safetyBuy::${ts.id}`,
             )
 
             // Ts.safeBuy += 1

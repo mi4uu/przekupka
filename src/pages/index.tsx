@@ -25,7 +25,7 @@ export default function layout() {
       console.log(error)
     }
 
-    setTimeout(getStatus, 6000)
+    setTimeout(getStatus, 1000)
   }
 
   const getTransactions = async () => {
@@ -36,7 +36,7 @@ export default function layout() {
       console.log(error)
     }
 
-    setTimeout(getTransactions, 6000)
+    setTimeout(getTransactions, 1200)
   }
 
   const getStore = async () => {
@@ -47,7 +47,7 @@ export default function layout() {
       console.log(error)
     }
 
-    setTimeout(getStore, 6000)
+    setTimeout(getStore, 1100)
   }
 
   useEffect(() => {

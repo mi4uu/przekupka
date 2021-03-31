@@ -2,6 +2,9 @@ import {Pair} from '#db/entity/pair'
 import moment from 'moment'
 
 export interface ITradeVars {
+  buyBelowPrice: string
+  mustDropBy: string
+  buyAtDropBy: number
   profit: number
   takeProfit: any
   stats: {
@@ -60,6 +63,7 @@ export const createTradeVars = (pair: string, i = 0) => {
       buy: false,
       sell: false,
       wait: 0,
+      profit: 0,
       lastActionTime: moment()
         .subtract(2, 'hours')
         .add(i * 2 - 10, 'seconds')

@@ -89,12 +89,10 @@ const getStatus = async () => {
       const priceUSD =
         pair.coin1 === api.baseCoin ? '1' : store.ticks[store.ticks.length - 1].pairs[`${pair.coin1}${api.baseCoin}`].c
       return {
-        id: p.id,
-        left: p.left,
+        ...p,
         balance: store.balance[pair.coin0],
         pair: pair.name,
         isSelling: sell.includes(pair.name),
-        price: p.price,
         currentPrice: price.toFixed(8),
         diffInPrice: bn(price).minus(p.price).toFixed(8),
         diffInPricePercent: calculatePercentage(price, p.price).toFixed(2),
@@ -102,10 +100,6 @@ const getStatus = async () => {
         profitInUSD: bn(price).minus(p.price).multipliedBy(p.left).multipliedBy(priceUSD).toFixed(2),
         worthInUSD: bn(price).multipliedBy(p.left).multipliedBy(priceUSD).toFixed(2),
         canBeSold: api.isTransactionValid(pair, p.left, price),
-        sellUpdate: p.sellUpdate,
-        buyUpdate: p.buyUpdate,
-        strategy: p.strategy,
-        safeBuy: p.safeBuy,
       }
     }),
   )

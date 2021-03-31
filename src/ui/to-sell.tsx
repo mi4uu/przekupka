@@ -21,6 +21,8 @@ export const ToSell = ({toSell, vars}) => {
         .filter(Boolean)
         .join(' ')}
     >
+      {' '}
+      <td>{toSell.id}</td>
       <td>
         <a name={toSell.pair}> </a>
         <a target={toSell.pair} href={'https://pl.tradingview.com/chart?symbol=BINANCE%3A' + toSell.pair}>
@@ -31,10 +33,8 @@ export const ToSell = ({toSell, vars}) => {
       <td>{toSell.balance}</td>
       <td>{bn(toSell.price).toFixed(8)}</td>
       <td>{toSell.currentPrice}</td>
-
       <td>{toSell.diffInPricePercent} %</td>
-      <td>{bn(vars.takeProfit).toFixed(2)} %</td>
-
+      <td>{vars.takeProfit} %</td>
       <td>
         <button
           className='panicButton'
@@ -74,7 +74,6 @@ export const ToSell = ({toSell, vars}) => {
       <td>{toSell.profitInUSD}</td>
       <td>{toSell.worthInUSD}</td>
       <td>{toSell.canBeSold ? <div className='pill green'>YES</div> : <div className='pill red'>NO</div>}</td>
-
       <td>{toSell.isSelling ? <div className='pill green'>YES</div> : <div className='pill gray'>NO</div>}</td>
       <td>{toSell.safeBuy}</td>
       <td>{toSell.strategy}</td>
