@@ -8,16 +8,28 @@ import {getRepository} from 'typeorm'
 export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: string) {
   const minPrice = bn(t.price).minus(bn(t.price).multipliedBy(1 / 100))
   const maxPrice = bn(t.price).plus(bn(t.price).multipliedBy(1 / 100))
-  const result = await getRepository(ToSell)
-    .createQueryBuilder('t')
-    .where('t.pairName = :pair AND t.filled = :filled AND t.price <= :maxPrice AND t.price >= :minPrice', {
-      pair: pair.name,
-      maxPrice: maxPrice.toFixed(pair.coin0Precision),
-      minPrice: minPrice.toFixed(pair.coin0Precision),
+  let result
+  if (strategy && strategy.includes('safetyBuy::')) {
+    const id = strategy.split('::')[1]
 
-      filled: false,
-    })
-    .getMany()
+    console.log(`safety buy for`, id)
+    result = await getRepository(ToSell)
+      .createQueryBuilder('t')
+      .where('t.id=id', {
+        id,
+      })
+      .getMany()
+  } else
+    result = await getRepository(ToSell)
+      .createQueryBuilder('t')
+      .where('t.pairName = :pair AND t.filled = :filled AND t.price <= :maxPrice AND t.price >= :minPrice', {
+        pair: pair.name,
+        maxPrice: maxPrice.toFixed(pair.coin0Precision),
+        minPrice: minPrice.toFixed(pair.coin0Precision),
+
+        filled: false,
+      })
+      .getMany()
   const toSellPosition = new ToSell()
   console.log({result})
   toSellPosition.pair = pair
@@ -67,6 +79,6 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
 
   await toSellPosition.save()
   console.log('    |-------added tosell:', toSellPosition.id)
-
+  t.strategy = strategy || '?'
   await t.save()
 }

@@ -50,6 +50,7 @@ export const ToSellList = ({status, store}) => {
         <table className='fl-table'>
           <thead>
             <tr>
+              <th>id</th>
               <th>Pair</th>
               <th>Left</th>
               <th>Balance</th>

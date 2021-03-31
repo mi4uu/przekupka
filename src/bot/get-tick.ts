@@ -135,12 +135,13 @@ export const getTick = async () => {
       if (!api.isTransactionValid(pair, ts.left, ts.price)) {
         ts.dust = true
         await ts.save()
+        continue
       }
 
+      if (ts.buyUpdate > moment().subtract(5, 'minutes').unix()) continue
+
       // Disable safe buy for this strat
-      usedPairs.push(pair.name)
       if (usedPairs.includes(pair.name)) continue
-      usedPairs.push(pair.name)
 
       // Buy ->
       //        drop 6% ->  3%
@@ -157,7 +158,9 @@ export const getTick = async () => {
           safeBuyTresholds[ts.safeBuy],
         )
       ) {
-        console.log('SAFETY BUY FOR', pair.name, 'price dropped over', safeBuyTresholds[ts.safeBuy], '%.')
+        usedPairs.push(pair.name)
+
+        console.log('SAFETY BUY FOR', pair.name, `(${ts.id}) price dropped over`, safeBuyTresholds[ts.safeBuy], '%.')
         const amount = bn(ts.left).multipliedBy(safeBuyMultipliers[ts.safeBuy])
 
         if (ts.safeBuy < maxSafeBuys) {
@@ -166,7 +169,7 @@ export const getTick = async () => {
               pair.name,
               amount.toFixed(pair.coin0Precision),
               amount.toFixed(pair.coin0Precision),
-              'safety buy',
+              `safetyBuy::${ts.id}`,
             )
 
             // Ts.safeBuy += 1
