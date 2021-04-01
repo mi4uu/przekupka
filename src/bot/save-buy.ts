@@ -38,7 +38,8 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
 
   toSellPosition.buyUpdate = moment().unix()
 
-  if (result) {
+  if (result && result.length > 0) {
+    console.log('if(result)', result, Boolean(result), result.length)
     for (const dbToSellPosition of result) {
       toSellPosition.sellUpdate = dbToSellPosition.sellUpdate
 

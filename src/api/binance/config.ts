@@ -23,10 +23,10 @@ export const activePairs = new Set([
 
   'ENJBNB',
 ])
-export const desiredPrice = '100' // How many $ per transaction ( min 20, recomended min 40 )
-export const desiredPriceBTC = '50' // How many $ per transaction ( min 20, recomended min 40 )
+export const desiredPrice = '20' // How many $ per transaction ( min 20, recomended min 40 )
+export const desiredPriceBTC = '20' // How many $ per transaction ( min 20, recomended min 40 )
 export const desiredPriceBNB = '20' // How many $ per transaction ( min 20, recomended min 40 )
-export const minPriceDrop = 2
+export const minPriceDrop = 3
 export const takeTrailingProfitFrom = 1
 export const trailing = 0.2
 export const marketVelocityDivider = 6
