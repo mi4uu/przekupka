@@ -92,12 +92,12 @@ const cleanUp = async () => {
   await Promise.all(fixThings('BTC', 'USDT', 'BNB'))
   // Await Promise.all(fixThings())
 
-  await closeThings()
+  // await closeThings()
 
   // Await Promise.all(fixThings('BTC'))
   //   await Promise.all(fixThings())
 
-  await closeThings()
+  // await closeThings()
 }
 
 cleanUp()

@@ -160,11 +160,18 @@ export const getTick = async () => {
       ) {
         usedPairs.push(pair.name)
 
-        console.log('SAFETY BUY FOR', pair.name, `(${ts.id}) price dropped over`, safeBuyTresholds[ts.safeBuy], '%.')
         const amount = bn(ts.left).multipliedBy(safeBuyMultipliers[ts.safeBuy])
 
         if (ts.safeBuy < maxSafeBuys) {
           if (bn(store.balance[pair.coin1]).isGreaterThan(amount.multipliedBy(ts.price))) {
+            console.log(
+              'SAFETY BUY FOR',
+              pair.name,
+              `(${ts.id}) price dropped over`,
+              safeBuyTresholds[ts.safeBuy],
+              '%.',
+            )
+
             const result = await api.makeBuyOffer(
               pair.name,
               amount.toFixed(pair.coin0Precision),
@@ -176,16 +183,16 @@ export const getTick = async () => {
             // await ts.save()
             console.log(result)
           } else {
-            console.log(
-              'not enought balance  to make safety trade. Need:',
-              amount.multipliedBy(ts.price).toFixed(8),
-              ' ',
-              pair.coin1,
-              'HAVE:',
-              store.balance[pair.coin1],
-              ' ',
-              pair.coin1,
-            )
+            // Console.log(
+            //   'not enought balance  to make safety trade. Need:',
+            //   amount.multipliedBy(ts.price).toFixed(8),
+            //   ' ',
+            //   pair.coin1,
+            //   'HAVE:',
+            //   store.balance[pair.coin1],
+            //   ' ',
+            //   pair.coin1,
+            // )
           }
         } else {
           console.log('it is overinvested. sry ;(')

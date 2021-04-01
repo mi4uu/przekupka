@@ -44,6 +44,8 @@ export async function saveSell(pair: Pair, t: ClosedTransaction) {
 
       if (left.isEqualTo(soldVol)) {
         ts.filled = true
+        console.log('DEBUG:', 'sell1')
+
         console.log(`        |--* ts=t [ts id: ${ts.id}] left ${ts.left} - ${soldVol.toFixed(0)} = 0 END`)
         ts.left = '0.0'
         // Ts.sellUpdate = moment().unix()
@@ -57,6 +59,8 @@ export async function saveSell(pair: Pair, t: ClosedTransaction) {
         )
 
         ts.filled = true
+        console.log('DEBUG:', 'sell2')
+
         soldVol = soldVol.minus(bn(ts.left))
         ts.left = '0.0'
         //   Ts.sellUpdate = moment().unix()

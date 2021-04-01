@@ -13,12 +13,13 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
   if (strategy && strategy.includes('safetyBuy::')) {
     safeBuy = true
     const id = strategy.split('::')[1]
-
+    console.log(`>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>SAFETY BUY ${pair.name} <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<`)
     console.log(`safety buy for`, id)
     result = await getRepository(ToSell)
       .createQueryBuilder('t')
-      .where('t.id=id', {
+      .where('t.id=id AND t.pairName = :pair', {
         id,
+        pair: pair.name,
       })
       .getMany()
   } else
@@ -37,7 +38,7 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
 
   toSellPosition.buyUpdate = moment().unix()
 
-  if (result && result.length > 0) {
+  if (result) {
     for (const dbToSellPosition of result) {
       toSellPosition.sellUpdate = dbToSellPosition.sellUpdate
 
@@ -66,12 +67,13 @@ export async function saveBuy(pair: Pair, t: ClosedTransaction, strategy?: strin
       console.log(`= price: ${price}  volume: ${left}`)
 
       dbToSellPosition.filled = true
+      console.log('DEBUG:', 'safebuy filled=false')
       await dbToSellPosition.save()
     }
 
     //   Await dbToSellPosition.save()
   } else {
-    console.log('DID NOT FIND ANY OTHER', pair.name, 'to sell position')
+    console.log('DID NOT FIND ANY OTHER', pair.name, 'to sell position', {result, strategy})
     toSellPosition.price = t.price
     toSellPosition.vol = t.vol
     toSellPosition.left = t.vol

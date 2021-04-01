@@ -1,0 +1,20 @@
+version: "3.5"
+services:
+  flipper-frontend:
+    network_mode: bridge
+    build:
+      network: bridge
+      context: .
+      dockerfile: CI.dockerfile
+    image: flipper-frontend
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/frontend
+    environment:
+      HUSKY_SKIP_HOOKS: 0
+      HUSKY_SKIP_INSTALL: 0
+      CI: 0
+      NODE_ENV: "development"
+    working_dir: /frontend
+    command: bash -c "unlink /frontend/node_modules; ln -s /app/node_modules /frontend/node_modules ; npm run styles-definition;  npm start"
